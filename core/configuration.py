@@ -50,6 +50,8 @@ class ModelAndLoss(nn.Module):
         # Run forward pass
         # -------------------------------------
         output_dict = self._model(example_dict)
+        #print("Example_dict's keys:", example_dict.keys())
+        #print("Output_dict's keys:", output_dict.keys())
 
         # -------------------------------------
         # Compute losses
@@ -397,6 +399,8 @@ def configure_data_loaders(args):
             # Create training dataset
             # ----------------------------------------------
             train_dataset = tools.instance_from_kwargs(args.training_dataset_class, kwargs)
+            #print("length of train dataset is ", len(train_dataset))
+            #print("Training Dataset used is:", train_dataset)
 
             # ----------------------------------------------
             # Create training loader
@@ -431,6 +435,7 @@ def configure_data_loaders(args):
             # Create validation dataset
             # ----------------------------------------------
             validation_dataset = tools.instance_from_kwargs(args.validation_dataset_class, kwargs)
+            #print("Validation dataset used is:", validation_dataset)
 
             # ----------------------------------------------
             # Create validation loader

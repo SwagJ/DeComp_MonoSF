@@ -7,7 +7,7 @@ from . import model_monodepth_ablation
 ## Monocular Scene Flow - The full model 
 ##########################################################################################
 
-MonoSceneFlow_fullmodel			=	model_monosceneflow.MonoSceneFlow
+MonoSF_Full		=	model_monosceneflow.MonoSceneFlow
 
 ##########################################################################################
 ## Monocular Scene Flow - The models for the ablation studies

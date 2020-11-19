@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # DATASETS_HOME
-KITTI_HOME=""
-CHECKPOINT="checkpoints/full_model_kitti/checkpoint_kitti_split.ckpt"
+KITTI_HOME="/disk_hdd/kitti_flow"
+CHECKPOINT="./outputs/MonoSceneFlow_fullmodel-kitti-20201110-010256/checkpoint_best.ckpt"
 
 # model
 MODEL=MonoSceneFlow_fullmodel

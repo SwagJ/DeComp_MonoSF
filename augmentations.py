@@ -641,3 +641,126 @@ class Augmentation_Resize_Only(nn.Module):
 
         return example_dict
 
+
+
+
+###################################################################
+#
+#  Augmentation for Depth Supervised Training. 
+#
+###################################################################
+
+class Augmentation_SceneFlow_Depth_Sup(nn.Module):
+    def __init__(self, args, photometric=True, imgsize=[256, 832]):
+        super(Augmentation_SceneFlow_Depth_Sup, self).__init__()
+
+        # init
+        self._args = args
+        self._photometric = photometric
+        self._photo_augmentation = PhotometricAugmentation()
+        self._imgsize = imgsize
+
+
+    def cropping(self, img, str_x, str_y, end_x, end_y):
+
+        return img[:, :, str_y:end_y, str_x:end_x]
+
+    def kitti_random_crop(self, example_dict):
+
+        im_l1 = example_dict["input_l1"]
+        _, _, height, width = im_l1.size()
+        
+        scale = np.random.uniform(0.94, 1.00)        
+        crop_height = int(scale * height)
+        crop_width = int(scale * width)
+
+        # get starting positions
+        x = np.random.uniform(0, width - crop_width + 1)
+        y = np.random.uniform(0, height - crop_height + 1)
+        str_x = int(x)
+        str_y = int(y)
+        end_x = int(x + crop_width)
+        end_y = int(y + crop_height)
+
+        ## Cropping
+        example_dict["input_l1"] = self.cropping(example_dict["input_l1"], str_x, str_y, end_x, end_y)
+        example_dict["input_l2"] = self.cropping(example_dict["input_l2"], str_x, str_y, end_x, end_y)
+        example_dict["input_r1"] = self.cropping(example_dict["input_r1"], str_x, str_y, end_x, end_y)
+        example_dict["input_r2"] = self.cropping(example_dict["input_r2"], str_x, str_y, end_x, end_y)
+
+        example_dict["disp_l1"] = self.cropping(example_dict["disp_l1"], str_x, str_y, end_x, end_y)
+        example_dict["disp_l1_mask"] = self.cropping(example_dict["disp_l1_mask"], str_x, str_y, end_x, end_y)
+        example_dict["disp_l2"] = self.cropping(example_dict["disp_l2"], str_x, str_y, end_x, end_y)
+        example_dict["disp_l2_mask"] = self.cropping(example_dict["disp_l2_mask"], str_x, str_y, end_x, end_y)
+        
+        example_dict["disp_r1"] = self.cropping(example_dict["disp_r1"], str_x, str_y, end_x, end_y)
+        example_dict["disp_r1_mask"] = self.cropping(example_dict["disp_r1_mask"], str_x, str_y, end_x, end_y)
+        example_dict["disp_r2"] = self.cropping(example_dict["disp_r2"], str_x, str_y, end_x, end_y)
+        example_dict["disp_r2_mask"] = self.cropping(example_dict["disp_r2_mask"], str_x, str_y, end_x, end_y)
+
+        example_dict["input_k_l1"] = _intrinsic_crop(example_dict["input_k_l1"], str_x, str_y)
+        example_dict["input_k_l2"] = _intrinsic_crop(example_dict["input_k_l2"], str_x, str_y)
+        example_dict["input_k_r1"] = _intrinsic_crop(example_dict["input_k_r1"], str_x, str_y)
+        example_dict["input_k_r2"] = _intrinsic_crop(example_dict["input_k_r2"], str_x, str_y)
+
+        input_size = example_dict["input_size"].clone()
+        input_size[:, 0] = crop_height
+        input_size[:, 1] = crop_width
+        example_dict["input_size"] = input_size
+
+        return 
+
+
+    def forward(self, example_dict):
+
+        ## KITTI Random Crop
+        self.kitti_random_crop(example_dict)
+
+        # Image resizing
+        im_l1 = interpolate2d(example_dict["input_l1"], self._imgsize)
+        im_l2 = interpolate2d(example_dict["input_l2"], self._imgsize)
+        im_r1 = interpolate2d(example_dict["input_r1"], self._imgsize)
+        im_r2 = interpolate2d(example_dict["input_r2"], self._imgsize)
+
+        # Focal length rescaling
+        _, _, hh, ww = example_dict["input_l1"].size()
+        sy = self._imgsize[0] / hh
+        sx = self._imgsize[1] / ww
+
+        k_l1 = _intrinsic_scale(example_dict["input_k_l1"], sx, sy)
+        k_l2 = _intrinsic_scale(example_dict["input_k_l2"], sx, sy)
+        k_r1 = _intrinsic_scale(example_dict["input_k_r1"], sx, sy)
+        k_r2 = _intrinsic_scale(example_dict["input_k_r2"], sx, sy)
+
+        if self._photometric and torch.rand(1) > 0.5:
+            im_l1, im_l2, im_r1, im_r2 = self._photo_augmentation(im_l1, im_l2, im_r1, im_r2)
+
+        example_dict["input_l1_aug"] = im_l1
+        example_dict["input_l2_aug"] = im_l2
+        example_dict["input_r1_aug"] = im_r1
+        example_dict["input_r2_aug"] = im_r2
+
+        example_dict["input_k_l1_aug"] = k_l1
+        example_dict["input_k_l2_aug"] = k_l2
+        example_dict["input_k_r1_aug"] = k_r1
+        example_dict["input_k_r2_aug"] = k_r2
+
+        k_l1_flip = k_l1.clone()
+        k_l2_flip = k_l2.clone()
+        k_r1_flip = k_r1.clone()
+        k_r2_flip = k_r2.clone()
+        k_l1_flip[:, 0, 2] = im_l1.size(3) - k_l1_flip[:, 0, 2]
+        k_l2_flip[:, 0, 2] = im_l2.size(3) - k_l2_flip[:, 0, 2]
+        k_r1_flip[:, 0, 2] = im_r1.size(3) - k_r1_flip[:, 0, 2]
+        k_r2_flip[:, 0, 2] = im_r2.size(3) - k_r2_flip[:, 0, 2]
+        example_dict["input_k_l1_flip_aug"] = k_l1_flip
+        example_dict["input_k_l2_flip_aug"] = k_l2_flip
+        example_dict["input_k_r1_flip_aug"] = k_r1_flip
+        example_dict["input_k_r2_flip_aug"] = k_r2_flip
+
+        aug_size = torch.zeros_like(example_dict["input_size"])
+        aug_size[:, 0] = self._imgsize[0]
+        aug_size[:, 1] = self._imgsize[1]
+        example_dict["aug_size"] = aug_size
+
+        return example_dict

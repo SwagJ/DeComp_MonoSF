@@ -19,8 +19,8 @@ class KITTI_2015_Train_Base(data.Dataset):
                  data_root=None,
                  dstype="full"):
 
-        images_l_root = os.path.join(data_root, "data_scene_flow", "training", "image_2_jpg")
-        images_r_root = os.path.join(data_root, "data_scene_flow", "training", "image_3_jpg")
+        images_l_root = os.path.join(data_root, "data_scene_flow", "training", "image_2")
+        images_r_root = os.path.join(data_root, "data_scene_flow", "training", "image_3")
         flow_root_occ = os.path.join(data_root, "data_scene_flow", "training", "flow_occ")
         flow_root_noc = os.path.join(data_root, "data_scene_flow", "training", "flow_noc")
         disp0_root_occ = os.path.join(data_root, "data_scene_flow", "training", "disp_occ_0")
@@ -67,7 +67,7 @@ class KITTI_2015_Train_Base(data.Dataset):
         self._image_list = []
         self._flow_list = []
         self._disp_list = []
-        img_ext = '.jpg'
+        img_ext = '.png'
 
         for ii in list_of_indices:
 

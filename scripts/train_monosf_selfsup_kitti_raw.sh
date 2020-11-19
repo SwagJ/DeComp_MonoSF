@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # experiments and datasets meta
-KITTI_RAW_HOME=""
-EXPERIMENTS_HOME=""
+KITTI_RAW_HOME="/disk_hdd/kitti_raw/"
+EXPERIMENTS_HOME="./outputs/"
 
 # model
 MODEL=MonoSceneFlow_fullmodel
@@ -24,14 +24,14 @@ Valid_Loss_Function=Loss_SceneFlow_SelfSup
 
 # training configuration
 python ../main.py \
---batch_size=4 \
+--batch_size=1 \
 --batch_size_val=1 \
 --checkpoint=$CHECKPOINT \
 --lr_scheduler=MultiStepLR \
 --lr_scheduler_gamma=0.5 \
 --lr_scheduler_milestones="[23, 39, 47, 54]" \
 --model=$MODEL \
---num_workers=16 \
+--num_workers=10 \
 --optimizer=Adam \
 --optimizer_lr=2e-4 \
 --save=$SAVE_PATH \

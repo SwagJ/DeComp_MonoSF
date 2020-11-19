@@ -1,0 +1,761 @@
+[2020-11-16 21:27:22] ==> Commandline Arguments
+[2020-11-16 21:27:22]   batch_size: 1
+[2020-11-16 21:27:22]   batch_size_val: 1
+[2020-11-16 21:27:22]   checkpoint: ./outputs/MonoSceneFlow_fullmodel-kitti-20201110-010256/checkpoint_best.ckpt
+[2020-11-16 21:27:22]   checkpoint_exclude_params: ['']
+[2020-11-16 21:27:22]   checkpoint_include_params: ['*']
+[2020-11-16 21:27:22]   checkpoint_mode: resume_from_latest
+[2020-11-16 21:27:22]   cuda: True
+[2020-11-16 21:27:22]   evaluation: True
+[2020-11-16 21:27:22]   finetuning: False
+[2020-11-16 21:27:22]   lr_scheduler: None
+[2020-11-16 21:27:22]   model: MonoSceneFlow_fullmodel
+[2020-11-16 21:27:22]   num_workers: 4
+[2020-11-16 21:27:22]   optimizer: Adam
+[2020-11-16 21:27:22]   optimizer_amsgrad: False
+[2020-11-16 21:27:22]   optimizer_betas: (0.9, 0.999)
+[2020-11-16 21:27:22]   optimizer_eps: 1e-08
+[2020-11-16 21:27:22]   optimizer_group: None
+[2020-11-16 21:27:22]   optimizer_lr: 0.001
+[2020-11-16 21:27:22]   optimizer_weight_decay: 0
+[2020-11-16 21:27:22]   save: eval/monosf_selfsup_kitti_train
+[2020-11-16 21:27:22]   save_disp: False
+[2020-11-16 21:27:22]   save_disp2: False
+[2020-11-16 21:27:22]   save_flow: False
+[2020-11-16 21:27:22]   seed: 1
+[2020-11-16 21:27:22]   start_epoch: 1
+[2020-11-16 21:27:22]   total_epochs: 1
+[2020-11-16 21:27:22]   training_augmentation: None
+[2020-11-16 21:27:22]   training_dataset: None
+[2020-11-16 21:27:22]   training_loss: None
+[2020-11-16 21:27:22]   validation_augmentation: Augmentation_Resize_Only
+[2020-11-16 21:27:22]   validation_augmentation_imgsize: [256, 832]
+[2020-11-16 21:27:22]   validation_augmentation_photometric: False
+[2020-11-16 21:27:22]   validation_dataset: KITTI_2015_Train_Full_mnsf
+[2020-11-16 21:27:22]   validation_dataset_crop_size: [370, 1224]
+[2020-11-16 21:27:22]   validation_dataset_preprocessing_crop: False
+[2020-11-16 21:27:22]   validation_dataset_root: /disk_hdd/kitti_flow
+[2020-11-16 21:27:22]   validation_key: sf
+[2020-11-16 21:27:22]   validation_key_minimize: True
+[2020-11-16 21:27:22]   validation_loss: Eval_SceneFlow_KITTI_Train
+[2020-11-16 21:27:22] ==> Random Seeds
+[2020-11-16 21:27:22]   Python seed: 1
+[2020-11-16 21:27:22]   Numpy seed: 2
+[2020-11-16 21:27:22]   Torch CPU seed: 3
+[2020-11-16 21:27:22]   Torch CUDA seed: 4
+[2020-11-16 21:27:22] ==> Datasets
+[2020-11-16 21:27:48] ==> Commandline Arguments
+[2020-11-16 21:27:48]   batch_size: 1
+[2020-11-16 21:27:48]   batch_size_val: 1
+[2020-11-16 21:27:48]   checkpoint: ./outputs/MonoSceneFlow_fullmodel-kitti-20201110-010256/checkpoint_best.ckpt
+[2020-11-16 21:27:48]   checkpoint_exclude_params: ['']
+[2020-11-16 21:27:48]   checkpoint_include_params: ['*']
+[2020-11-16 21:27:48]   checkpoint_mode: resume_from_latest
+[2020-11-16 21:27:48]   cuda: True
+[2020-11-16 21:27:48]   evaluation: True
+[2020-11-16 21:27:48]   finetuning: False
+[2020-11-16 21:27:48]   lr_scheduler: None
+[2020-11-16 21:27:48]   model: MonoSceneFlow_fullmodel
+[2020-11-16 21:27:48]   num_workers: 4
+[2020-11-16 21:27:48]   optimizer: Adam
+[2020-11-16 21:27:48]   optimizer_amsgrad: False
+[2020-11-16 21:27:48]   optimizer_betas: (0.9, 0.999)
+[2020-11-16 21:27:48]   optimizer_eps: 1e-08
+[2020-11-16 21:27:48]   optimizer_group: None
+[2020-11-16 21:27:48]   optimizer_lr: 0.001
+[2020-11-16 21:27:48]   optimizer_weight_decay: 0
+[2020-11-16 21:27:48]   save: eval/monosf_selfsup_kitti_train
+[2020-11-16 21:27:48]   save_disp: False
+[2020-11-16 21:27:48]   save_disp2: False
+[2020-11-16 21:27:48]   save_flow: False
+[2020-11-16 21:27:48]   seed: 1
+[2020-11-16 21:27:48]   start_epoch: 1
+[2020-11-16 21:27:48]   total_epochs: 1
+[2020-11-16 21:27:48]   training_augmentation: None
+[2020-11-16 21:27:48]   training_dataset: None
+[2020-11-16 21:27:48]   training_loss: None
+[2020-11-16 21:27:48]   validation_augmentation: Augmentation_Resize_Only
+[2020-11-16 21:27:48]   validation_augmentation_imgsize: [256, 832]
+[2020-11-16 21:27:48]   validation_augmentation_photometric: False
+[2020-11-16 21:27:48]   validation_dataset: KITTI_2015_Train_Full_mnsf
+[2020-11-16 21:27:48]   validation_dataset_crop_size: [370, 1224]
+[2020-11-16 21:27:48]   validation_dataset_preprocessing_crop: False
+[2020-11-16 21:27:48]   validation_dataset_root: /disk_hdd/kitti_flow
+[2020-11-16 21:27:48]   validation_key: sf
+[2020-11-16 21:27:48]   validation_key_minimize: True
+[2020-11-16 21:27:48]   validation_loss: Eval_SceneFlow_KITTI_Train
+[2020-11-16 21:27:48] ==> Random Seeds
+[2020-11-16 21:27:48]   Python seed: 1
+[2020-11-16 21:27:48]   Numpy seed: 2
+[2020-11-16 21:27:48]   Torch CPU seed: 3
+[2020-11-16 21:27:48]   Torch CUDA seed: 4
+[2020-11-16 21:27:48] ==> Datasets
+[2020-11-16 21:28:43] ==> Commandline Arguments
+[2020-11-16 21:28:43]   batch_size: 1
+[2020-11-16 21:28:43]   batch_size_val: 1
+[2020-11-16 21:28:43]   checkpoint: ./outputs/MonoSceneFlow_fullmodel-kitti-20201110-010256/checkpoint_best.ckpt
+[2020-11-16 21:28:43]   checkpoint_exclude_params: ['']
+[2020-11-16 21:28:43]   checkpoint_include_params: ['*']
+[2020-11-16 21:28:43]   checkpoint_mode: resume_from_latest
+[2020-11-16 21:28:43]   cuda: True
+[2020-11-16 21:28:43]   evaluation: True
+[2020-11-16 21:28:43]   finetuning: False
+[2020-11-16 21:28:43]   lr_scheduler: None
+[2020-11-16 21:28:43]   model: MonoSceneFlow_fullmodel
+[2020-11-16 21:28:43]   num_workers: 4
+[2020-11-16 21:28:43]   optimizer: Adam
+[2020-11-16 21:28:43]   optimizer_amsgrad: False
+[2020-11-16 21:28:43]   optimizer_betas: (0.9, 0.999)
+[2020-11-16 21:28:43]   optimizer_eps: 1e-08
+[2020-11-16 21:28:43]   optimizer_group: None
+[2020-11-16 21:28:43]   optimizer_lr: 0.001
+[2020-11-16 21:28:43]   optimizer_weight_decay: 0
+[2020-11-16 21:28:43]   save: eval/monosf_selfsup_kitti_train
+[2020-11-16 21:28:43]   save_disp: False
+[2020-11-16 21:28:43]   save_disp2: False
+[2020-11-16 21:28:43]   save_flow: False
+[2020-11-16 21:28:43]   seed: 1
+[2020-11-16 21:28:43]   start_epoch: 1
+[2020-11-16 21:28:43]   total_epochs: 1
+[2020-11-16 21:28:43]   training_augmentation: None
+[2020-11-16 21:28:43]   training_dataset: None
+[2020-11-16 21:28:43]   training_loss: None
+[2020-11-16 21:28:43]   validation_augmentation: Augmentation_Resize_Only
+[2020-11-16 21:28:43]   validation_augmentation_imgsize: [256, 832]
+[2020-11-16 21:28:43]   validation_augmentation_photometric: False
+[2020-11-16 21:28:43]   validation_dataset: KITTI_2015_Train_Full_mnsf
+[2020-11-16 21:28:43]   validation_dataset_crop_size: [370, 1224]
+[2020-11-16 21:28:43]   validation_dataset_preprocessing_crop: False
+[2020-11-16 21:28:43]   validation_dataset_root: /disk_hdd/kitti_flow
+[2020-11-16 21:28:43]   validation_key: sf
+[2020-11-16 21:28:43]   validation_key_minimize: True
+[2020-11-16 21:28:43]   validation_loss: Eval_SceneFlow_KITTI_Train
+[2020-11-16 21:28:43] ==> Random Seeds
+[2020-11-16 21:28:43]   Python seed: 1
+[2020-11-16 21:28:43]   Numpy seed: 2
+[2020-11-16 21:28:43]   Torch CPU seed: 3
+[2020-11-16 21:28:43]   Torch CUDA seed: 4
+[2020-11-16 21:28:43] ==> Datasets
+[2020-11-16 21:28:43]   Validation Dataset: KITTI_2015_Train_Full_mnsf
+[2020-11-16 21:28:44]     input_k_l1: [3, 3]
+[2020-11-16 21:28:44]     input_k_l2: [3, 3]
+[2020-11-16 21:28:44]     input_k_r1: [3, 3]
+[2020-11-16 21:28:44]     input_k_r2: [3, 3]
+[2020-11-16 21:28:44]     input_l1: [3, 375, 1242]
+[2020-11-16 21:28:44]     input_l2: [3, 375, 1242]
+[2020-11-16 21:28:44]     input_r1: [3, 375, 1242]
+[2020-11-16 21:28:44]     input_r2: [3, 375, 1242]
+[2020-11-16 21:28:44]     input_size: [2]
+[2020-11-16 21:28:44]     target_disp: [1, 375, 1242]
+[2020-11-16 21:28:44]     target_disp2_mask_noc: [1, 375, 1242]
+[2020-11-16 21:28:44]     target_disp2_mask_occ: [1, 375, 1242]
+[2020-11-16 21:28:44]     target_disp2_noc: [1, 375, 1242]
+[2020-11-16 21:28:44]     target_disp2_occ: [1, 375, 1242]
+[2020-11-16 21:28:44]     target_disp_mask: [1, 375, 1242]
+[2020-11-16 21:28:44]     target_disp_mask_noc: [1, 375, 1242]
+[2020-11-16 21:28:44]     target_disp_noc: [1, 375, 1242]
+[2020-11-16 21:28:44]     target_flow: [2, 375, 1242]
+[2020-11-16 21:28:44]     target_flow_mask: [1, 375, 1242]
+[2020-11-16 21:28:44]     target_flow_mask_noc: [1, 375, 1242]
+[2020-11-16 21:28:44]     target_flow_noc: [2, 375, 1242]
+[2020-11-16 21:28:44]     num_examples: 200
+[2020-11-16 21:28:44] ==> Runtime Augmentations
+[2020-11-16 21:28:44]   training_augmentation: None
+[2020-11-16 21:28:44]   validation_augmentation: Augmentation_Resize_Only
+[2020-11-16 21:28:44]     imgsize: [256, 832]
+[2020-11-16 21:28:44]     photometric: False
+[2020-11-16 21:28:44] ==> Model and Loss
+[2020-11-16 21:28:44]   Initializing MSRA
+[2020-11-16 21:28:46]   Batch Size: 1
+[2020-11-16 21:28:46]   GPGPU: Cuda
+[2020-11-16 21:28:46]   Network: MonoSceneFlow_fullmodel
+[2020-11-16 21:28:46]   Number of parameters: 5755000
+[2020-11-16 21:28:46]   Validation Key: sf
+[2020-11-16 21:28:46]   Validation Loss: Eval_SceneFlow_KITTI_Train
+[2020-11-16 21:28:46] ==> Checkpoint
+[2020-11-16 21:28:46]     Restore keys:
+[2020-11-16 21:28:46]       _model.flow_estimators.2.convs.3.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.0.convs.1.0.bias
+[2020-11-16 21:28:46]       _model.flow_estimators.4.convs.0.0.bias
+[2020-11-16 21:28:46]       _model.flow_estimators.3.convs.0.0.weight
+[2020-11-16 21:28:46]       _model.context_networks.conv_d1.0.0.weight
+[2020-11-16 21:28:46]       _model.feature_pyramid_extractor.convs.2.0.0.bias
+[2020-11-16 21:28:46]       _model.flow_estimators.2.convs.4.0.bias
+[2020-11-16 21:28:46]       _model.flow_estimators.3.convs.2.0.bias
+[2020-11-16 21:28:46]       _model.flow_estimators.3.convs.1.0.bias
+[2020-11-16 21:28:46]       _model.feature_pyramid_extractor.convs.1.1.0.bias
+[2020-11-16 21:28:46]       _model.flow_estimators.0.convs.4.0.bias
+[2020-11-16 21:28:46]       _model.flow_estimators.4.conv_d1.0.bias
+[2020-11-16 21:28:46]       _model.flow_estimators.2.convs.4.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.3.conv_d1.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.2.conv_sf.0.bias
+[2020-11-16 21:28:46]       _model.flow_estimators.4.conv_d1.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.1.conv_d1.0.bias
+[2020-11-16 21:28:46]       _model.flow_estimators.1.convs.3.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.2.convs.0.0.bias
+[2020-11-16 21:28:46]       _model.flow_estimators.0.conv_d1.0.bias
+[2020-11-16 21:28:46]       _model.context_networks.convs.4.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.4.conv_sf.0.weight
+[2020-11-16 21:28:46]       _model.feature_pyramid_extractor.convs.1.1.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.4.convs.0.0.weight
+[2020-11-16 21:28:46]       _model.feature_pyramid_extractor.convs.5.1.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.1.convs.4.0.bias
+[2020-11-16 21:28:46]       _model.flow_estimators.1.convs.0.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.1.conv_sf.0.bias
+[2020-11-16 21:28:46]       _model.feature_pyramid_extractor.convs.1.0.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.1.convs.4.0.weight
+[2020-11-16 21:28:46]       _model.feature_pyramid_extractor.convs.0.1.0.weight
+[2020-11-16 21:28:46]       _model.context_networks.convs.0.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.0.convs.4.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.1.convs.1.0.bias
+[2020-11-16 21:28:46]       _model.context_networks.convs.3.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.2.convs.3.0.bias
+[2020-11-16 21:28:46]       _model.flow_estimators.0.convs.2.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.4.conv_sf.0.bias
+[2020-11-16 21:28:46]       _model.context_networks.convs.1.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.2.conv_d1.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.3.convs.3.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.3.conv_sf.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.2.convs.2.0.bias
+[2020-11-16 21:28:46]       _model.context_networks.convs.1.0.bias
+[2020-11-16 21:28:46]       _model.flow_estimators.0.convs.3.0.bias
+[2020-11-16 21:28:46]       _model.flow_estimators.1.convs.2.0.weight
+[2020-11-16 21:28:46]       _model.feature_pyramid_extractor.convs.0.0.0.bias
+[2020-11-16 21:28:46]       _model.flow_estimators.1.convs.0.0.bias
+[2020-11-16 21:28:46]       _model.feature_pyramid_extractor.convs.3.1.0.bias
+[2020-11-16 21:28:46]       _model.flow_estimators.4.convs.1.0.bias
+[2020-11-16 21:28:46]       _model.flow_estimators.0.conv_sf.0.bias
+[2020-11-16 21:28:46]       _model.feature_pyramid_extractor.convs.4.1.0.bias
+[2020-11-16 21:28:46]       _model.feature_pyramid_extractor.convs.3.0.0.bias
+[2020-11-16 21:28:46]       _model.feature_pyramid_extractor.convs.2.0.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.1.conv_sf.0.weight
+[2020-11-16 21:28:46]       _model.context_networks.conv_sf.0.weight
+[2020-11-16 21:28:46]       _model.feature_pyramid_extractor.convs.0.1.0.bias
+[2020-11-16 21:28:46]       _model.flow_estimators.3.conv_sf.0.bias
+[2020-11-16 21:28:46]       _model.feature_pyramid_extractor.convs.0.0.0.weight
+[2020-11-16 21:28:46]       _model.feature_pyramid_extractor.convs.2.1.0.bias
+[2020-11-16 21:28:46]       _model.feature_pyramid_extractor.convs.4.0.0.bias
+[2020-11-16 21:28:46]       _model.flow_estimators.3.convs.3.0.bias
+[2020-11-16 21:28:46]       _model.flow_estimators.4.convs.1.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.4.convs.2.0.bias
+[2020-11-16 21:28:46]       _model.feature_pyramid_extractor.convs.4.0.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.2.convs.1.0.bias
+[2020-11-16 21:28:46]       _model.feature_pyramid_extractor.convs.3.0.0.weight
+[2020-11-16 21:28:46]       _model.upconv_layers.3.conv1.0.bias
+[2020-11-16 21:28:46]       _model.feature_pyramid_extractor.convs.5.1.0.bias
+[2020-11-16 21:28:46]       _model.feature_pyramid_extractor.convs.2.1.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.0.convs.3.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.0.convs.1.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.3.convs.0.0.bias
+[2020-11-16 21:28:46]       _model.flow_estimators.3.convs.1.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.0.conv_d1.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.2.convs.1.0.weight
+[2020-11-16 21:28:46]       _model.context_networks.convs.5.0.weight
+[2020-11-16 21:28:46]       _model.context_networks.convs.4.0.bias
+[2020-11-16 21:28:46]       _model.upconv_layers.2.conv1.0.bias
+[2020-11-16 21:28:46]       _model.context_networks.convs.2.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.0.convs.0.0.bias
+[2020-11-16 21:28:46]       _model.flow_estimators.4.convs.2.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.2.convs.2.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.0.convs.0.0.weight
+[2020-11-16 21:28:46]       _model.context_networks.conv_sf.0.bias
+[2020-11-16 21:28:46]       _model.flow_estimators.4.convs.3.0.bias
+[2020-11-16 21:28:46]       _model.flow_estimators.1.convs.2.0.bias
+[2020-11-16 21:28:46]       _model.context_networks.convs.5.0.bias
+[2020-11-16 21:28:46]       _model.flow_estimators.3.convs.4.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.4.convs.4.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.2.conv_sf.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.4.convs.4.0.bias
+[2020-11-16 21:28:46]       _model.upconv_layers.0.conv1.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.2.conv_d1.0.bias
+[2020-11-16 21:28:46]       _model.context_networks.convs.3.0.bias
+[2020-11-16 21:28:46]       _model.flow_estimators.1.convs.1.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.3.convs.2.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.0.conv_sf.0.weight
+[2020-11-16 21:28:46]       _model.upconv_layers.1.conv1.0.weight
+[2020-11-16 21:28:46]       _model.context_networks.conv_d1.0.0.bias
+[2020-11-16 21:28:46]       _model.flow_estimators.3.convs.4.0.bias
+[2020-11-16 21:28:46]       _model.feature_pyramid_extractor.convs.3.1.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.1.convs.3.0.bias
+[2020-11-16 21:28:46]       _model.flow_estimators.0.convs.2.0.bias
+[2020-11-16 21:28:46]       _model.flow_estimators.4.convs.3.0.weight
+[2020-11-16 21:28:46]       _model.feature_pyramid_extractor.convs.5.0.0.weight
+[2020-11-16 21:28:46]       _model.upconv_layers.2.conv1.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.2.convs.0.0.weight
+[2020-11-16 21:28:46]       _model.flow_estimators.1.conv_d1.0.weight
+[2020-11-16 21:28:46]       _model.feature_pyramid_extractor.convs.1.0.0.bias
+[2020-11-16 21:28:46]       _model.flow_estimators.3.conv_d1.0.bias
+[2020-11-16 21:28:46]       _model.feature_pyramid_extractor.convs.4.1.0.weight
+[2020-11-16 21:28:46]       _model.upconv_layers.0.conv1.0.bias
+[2020-11-16 21:28:46]       _model.context_networks.convs.0.0.bias
+[2020-11-16 21:28:46]       _model.context_networks.convs.2.0.bias
+[2020-11-16 21:28:46]       _model.upconv_layers.1.conv1.0.bias
+[2020-11-16 21:28:46]       _model.upconv_layers.3.conv1.0.weight
+[2020-11-16 21:28:46]       _model.feature_pyramid_extractor.convs.5.0.0.bias
+[2020-11-16 21:28:46] ==> Save Directory
+[2020-11-16 21:28:46]   Save directory: eval/monosf_selfsup_kitti_train
+[2020-11-16 21:28:46] ==> Optimizer
+[2020-11-16 21:28:46]   Adam
+[2020-11-16 21:28:46]   amsgrad: False
+[2020-11-16 21:28:46]   betas: (0.9, 0.999)
+[2020-11-16 21:28:46]   eps: 1e-08
+[2020-11-16 21:28:46]   lr: 0.001
+[2020-11-16 21:28:46]   weight_decay: 0
+[2020-11-16 21:28:46] ==> Learning Rate Scheduler
+[2020-11-16 21:28:46]   class: None
+[2020-11-16 21:28:46] ==> Runtime
+[2020-11-16 21:28:46]   start_epoch: 1
+[2020-11-16 21:28:46]   total_epochs: 1
+[2020-11-16 21:28:46] 
+[2020-11-16 21:28:46] ==> Epoch 1/1
+[2020-11-16 21:28:46]   lr: 0.001
+[2020-11-16 21:28:55] ==> Validate:  10%| |  19/200  00:09<01:31  1.98it/s  d1=0.2983, d2=0.2780, d_abs=0.0980, d_sq=0.7932, f1=0.1398, f_epe=3.6681, sf=0.3837
+[2020-11-16 21:28:55] ==> Progress:   0%|                                      |  0/1  00:09<? ?s/ep  
+[2020-11-16 21:32:55] ==> Commandline Arguments
+[2020-11-16 21:32:55]   batch_size: 1
+[2020-11-16 21:32:55]   batch_size_val: 1
+[2020-11-16 21:32:55]   checkpoint: ./outputs/MonoSceneFlow_fullmodel-kitti-20201110-010256/checkpoint_best.ckpt
+[2020-11-16 21:32:55]   checkpoint_exclude_params: ['']
+[2020-11-16 21:32:55]   checkpoint_include_params: ['*']
+[2020-11-16 21:32:55]   checkpoint_mode: resume_from_latest
+[2020-11-16 21:32:55]   cuda: True
+[2020-11-16 21:32:55]   evaluation: True
+[2020-11-16 21:32:55]   finetuning: False
+[2020-11-16 21:32:55]   lr_scheduler: None
+[2020-11-16 21:32:55]   model: MonoSceneFlow_fullmodel
+[2020-11-16 21:32:55]   num_workers: 4
+[2020-11-16 21:32:55]   optimizer: Adam
+[2020-11-16 21:32:55]   optimizer_amsgrad: False
+[2020-11-16 21:32:55]   optimizer_betas: (0.9, 0.999)
+[2020-11-16 21:32:55]   optimizer_eps: 1e-08
+[2020-11-16 21:32:55]   optimizer_group: None
+[2020-11-16 21:32:55]   optimizer_lr: 0.001
+[2020-11-16 21:32:55]   optimizer_weight_decay: 0
+[2020-11-16 21:32:55]   save: eval/monosf_selfsup_kitti_train
+[2020-11-16 21:32:55]   save_disp: False
+[2020-11-16 21:32:55]   save_disp2: False
+[2020-11-16 21:32:55]   save_flow: False
+[2020-11-16 21:32:55]   seed: 1
+[2020-11-16 21:32:55]   start_epoch: 1
+[2020-11-16 21:32:55]   total_epochs: 1
+[2020-11-16 21:32:55]   training_augmentation: None
+[2020-11-16 21:32:55]   training_dataset: None
+[2020-11-16 21:32:55]   training_loss: None
+[2020-11-16 21:32:55]   validation_augmentation: Augmentation_Resize_Only
+[2020-11-16 21:32:55]   validation_augmentation_imgsize: [256, 832]
+[2020-11-16 21:32:55]   validation_augmentation_photometric: False
+[2020-11-16 21:32:55]   validation_dataset: KITTI_2015_Train_Full_mnsf
+[2020-11-16 21:32:55]   validation_dataset_crop_size: [370, 1224]
+[2020-11-16 21:32:55]   validation_dataset_preprocessing_crop: False
+[2020-11-16 21:32:55]   validation_dataset_root: /disk_hdd/kitti_flow
+[2020-11-16 21:32:55]   validation_key: sf
+[2020-11-16 21:32:55]   validation_key_minimize: True
+[2020-11-16 21:32:55]   validation_loss: Eval_SceneFlow_KITTI_Train
+[2020-11-16 21:32:55] ==> Random Seeds
+[2020-11-16 21:32:55]   Python seed: 1
+[2020-11-16 21:32:55]   Numpy seed: 2
+[2020-11-16 21:32:55]   Torch CPU seed: 3
+[2020-11-16 21:32:55]   Torch CUDA seed: 4
+[2020-11-16 21:32:55] ==> Datasets
+[2020-11-16 21:32:55]   Validation Dataset: KITTI_2015_Train_Full_mnsf
+[2020-11-16 21:32:56]     input_k_l1: [3, 3]
+[2020-11-16 21:32:56]     input_k_l2: [3, 3]
+[2020-11-16 21:32:56]     input_k_r1: [3, 3]
+[2020-11-16 21:32:56]     input_k_r2: [3, 3]
+[2020-11-16 21:32:56]     input_l1: [3, 375, 1242]
+[2020-11-16 21:32:56]     input_l2: [3, 375, 1242]
+[2020-11-16 21:32:56]     input_r1: [3, 375, 1242]
+[2020-11-16 21:32:56]     input_r2: [3, 375, 1242]
+[2020-11-16 21:32:56]     input_size: [2]
+[2020-11-16 21:32:56]     target_disp: [1, 375, 1242]
+[2020-11-16 21:32:56]     target_disp2_mask_noc: [1, 375, 1242]
+[2020-11-16 21:32:56]     target_disp2_mask_occ: [1, 375, 1242]
+[2020-11-16 21:32:56]     target_disp2_noc: [1, 375, 1242]
+[2020-11-16 21:32:56]     target_disp2_occ: [1, 375, 1242]
+[2020-11-16 21:32:56]     target_disp_mask: [1, 375, 1242]
+[2020-11-16 21:32:56]     target_disp_mask_noc: [1, 375, 1242]
+[2020-11-16 21:32:56]     target_disp_noc: [1, 375, 1242]
+[2020-11-16 21:32:56]     target_flow: [2, 375, 1242]
+[2020-11-16 21:32:56]     target_flow_mask: [1, 375, 1242]
+[2020-11-16 21:32:56]     target_flow_mask_noc: [1, 375, 1242]
+[2020-11-16 21:32:56]     target_flow_noc: [2, 375, 1242]
+[2020-11-16 21:32:56]     num_examples: 200
+[2020-11-16 21:32:56] ==> Runtime Augmentations
+[2020-11-16 21:32:56]   training_augmentation: None
+[2020-11-16 21:32:56]   validation_augmentation: Augmentation_Resize_Only
+[2020-11-16 21:32:56]     imgsize: [256, 832]
+[2020-11-16 21:32:56]     photometric: False
+[2020-11-16 21:32:56] ==> Model and Loss
+[2020-11-16 21:32:56]   Initializing MSRA
+[2020-11-16 21:32:57]   Batch Size: 1
+[2020-11-16 21:32:57]   GPGPU: Cuda
+[2020-11-16 21:32:57]   Network: MonoSceneFlow_fullmodel
+[2020-11-16 21:32:57]   Number of parameters: 5755000
+[2020-11-16 21:32:57]   Validation Key: sf
+[2020-11-16 21:32:57]   Validation Loss: Eval_SceneFlow_KITTI_Train
+[2020-11-16 21:32:57] ==> Checkpoint
+[2020-11-16 21:32:57]     Restore keys:
+[2020-11-16 21:32:57]       _model.context_networks.convs.5.0.weight
+[2020-11-16 21:32:57]       _model.context_networks.convs.1.0.bias
+[2020-11-16 21:32:57]       _model.feature_pyramid_extractor.convs.0.1.0.weight
+[2020-11-16 21:32:57]       _model.flow_estimators.0.conv_sf.0.weight
+[2020-11-16 21:32:57]       _model.flow_estimators.3.convs.0.0.weight
+[2020-11-16 21:32:57]       _model.flow_estimators.3.conv_sf.0.weight
+[2020-11-16 21:32:57]       _model.upconv_layers.0.conv1.0.weight
+[2020-11-16 21:32:57]       _model.flow_estimators.1.conv_d1.0.weight
+[2020-11-16 21:32:57]       _model.flow_estimators.2.convs.2.0.weight
+[2020-11-16 21:32:57]       _model.flow_estimators.0.convs.4.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.4.conv_sf.0.weight
+[2020-11-16 21:32:57]       _model.flow_estimators.2.convs.1.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.1.convs.3.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.3.convs.3.0.bias
+[2020-11-16 21:32:57]       _model.upconv_layers.2.conv1.0.bias
+[2020-11-16 21:32:57]       _model.feature_pyramid_extractor.convs.2.1.0.weight
+[2020-11-16 21:32:57]       _model.context_networks.convs.1.0.weight
+[2020-11-16 21:32:57]       _model.flow_estimators.1.convs.2.0.weight
+[2020-11-16 21:32:57]       _model.context_networks.conv_sf.0.weight
+[2020-11-16 21:32:57]       _model.flow_estimators.2.conv_sf.0.weight
+[2020-11-16 21:32:57]       _model.upconv_layers.1.conv1.0.weight
+[2020-11-16 21:32:57]       _model.flow_estimators.4.conv_sf.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.0.convs.3.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.4.convs.3.0.weight
+[2020-11-16 21:32:57]       _model.flow_estimators.4.convs.0.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.3.conv_sf.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.1.convs.2.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.2.convs.4.0.weight
+[2020-11-16 21:32:57]       _model.feature_pyramid_extractor.convs.2.0.0.weight
+[2020-11-16 21:32:57]       _model.feature_pyramid_extractor.convs.5.0.0.weight
+[2020-11-16 21:32:57]       _model.flow_estimators.4.convs.4.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.4.convs.4.0.weight
+[2020-11-16 21:32:57]       _model.flow_estimators.3.convs.4.0.weight
+[2020-11-16 21:32:57]       _model.flow_estimators.1.convs.0.0.weight
+[2020-11-16 21:32:57]       _model.upconv_layers.1.conv1.0.bias
+[2020-11-16 21:32:57]       _model.upconv_layers.3.conv1.0.bias
+[2020-11-16 21:32:57]       _model.context_networks.convs.0.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.4.conv_d1.0.weight
+[2020-11-16 21:32:57]       _model.feature_pyramid_extractor.convs.4.0.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.3.convs.1.0.weight
+[2020-11-16 21:32:57]       _model.flow_estimators.2.convs.3.0.weight
+[2020-11-16 21:32:57]       _model.flow_estimators.1.convs.3.0.weight
+[2020-11-16 21:32:57]       _model.context_networks.convs.0.0.weight
+[2020-11-16 21:32:57]       _model.flow_estimators.0.convs.1.0.weight
+[2020-11-16 21:32:57]       _model.upconv_layers.2.conv1.0.weight
+[2020-11-16 21:32:57]       _model.flow_estimators.2.convs.2.0.bias
+[2020-11-16 21:32:57]       _model.feature_pyramid_extractor.convs.2.0.0.bias
+[2020-11-16 21:32:57]       _model.feature_pyramid_extractor.convs.1.1.0.bias
+[2020-11-16 21:32:57]       _model.feature_pyramid_extractor.convs.3.0.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.4.conv_d1.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.0.convs.3.0.weight
+[2020-11-16 21:32:57]       _model.feature_pyramid_extractor.convs.1.1.0.weight
+[2020-11-16 21:32:57]       _model.feature_pyramid_extractor.convs.4.1.0.weight
+[2020-11-16 21:32:57]       _model.flow_estimators.2.convs.0.0.weight
+[2020-11-16 21:32:57]       _model.flow_estimators.3.convs.4.0.bias
+[2020-11-16 21:32:57]       _model.context_networks.convs.3.0.weight
+[2020-11-16 21:32:57]       _model.feature_pyramid_extractor.convs.2.1.0.bias
+[2020-11-16 21:32:57]       _model.feature_pyramid_extractor.convs.0.0.0.weight
+[2020-11-16 21:32:57]       _model.feature_pyramid_extractor.convs.3.0.0.weight
+[2020-11-16 21:32:57]       _model.context_networks.conv_d1.0.0.weight
+[2020-11-16 21:32:57]       _model.feature_pyramid_extractor.convs.1.0.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.3.convs.2.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.1.conv_d1.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.4.convs.1.0.weight
+[2020-11-16 21:32:57]       _model.flow_estimators.0.convs.0.0.weight
+[2020-11-16 21:32:57]       _model.feature_pyramid_extractor.convs.3.1.0.weight
+[2020-11-16 21:32:57]       _model.flow_estimators.2.convs.1.0.weight
+[2020-11-16 21:32:57]       _model.feature_pyramid_extractor.convs.5.1.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.2.conv_d1.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.3.convs.3.0.weight
+[2020-11-16 21:32:57]       _model.flow_estimators.2.conv_sf.0.bias
+[2020-11-16 21:32:57]       _model.feature_pyramid_extractor.convs.0.0.0.bias
+[2020-11-16 21:32:57]       _model.context_networks.convs.3.0.bias
+[2020-11-16 21:32:57]       _model.feature_pyramid_extractor.convs.5.1.0.weight
+[2020-11-16 21:32:57]       _model.flow_estimators.4.convs.1.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.1.convs.4.0.bias
+[2020-11-16 21:32:57]       _model.feature_pyramid_extractor.convs.0.1.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.1.conv_sf.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.3.convs.2.0.weight
+[2020-11-16 21:32:57]       _model.context_networks.conv_sf.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.4.convs.2.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.1.convs.0.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.2.convs.4.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.1.convs.4.0.weight
+[2020-11-16 21:32:57]       _model.upconv_layers.0.conv1.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.3.convs.0.0.bias
+[2020-11-16 21:32:57]       _model.context_networks.convs.2.0.weight
+[2020-11-16 21:32:57]       _model.flow_estimators.3.convs.1.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.2.convs.3.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.0.conv_sf.0.bias
+[2020-11-16 21:32:57]       _model.feature_pyramid_extractor.convs.5.0.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.1.conv_sf.0.weight
+[2020-11-16 21:32:57]       _model.context_networks.conv_d1.0.0.bias
+[2020-11-16 21:32:57]       _model.feature_pyramid_extractor.convs.4.1.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.4.convs.0.0.weight
+[2020-11-16 21:32:57]       _model.flow_estimators.4.convs.3.0.bias
+[2020-11-16 21:32:57]       _model.upconv_layers.3.conv1.0.weight
+[2020-11-16 21:32:57]       _model.flow_estimators.0.convs.2.0.weight
+[2020-11-16 21:32:57]       _model.flow_estimators.0.convs.4.0.weight
+[2020-11-16 21:32:57]       _model.flow_estimators.2.conv_d1.0.weight
+[2020-11-16 21:32:57]       _model.flow_estimators.0.convs.1.0.bias
+[2020-11-16 21:32:57]       _model.context_networks.convs.4.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.0.conv_d1.0.weight
+[2020-11-16 21:32:57]       _model.flow_estimators.3.conv_d1.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.0.conv_d1.0.bias
+[2020-11-16 21:32:57]       _model.context_networks.convs.2.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.0.convs.0.0.bias
+[2020-11-16 21:32:57]       _model.context_networks.convs.4.0.weight
+[2020-11-16 21:32:57]       _model.flow_estimators.4.convs.2.0.weight
+[2020-11-16 21:32:57]       _model.flow_estimators.2.convs.0.0.bias
+[2020-11-16 21:32:57]       _model.feature_pyramid_extractor.convs.1.0.0.weight
+[2020-11-16 21:32:57]       _model.context_networks.convs.5.0.bias
+[2020-11-16 21:32:57]       _model.feature_pyramid_extractor.convs.3.1.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.1.convs.1.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.3.conv_d1.0.weight
+[2020-11-16 21:32:57]       _model.flow_estimators.0.convs.2.0.bias
+[2020-11-16 21:32:57]       _model.flow_estimators.1.convs.1.0.weight
+[2020-11-16 21:32:57]       _model.feature_pyramid_extractor.convs.4.0.0.weight
+[2020-11-16 21:32:57] ==> Save Directory
+[2020-11-16 21:32:57]   Save directory: eval/monosf_selfsup_kitti_train
+[2020-11-16 21:32:57] ==> Optimizer
+[2020-11-16 21:32:57]   Adam
+[2020-11-16 21:32:57]   amsgrad: False
+[2020-11-16 21:32:57]   betas: (0.9, 0.999)
+[2020-11-16 21:32:57]   eps: 1e-08
+[2020-11-16 21:32:57]   lr: 0.001
+[2020-11-16 21:32:57]   weight_decay: 0
+[2020-11-16 21:32:57] ==> Learning Rate Scheduler
+[2020-11-16 21:32:57]   class: None
+[2020-11-16 21:32:57] ==> Runtime
+[2020-11-16 21:32:57]   start_epoch: 1
+[2020-11-16 21:32:57]   total_epochs: 1
+[2020-11-16 21:32:57] 
+[2020-11-16 21:32:57] ==> Epoch 1/1
+[2020-11-16 21:32:57]   lr: 0.001
+[2020-11-16 21:34:22] ==> Validate: 100%|#################################################################|  200/200  01:24<00:00  2.38it/s  d1=0.3247, d2=0.3679, d_abs=0.1083, d_sq=0.9405, f1=0.2543, f_epe=8.3452, sf=0.4934
+[2020-11-16 21:34:22] ==> Progress:   0%|                                                                                                                                              |  0/1  01:24<? ?s/ep  best_sf_avg=0.4934
+[2020-11-16 21:34:22] 
+[2020-11-16 21:34:22] ==> Progress: 100%|######################################################################################################################################|  1/1  01:24<00:00 84.10s/ep  best_sf_avg=0.4934
+[2020-11-16 21:34:22] Finished.
+[2020-11-16 21:43:00] ==> Commandline Arguments
+[2020-11-16 21:43:00]   batch_size: 1
+[2020-11-16 21:43:00]   batch_size_val: 1
+[2020-11-16 21:43:00]   checkpoint: ./outputs/MonoSceneFlow_fullmodel-kitti-20201110-010256/checkpoint_best.ckpt
+[2020-11-16 21:43:00]   checkpoint_exclude_params: ['']
+[2020-11-16 21:43:00]   checkpoint_include_params: ['*']
+[2020-11-16 21:43:00]   checkpoint_mode: resume_from_latest
+[2020-11-16 21:43:00]   cuda: True
+[2020-11-16 21:43:00]   evaluation: True
+[2020-11-16 21:43:00]   finetuning: False
+[2020-11-16 21:43:00]   lr_scheduler: None
+[2020-11-16 21:43:00]   model: MonoSceneFlow_fullmodel
+[2020-11-16 21:43:00]   num_workers: 4
+[2020-11-16 21:43:00]   optimizer: Adam
+[2020-11-16 21:43:00]   optimizer_amsgrad: False
+[2020-11-16 21:43:00]   optimizer_betas: (0.9, 0.999)
+[2020-11-16 21:43:00]   optimizer_eps: 1e-08
+[2020-11-16 21:43:00]   optimizer_group: None
+[2020-11-16 21:43:00]   optimizer_lr: 0.001
+[2020-11-16 21:43:00]   optimizer_weight_decay: 0
+[2020-11-16 21:43:00]   save: eval/monosf_selfsup_kitti_train
+[2020-11-16 21:43:00]   save_disp: False
+[2020-11-16 21:43:00]   save_disp2: False
+[2020-11-16 21:43:00]   save_flow: False
+[2020-11-16 21:43:00]   seed: 1
+[2020-11-16 21:43:00]   start_epoch: 1
+[2020-11-16 21:43:00]   total_epochs: 1
+[2020-11-16 21:43:00]   training_augmentation: None
+[2020-11-16 21:43:00]   training_dataset: None
+[2020-11-16 21:43:00]   training_loss: None
+[2020-11-16 21:43:00]   validation_augmentation: Augmentation_Resize_Only
+[2020-11-16 21:43:00]   validation_augmentation_imgsize: [256, 832]
+[2020-11-16 21:43:00]   validation_augmentation_photometric: False
+[2020-11-16 21:43:00]   validation_dataset: KITTI_2015_Train_Full_mnsf
+[2020-11-16 21:43:00]   validation_dataset_crop_size: [370, 1224]
+[2020-11-16 21:43:00]   validation_dataset_preprocessing_crop: False
+[2020-11-16 21:43:00]   validation_dataset_root: /disk_hdd/kitti_flow
+[2020-11-16 21:43:00]   validation_key: sf
+[2020-11-16 21:43:00]   validation_key_minimize: True
+[2020-11-16 21:43:00]   validation_loss: Eval_SceneFlow_KITTI_Train
+[2020-11-16 21:43:00] ==> Random Seeds
+[2020-11-16 21:43:00]   Python seed: 1
+[2020-11-16 21:43:00]   Numpy seed: 2
+[2020-11-16 21:43:00]   Torch CPU seed: 3
+[2020-11-16 21:43:00]   Torch CUDA seed: 4
+[2020-11-16 21:43:00] ==> Datasets
+[2020-11-16 21:43:00]   Validation Dataset: KITTI_2015_Train_Full_mnsf
+[2020-11-16 21:43:01]     input_k_l1: [3, 3]
+[2020-11-16 21:43:01]     input_k_l2: [3, 3]
+[2020-11-16 21:43:01]     input_k_r1: [3, 3]
+[2020-11-16 21:43:01]     input_k_r2: [3, 3]
+[2020-11-16 21:43:01]     input_l1: [3, 375, 1242]
+[2020-11-16 21:43:01]     input_l2: [3, 375, 1242]
+[2020-11-16 21:43:01]     input_r1: [3, 375, 1242]
+[2020-11-16 21:43:01]     input_r2: [3, 375, 1242]
+[2020-11-16 21:43:01]     input_size: [2]
+[2020-11-16 21:43:01]     target_disp: [1, 375, 1242]
+[2020-11-16 21:43:01]     target_disp2_mask_noc: [1, 375, 1242]
+[2020-11-16 21:43:01]     target_disp2_mask_occ: [1, 375, 1242]
+[2020-11-16 21:43:01]     target_disp2_noc: [1, 375, 1242]
+[2020-11-16 21:43:01]     target_disp2_occ: [1, 375, 1242]
+[2020-11-16 21:43:01]     target_disp_mask: [1, 375, 1242]
+[2020-11-16 21:43:01]     target_disp_mask_noc: [1, 375, 1242]
+[2020-11-16 21:43:01]     target_disp_noc: [1, 375, 1242]
+[2020-11-16 21:43:01]     target_flow: [2, 375, 1242]
+[2020-11-16 21:43:01]     target_flow_mask: [1, 375, 1242]
+[2020-11-16 21:43:01]     target_flow_mask_noc: [1, 375, 1242]
+[2020-11-16 21:43:01]     target_flow_noc: [2, 375, 1242]
+[2020-11-16 21:43:01]     num_examples: 200
+[2020-11-16 21:43:01] ==> Runtime Augmentations
+[2020-11-16 21:43:01]   training_augmentation: None
+[2020-11-16 21:43:01]   validation_augmentation: Augmentation_Resize_Only
+[2020-11-16 21:43:01]     imgsize: [256, 832]
+[2020-11-16 21:43:01]     photometric: False
+[2020-11-16 21:43:01] ==> Model and Loss
+[2020-11-16 21:43:01]   Initializing MSRA
+[2020-11-16 21:43:02]   Batch Size: 1
+[2020-11-16 21:43:02]   GPGPU: Cuda
+[2020-11-16 21:43:02]   Network: MonoSceneFlow_fullmodel
+[2020-11-16 21:43:02]   Number of parameters: 5755000
+[2020-11-16 21:43:02]   Validation Key: sf
+[2020-11-16 21:43:02]   Validation Loss: Eval_SceneFlow_KITTI_Train
+[2020-11-16 21:43:02] ==> Checkpoint
+[2020-11-16 21:43:02]     Restore keys:
+[2020-11-16 21:43:02]       _model.flow_estimators.4.conv_d1.0.bias
+[2020-11-16 21:43:02]       _model.feature_pyramid_extractor.convs.3.0.0.bias
+[2020-11-16 21:43:02]       _model.flow_estimators.1.convs.0.0.bias
+[2020-11-16 21:43:02]       _model.flow_estimators.1.convs.1.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.1.convs.3.0.weight
+[2020-11-16 21:43:02]       _model.feature_pyramid_extractor.convs.5.1.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.4.conv_sf.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.2.convs.1.0.bias
+[2020-11-16 21:43:02]       _model.context_networks.convs.4.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.0.convs.1.0.bias
+[2020-11-16 21:43:02]       _model.context_networks.convs.5.0.weight
+[2020-11-16 21:43:02]       _model.feature_pyramid_extractor.convs.0.1.0.weight
+[2020-11-16 21:43:02]       _model.context_networks.convs.1.0.bias
+[2020-11-16 21:43:02]       _model.flow_estimators.4.convs.1.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.2.conv_d1.0.bias
+[2020-11-16 21:43:02]       _model.flow_estimators.1.conv_d1.0.bias
+[2020-11-16 21:43:02]       _model.flow_estimators.4.convs.3.0.bias
+[2020-11-16 21:43:02]       _model.flow_estimators.4.conv_sf.0.bias
+[2020-11-16 21:43:02]       _model.feature_pyramid_extractor.convs.2.0.0.weight
+[2020-11-16 21:43:02]       _model.context_networks.conv_sf.0.weight
+[2020-11-16 21:43:02]       _model.context_networks.convs.5.0.bias
+[2020-11-16 21:43:02]       _model.upconv_layers.1.conv1.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.0.conv_d1.0.bias
+[2020-11-16 21:43:02]       _model.flow_estimators.4.convs.0.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.1.conv_d1.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.4.convs.4.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.1.convs.2.0.bias
+[2020-11-16 21:43:02]       _model.flow_estimators.3.conv_sf.0.weight
+[2020-11-16 21:43:02]       _model.feature_pyramid_extractor.convs.1.1.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.3.convs.1.0.weight
+[2020-11-16 21:43:02]       _model.feature_pyramid_extractor.convs.4.1.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.1.convs.0.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.2.conv_d1.0.weight
+[2020-11-16 21:43:02]       _model.context_networks.convs.4.0.bias
+[2020-11-16 21:43:02]       _model.feature_pyramid_extractor.convs.3.0.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.1.convs.1.0.bias
+[2020-11-16 21:43:02]       _model.flow_estimators.3.conv_d1.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.2.convs.3.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.1.convs.3.0.bias
+[2020-11-16 21:43:02]       _model.flow_estimators.1.conv_sf.0.bias
+[2020-11-16 21:43:02]       _model.upconv_layers.3.conv1.0.weight
+[2020-11-16 21:43:02]       _model.context_networks.convs.0.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.4.convs.1.0.bias
+[2020-11-16 21:43:02]       _model.flow_estimators.3.convs.4.0.bias
+[2020-11-16 21:43:02]       _model.flow_estimators.0.convs.4.0.bias
+[2020-11-16 21:43:02]       _model.context_networks.convs.2.0.bias
+[2020-11-16 21:43:02]       _model.flow_estimators.0.convs.0.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.4.convs.2.0.bias
+[2020-11-16 21:43:02]       _model.flow_estimators.0.conv_d1.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.0.convs.0.0.bias
+[2020-11-16 21:43:02]       _model.flow_estimators.2.convs.4.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.3.convs.0.0.weight
+[2020-11-16 21:43:02]       _model.feature_pyramid_extractor.convs.1.0.0.bias
+[2020-11-16 21:43:02]       _model.flow_estimators.0.convs.1.0.weight
+[2020-11-16 21:43:02]       _model.feature_pyramid_extractor.convs.1.1.0.bias
+[2020-11-16 21:43:02]       _model.upconv_layers.0.conv1.0.weight
+[2020-11-16 21:43:02]       _model.context_networks.convs.2.0.weight
+[2020-11-16 21:43:02]       _model.feature_pyramid_extractor.convs.3.1.0.bias
+[2020-11-16 21:43:02]       _model.flow_estimators.2.conv_sf.0.bias
+[2020-11-16 21:43:02]       _model.flow_estimators.2.convs.3.0.bias
+[2020-11-16 21:43:02]       _model.feature_pyramid_extractor.convs.0.0.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.0.convs.2.0.weight
+[2020-11-16 21:43:02]       _model.feature_pyramid_extractor.convs.4.0.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.1.conv_sf.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.3.convs.4.0.weight
+[2020-11-16 21:43:02]       _model.feature_pyramid_extractor.convs.2.1.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.4.conv_d1.0.weight
+[2020-11-16 21:43:02]       _model.upconv_layers.1.conv1.0.bias
+[2020-11-16 21:43:02]       _model.context_networks.conv_d1.0.0.weight
+[2020-11-16 21:43:02]       _model.context_networks.conv_d1.0.0.bias
+[2020-11-16 21:43:02]       _model.feature_pyramid_extractor.convs.5.0.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.1.convs.4.0.bias
+[2020-11-16 21:43:02]       _model.feature_pyramid_extractor.convs.0.1.0.bias
+[2020-11-16 21:43:02]       _model.flow_estimators.4.convs.3.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.1.convs.4.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.0.conv_sf.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.2.conv_sf.0.weight
+[2020-11-16 21:43:02]       _model.upconv_layers.0.conv1.0.bias
+[2020-11-16 21:43:02]       _model.flow_estimators.2.convs.2.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.0.convs.4.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.3.convs.3.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.2.convs.0.0.weight
+[2020-11-16 21:43:02]       _model.context_networks.convs.3.0.bias
+[2020-11-16 21:43:02]       _model.feature_pyramid_extractor.convs.5.1.0.bias
+[2020-11-16 21:43:02]       _model.feature_pyramid_extractor.convs.2.1.0.bias
+[2020-11-16 21:43:02]       _model.flow_estimators.4.convs.4.0.bias
+[2020-11-16 21:43:02]       _model.feature_pyramid_extractor.convs.4.1.0.bias
+[2020-11-16 21:43:02]       _model.flow_estimators.0.convs.3.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.1.convs.2.0.weight
+[2020-11-16 21:43:02]       _model.context_networks.convs.1.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.3.convs.0.0.bias
+[2020-11-16 21:43:02]       _model.feature_pyramid_extractor.convs.0.0.0.bias
+[2020-11-16 21:43:02]       _model.flow_estimators.3.convs.2.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.3.convs.1.0.bias
+[2020-11-16 21:43:02]       _model.feature_pyramid_extractor.convs.3.1.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.3.conv_sf.0.bias
+[2020-11-16 21:43:02]       _model.flow_estimators.0.convs.3.0.bias
+[2020-11-16 21:43:02]       _model.context_networks.conv_sf.0.bias
+[2020-11-16 21:43:02]       _model.upconv_layers.3.conv1.0.bias
+[2020-11-16 21:43:02]       _model.feature_pyramid_extractor.convs.4.0.0.bias
+[2020-11-16 21:43:02]       _model.flow_estimators.0.convs.2.0.bias
+[2020-11-16 21:43:02]       _model.flow_estimators.4.convs.0.0.bias
+[2020-11-16 21:43:02]       _model.context_networks.convs.0.0.bias
+[2020-11-16 21:43:02]       _model.flow_estimators.2.convs.0.0.bias
+[2020-11-16 21:43:02]       _model.context_networks.convs.3.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.2.convs.1.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.0.conv_sf.0.bias
+[2020-11-16 21:43:02]       _model.flow_estimators.3.convs.2.0.bias
+[2020-11-16 21:43:02]       _model.upconv_layers.2.conv1.0.weight
+[2020-11-16 21:43:02]       _model.feature_pyramid_extractor.convs.2.0.0.bias
+[2020-11-16 21:43:02]       _model.feature_pyramid_extractor.convs.5.0.0.bias
+[2020-11-16 21:43:02]       _model.flow_estimators.3.convs.3.0.bias
+[2020-11-16 21:43:02]       _model.flow_estimators.4.convs.2.0.weight
+[2020-11-16 21:43:02]       _model.flow_estimators.2.convs.2.0.bias
+[2020-11-16 21:43:02]       _model.flow_estimators.3.conv_d1.0.bias
+[2020-11-16 21:43:02]       _model.upconv_layers.2.conv1.0.bias
+[2020-11-16 21:43:02]       _model.flow_estimators.2.convs.4.0.bias
+[2020-11-16 21:43:02]       _model.feature_pyramid_extractor.convs.1.0.0.weight
+[2020-11-16 21:43:02] ==> Save Directory
+[2020-11-16 21:43:02]   Save directory: eval/monosf_selfsup_kitti_train
+[2020-11-16 21:43:02] ==> Optimizer
+[2020-11-16 21:43:02]   Adam
+[2020-11-16 21:43:02]   amsgrad: False
+[2020-11-16 21:43:02]   betas: (0.9, 0.999)
+[2020-11-16 21:43:02]   eps: 1e-08
+[2020-11-16 21:43:02]   lr: 0.001
+[2020-11-16 21:43:02]   weight_decay: 0
+[2020-11-16 21:43:02] ==> Learning Rate Scheduler
+[2020-11-16 21:43:02]   class: None
+[2020-11-16 21:43:02] ==> Runtime
+[2020-11-16 21:43:02]   start_epoch: 1
+[2020-11-16 21:43:02]   total_epochs: 1
+[2020-11-16 21:43:02] 
+[2020-11-16 21:43:02] ==> Epoch 1/1
+[2020-11-16 21:43:02]   lr: 0.001
+[2020-11-16 21:44:20] ==> Validate: 100%|#################################################################|  200/200  01:17<00:00  2.57it/s  d1=0.3247, d2=0.3679, d_abs=0.1083, d_sq=0.9405, f1=0.2543, f_epe=8.3452, sf=0.4934
+[2020-11-16 21:44:20] ==> Progress:   0%|                                                                                                                                              |  0/1  01:17<? ?s/ep  best_sf_avg=0.4934
+[2020-11-16 21:44:20] 
+[2020-11-16 21:44:20] ==> Progress: 100%|######################################################################################################################################|  1/1  01:17<00:00 77.83s/ep  best_sf_avg=0.4934
+[2020-11-16 21:44:20] Finished.

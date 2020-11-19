@@ -1,0 +1,49 @@
+batch_size: 3
+batch_size_val: 1
+checkpoint: None
+cuda: True
+evaluation: False
+finetuning: False
+lr_scheduler: MultiStepLR
+lr_scheduler_gamma: 0.5
+lr_scheduler_last_epoch: -1
+lr_scheduler_milestones: [23, 39, 47, 54]
+model: MonoSceneFlow_fullmodel
+num_workers: 10
+optimizer: Adam
+optimizer_amsgrad: False
+optimizer_betas: (0.9, 0.999)
+optimizer_eps: 1e-08
+optimizer_group: None
+optimizer_lr: 0.0002
+optimizer_weight_decay: 0
+save: ./debug//MonoSceneFlow_fullmodel-eigen-20201117-222624
+save_disp: False
+save_disp2: False
+save_flow: False
+seed: 1
+start_epoch: 1
+total_epochs: 62
+training_augmentation: Augmentation_SceneFlow_Depth_Sup
+training_augmentation_imgsize: [256, 832]
+training_augmentation_photometric: True
+training_dataset: KITTI_Raw_Depth_KittiSplit_Train_mnsf
+training_dataset_crop_size: [370, 1224]
+training_dataset_flip_augmentations: True
+training_dataset_num_examples: -1
+training_dataset_preprocessing_crop: True
+training_dataset_root: /disk_hdd/kitti_full/
+training_key: total_loss
+training_loss: Loss_SceneFlow_Depth_Sup
+validation_augmentation: Augmentation_Resize_Only
+validation_augmentation_imgsize: [256, 832]
+validation_augmentation_photometric: False
+validation_dataset: KITTI_Raw_Depth_KittiSplit_Valid_mnsf
+validation_dataset_crop_size: [370, 1224]
+validation_dataset_flip_augmentations: False
+validation_dataset_num_examples: -1
+validation_dataset_preprocessing_crop: False
+validation_dataset_root: /disk_hdd/kitti_full/
+validation_key: total_loss
+validation_key_minimize: True
+validation_loss: Loss_SceneFlow_Depth_Sup
