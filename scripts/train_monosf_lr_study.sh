@@ -20,9 +20,13 @@ Valid_Dataset=KITTI_Raw_KittiSplit_Valid_mnsf
 Valid_Augmentation=Augmentation_Resize_Only
 Valid_Loss_Function=Loss_SceneFlow_SelfSup
 
-ALIAS="-kitti-"
+Init_LR=2e-4
+LR_Type=MultiStepLR
+LR_Milestones=[23, 39, 47, 54]
+
+ALIAS="-kitti-raw-"
 TIME=$(date +"%Y%m%d-%H%M%S")
-SAVE_PATH="$EXPERIMENTS_HOME/$MODEL$ALIAS$TIME/"
+SAVE_PATH="$EXPERIMENTS_HOME/lr_study/$LR_Type/$Init_LR/$LR_Milestones/"
 
 
 
