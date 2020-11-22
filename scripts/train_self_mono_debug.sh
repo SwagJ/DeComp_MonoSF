@@ -1,11 +1,20 @@
 #!/bin/bash
 
+# For SLURM cluster only
+#SBATCH	--output=/scratch_net/phon/majing/src/log/%j.out
+#SBATCH --gres=gpu:1
+#SBATCH --mem=50G
+
+#source /scratch_net/phon/majing/anaconda/bin/conda shell.bash hook
+conda activate self-mono
+
+
 # experiments and datasets meta
-KITTI_RAW_HOME="/disk_hdd/kitti_full/"
+KITTI_RAW_HOME="/scratch_net/phon/majing/datasets/kitti_full/"
 EXPERIMENTS_HOME="./debug/"
 
 # model
-MODEL=MonoSceneFlow_fullmodel
+MODEL=MonoSF_Full
 
 # save path
 ALIAS="-eigen-"
