@@ -4,6 +4,7 @@
 #SBATCH	--output=/scratch_net/phon/majing/src/log/%j.out
 #SBATCH --gres=gpu:1
 #SBATCH --mem=50G
+#SBATCH --constraint='turing'
 
 #source /scratch_net/phon/majing/anaconda/bin/conda shell.bash hook
 conda activate self-mono
@@ -11,7 +12,8 @@ conda activate self-mono
 
 # experiments and datasets meta
 KITTI_RAW_HOME="/scratch_net/phon/majing/datasets/kitti_full/"
-EXPERIMENTS_HOME="./debug/"
+#KITTI_RAW_HOME="/disk_hdd/kitti_full/"
+EXPERIMENTS_HOME="/disk_ssd/self-mono-debug/"
 
 # model
 MODEL=MonoSF_Full

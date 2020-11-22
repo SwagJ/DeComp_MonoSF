@@ -205,6 +205,7 @@ class CheckpointSaver:
         self._prefix = prefix
         self._model_key = model_key
         self._latest_postfix = latest_postfix
+        self._current_predix = "_epoch"
         self._best_postfix = best_postfix
         self._extension = extension
 
@@ -296,6 +297,31 @@ class CheckpointSaver:
         save_dict[self._model_key] = model_and_loss.state_dict()
 
         latest_checkpoint_filename = os.path.join(directory, self._prefix + self._latest_postfix + self._extension)
+        torch.save(save_dict, latest_checkpoint_filename)
+
+        # -----------------------------------------------------------------------------------------
+        # Possibly store as best
+        # -----------------------------------------------------------------------------------------
+        if store_as_best:
+            best_checkpoint_filename = os.path.join(directory, self._prefix + self._best_postfix + self._extension)
+
+            logging.info("Saved checkpoint as best model..")
+            shutil.copyfile(latest_checkpoint_filename, best_checkpoint_filename)
+
+    def save_current(self, directory, model_and_loss, stats_dict, store_as_best=False):
+        # -----------------------------------------------------------------------------------------
+        # Make sure directory exists
+        # -----------------------------------------------------------------------------------------
+        tools.ensure_dir(directory)
+
+        # -----------------------------------------------------------------------------------------
+        # Save
+        # -----------------------------------------------------------------------------------------
+        save_dict = dict(stats_dict)
+        save_dict[self._model_key] = model_and_loss.state_dict()
+        current_epoch = str(stats_dict['epoch'])
+
+        latest_checkpoint_filename = os.path.join(directory, self._prefix + self._current_predix + current_epoch + self._extension)
         torch.save(save_dict, latest_checkpoint_filename)
 
         # -----------------------------------------------------------------------------------------

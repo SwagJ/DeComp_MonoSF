@@ -534,11 +534,19 @@ def exec_runtime(args,
             # Store checkpoint
             # ----------------------------------------------------------------
             if checkpoint_saver is not None:
-                checkpoint_saver.save_latest(
-                    directory=args.save,
-                    model_and_loss=model_and_loss,
-                    stats_dict=dict(avg_loss_dict, epoch=epoch),
-                    store_as_best=store_as_best)
+                if epoch % args.save_freq == 0:
+                    checkpoint_saver.save_current(
+                        directory=args.save,
+                        model_and_loss=model_and_loss,
+                        stats_dict=dict(avg_loss_dict, epoch=epoch),
+                        store_as_best=store_as_best)
+                else:
+                    checkpoint_saver.save_latest(
+                        directory=args.save,
+                        model_and_loss=model_and_loss,
+                        stats_dict=dict(avg_loss_dict, epoch=epoch),
+                        store_as_best=store_as_best)
+
 
             # ----------------------------------------------------------------
             # Vertical space between epochs
