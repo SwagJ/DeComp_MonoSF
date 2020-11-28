@@ -1,8 +1,10 @@
 #!/bin/bash
 
 # experiments and datasets meta
-KITTI_RAW_HOME="/scratch_net/phon/majing/datasets/kitti_full"
-EXPERIMENTS_HOME="/scratch_net/phon/majing/src/Experiments/"
+#KITTI_RAW_HOME="/scratch_net/phon/majing/datasets/kitti_full"
+#EXPERIMENTS_HOME="/scratch_net/phon/majing/src/Experiments/"
+KITTI_RAW_HOME="/disk_hdd/kitti_full"
+EXPERIMENTS_HOME="/disk_ssd/Self_Mono_Experiments/"
 
 # model
 MODEL=MonoSF_Full
@@ -22,7 +24,7 @@ Valid_Loss_Function=Loss_SceneFlow_SelfSup
 
 ALIAS="-kitti-"
 TIME=$(date +"%Y%m%d-%H%M%S")
-SAVE_PATH="$EXPERIMENTS_HOME/$MODEL$ALIAS$TIME/"
+SAVE_PATH="$EXPERIMENTS_HOME/OG_KITTI_RAW_SelfSup/"
 
 
 
@@ -42,6 +44,7 @@ python ../main.py \
 --optimizer_lr=2e-4 \
 --save=$SAVE_PATH \
 --total_epochs=62 \
+--save_freq=8 \
 --training_augmentation=$Train_Augmentation \
 --training_augmentation_photometric=True \
 --training_dataset=$Train_Dataset \

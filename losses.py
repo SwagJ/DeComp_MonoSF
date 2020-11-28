@@ -1582,6 +1582,12 @@ class Loss_SceneFlow_Depth_Sup(nn.Module):
 
         return None
 
+    def _depth2disp_kitti_K(self, depth, k_value):
+        disp = k_value.unsqueeze(1).unsqueeze(1).unsqueeze(1) * 0.54 / depth
+
+    return disp
+
+
     def forward(self, output_dict, target_dict):
 
         loss_dict = {}
@@ -1635,6 +1641,9 @@ class Loss_SceneFlow_Depth_Sup(nn.Module):
             # disp_r2_up = interpolate2d_as(disp_r2, gt_disp_r2, mode="bilinear") * w_dp
             #print("Device for gt_disp_l1:",gt_disp_l1.device)
             #print("Device for disp_l1_up:",disp_l1_up.device)
+
+            gt_disp_l1 = self._depth2disp_kitti_K(gt_disp_l1, target_dict['input_k_l1_aug'][:, 0, 0])
+            gt_disp_l2 = self._depth2disp_kitti_K(gt_disp_l2, target_dict['input_k_l2_aug'][:, 0, 0])
 
             valid_abs_rel_l1 = torch.abs(gt_disp_l1.to(disp_l1.device) - disp_l1_up) * gt_disp_l1_mask.to(disp_l1.device)
             valid_abs_rel_l1[gt_disp_l1_mask == 0].detach_()

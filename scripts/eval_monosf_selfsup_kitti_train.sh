@@ -2,10 +2,10 @@
 
 # DATASETS_HOME
 KITTI_HOME="/disk_hdd/kitti_flow"
-CHECKPOINT="./outputs/MonoSceneFlow_fullmodel-kitti-20201110-010256/checkpoint_best.ckpt"
+CHECKPOINT="/disk_ssd/Self_Mono_Experiments/OG_KITTI_RAW_SelfSup/checkpoint_latest.ckpt"
 
 # model
-MODEL=MonoSceneFlow_fullmodel
+MODEL=MonoSF_Full
 
 Valid_Dataset=KITTI_2015_Train_Full_mnsf
 Valid_Augmentation=Augmentation_Resize_Only
@@ -28,6 +28,6 @@ python ../main.py \
 --validation_dataset_root=$KITTI_HOME \
 --validation_loss=$Valid_Loss_Function \
 --validation_key=sf \
-# --save_disp=True \
+--save_disp=True \
 # --save_disp2=True \
 # --save_flow=True

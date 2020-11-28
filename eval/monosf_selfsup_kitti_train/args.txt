@@ -1,6 +1,6 @@
 batch_size: 1
 batch_size_val: 1
-checkpoint: ./outputs/MonoSceneFlow_fullmodel-kitti-20201110-010256/checkpoint_best.ckpt
+checkpoint: /disk_ssd/Self_Mono_Experiments/OG_KITTI_RAW_SelfSup/checkpoint_latest.ckpt
 checkpoint_exclude_params: ['']
 checkpoint_include_params: ['*']
 checkpoint_mode: resume_from_latest
@@ -8,7 +8,7 @@ cuda: True
 evaluation: True
 finetuning: False
 lr_scheduler: None
-model: MonoSceneFlow_fullmodel
+model: MonoSF_Full
 num_workers: 4
 optimizer: Adam
 optimizer_amsgrad: False
@@ -18,9 +18,10 @@ optimizer_group: None
 optimizer_lr: 0.001
 optimizer_weight_decay: 0
 save: eval/monosf_selfsup_kitti_train
-save_disp: False
+save_disp: True
 save_disp2: False
 save_flow: False
+save_freq: 5
 seed: 1
 start_epoch: 1
 total_epochs: 1
