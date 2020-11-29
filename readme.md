@@ -5,7 +5,7 @@
 > 3D visualization of estimated depth and scene flow from two temporally consecutive images.  
 > Intermediate frames are interpolated using the estimated scene flow. (fine-tuned model, tested on KITTI Benchmark)
 
-This repository is the official PyTorch implementation of the paper:  
+This repository is forked from the official PyTorch implementation(https://github.com/visinf/self-mono-sf) of the paper:  
 
 &nbsp;&nbsp;&nbsp;[**Self-Supervised Monocular Scene Flow Estimation**](http://openaccess.thecvf.com/content_CVPR_2020/papers/Hur_Self-Supervised_Monocular_Scene_Flow_Estimation_CVPR_2020_paper.pdf)  
 &nbsp;&nbsp;&nbsp;[Junhwa Hur](https://sites.google.com/site/hurjunhwa) and [Stefan Roth](https://www.visinf.tu-darmstadt.de/team_members/sroth/sroth.en.jsp)  
