@@ -23,11 +23,11 @@ CHECKPOINT=None
 # Loss and Augmentation
 Train_Dataset=KITTI_Raw_KittiSplit_Train_mnsf
 Train_Augmentation=Augmentation_SceneFlow
-Train_Loss_Function=Loss_SceneFlow_SelfSup_FeatMetric
+Train_Loss_Function=Loss_SceneFlow_SelfSup_FeatMetReg
 
 Valid_Dataset=KITTI_Raw_KittiSplit_Valid_mnsf
 Valid_Augmentation=Augmentation_Resize_Only
-Valid_Loss_Function=Loss_SceneFlow_SelfSup_FeatMetric
+Valid_Loss_Function=Loss_SceneFlow_SelfSup_FeatMetReg
 
 Init_LR=2e-4
 LR_Type=MultiStepLR
