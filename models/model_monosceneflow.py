@@ -68,6 +68,8 @@ class MonoSceneFlow(nn.Module):
         sceneflows_b = []
         disps_1 = []
         disps_2 = []
+        x1_feats = []
+        x2_feats = []
 
         for l, (x1, x2) in enumerate(zip(x1_pyramid, x2_pyramid)):
 
@@ -101,6 +103,9 @@ class MonoSceneFlow(nn.Module):
                 flow_f = flow_f + flow_f_res
                 flow_b = flow_b + flow_b_res
 
+            x1_feats.append(x1_out)
+            x2_feats.append(x2_out)
+
             # upsampling or post-processing
             if l != self.output_level:
                 disp_l1 = self.sigmoid(disp_l1) * 0.3
@@ -120,12 +125,15 @@ class MonoSceneFlow(nn.Module):
                 disps_2.append(disp_l2)                
                 break
 
+
         x1_rev = x1_pyramid[::-1]
 
         output_dict['flow_f'] = upsample_outputs_as(sceneflows_f[::-1], x1_rev)
         output_dict['flow_b'] = upsample_outputs_as(sceneflows_b[::-1], x1_rev)
         output_dict['disp_l1'] = upsample_outputs_as(disps_1[::-1], x1_rev)
         output_dict['disp_l2'] = upsample_outputs_as(disps_2[::-1], x1_rev)
+        output_dict['x1_feats'] = upsample_outputs_as(x1_feats[::-1],x1_rev)
+        output_dict['x2_feats'] = upsample_outputs_as(x2_feats[::-1],x1_rev)
         
         return output_dict
 
@@ -153,6 +161,8 @@ class MonoSceneFlow(nn.Module):
                 output_dict_r['flow_b'][ii] = flow_horizontal_flip(output_dict_r['flow_b'][ii])
                 output_dict_r['disp_l1'][ii] = torch.flip(output_dict_r['disp_l1'][ii], [3])
                 output_dict_r['disp_l2'][ii] = torch.flip(output_dict_r['disp_l2'][ii], [3])
+                output_dict_r['x1_feats'][ii] = torch.flip(output_dict_r['x1_feats'][ii], [3])
+                output_dict_r['x2_feats'][ii] = torch.flip(output_dict_r['x2_feats'][ii], [3])
                 #print("output_dict_r[disp_l2] size:", output_dict_r['disp_l1'][ii].size())
 
             output_dict['output_dict_r'] = output_dict_r

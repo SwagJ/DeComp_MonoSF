@@ -20,13 +20,9 @@ Valid_Dataset=KITTI_Raw_KittiSplit_Valid_mnsf
 Valid_Augmentation=Augmentation_Resize_Only
 Valid_Loss_Function=Loss_SceneFlow_SelfSup
 
-Init_LR=2e-4
-LR_Type=MultiStepLR
-LR_Milestones=[23, 39, 47, 54]
 
-ALIAS="-kitti-raw-"
-TIME=$(date +"%Y%m%d-%H%M%S")
-SAVE_PATH="$EXPERIMENTS_HOME/lr_study/$LR_Type/$Init_LR/$LR_Milestones/"
+ALIAS="-kitti-selfsup-featmetric-"
+SAVE_PATH="$EXPERIMENTS_HOME/$ALIAS/"
 
 
 
@@ -38,8 +34,8 @@ python ../main.py \
 --batch_size_val=1 \
 --checkpoint=$CHECKPOINT \
 --lr_scheduler=MultiStepLR \
---lr_scheduler_gamma=0.5 \
---lr_scheduler_milestones="[23, 39, 47, 54]" \
+--lr_scheduler_gamma=0.4 \
+--lr_scheduler_milestones="[8, 23, 39, 47, 54]" \
 --model=$MODEL \
 --num_workers=10 \
 --optimizer=Adam \

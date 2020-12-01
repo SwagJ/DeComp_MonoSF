@@ -156,6 +156,9 @@ class TrainingEpoch:
         # Reset gradients
         optimizer.zero_grad()
 
+        #print("basename:",example_dict['basename'])
+        #print("datename:",example_dict['datename'])
+
         # Run forward pass to get losses and outputs.
         loss_dict, output_dict = model_and_loss(example_dict)
 
