@@ -1648,6 +1648,8 @@ class Loss_SceneFlow_Depth_Sup(nn.Module):
 			img_r1_aug = interpolate2d_as(target_dict["input_r1_aug"], sf_f)
 			img_r2_aug = interpolate2d_as(target_dict["input_r2_aug"], sf_b)
 
+			gt_disp_l1 = gt_disp_l1.to(disp_l1.device)
+			gt_disp_l2 = gt_disp_l2.to(disp_l1.device)
 			## Disp Loss
 			_, disp_occ_l1 = self.depth_loss_left_img(disp_l1, disp_r1, img_l1_aug, img_r1_aug, ii)
 			_, disp_occ_l2 = self.depth_loss_left_img(disp_l2, disp_r2, img_l2_aug, img_r2_aug, ii)

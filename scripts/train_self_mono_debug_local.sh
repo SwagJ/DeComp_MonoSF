@@ -21,13 +21,13 @@ MODEL=MonoSF_Full
 CHECKPOINT=None
 
 # Loss and Augmentation
-Train_Dataset=KITTI_Raw_KittiSplit_Train_mnsf
-Train_Augmentation=Augmentation_SceneFlow
-Train_Loss_Function=Loss_SceneFlow_SelfSup_FeatMetReg
+Train_Dataset=KITTI_Raw_Depth_KittiSplit_Train_mnsf
+Train_Augmentation=Augmentation_SceneFlow_Depth_Sup
+Train_Loss_Function=Loss_SceneFlow_Depth_Sup
 
-Valid_Dataset=KITTI_Raw_KittiSplit_Valid_mnsf
+Valid_Dataset=KITTI_Raw_Depth_KittiSplit_Valid_mnsf
 Valid_Augmentation=Augmentation_Resize_Only
-Valid_Loss_Function=Loss_SceneFlow_SelfSup_FeatMetReg
+Valid_Loss_Function=Loss_SceneFlow_Depth_Sup
 
 Init_LR=2e-4
 LR_Type=MultiStepLR
@@ -45,12 +45,12 @@ python ../main.py \
 --batch_size_val=1 \
 --checkpoint=$CHECKPOINT \
 --lr_scheduler=$LR_Type \
---lr_scheduler_gamma=$LR_GAMMA \
---lr_scheduler_milestones="[23, 39, 47, 54]" \
+--lr_scheduler_gamma=0.5 \
+--lr_scheduler_milestones="[8, 16, 23, 39, 47, 54]" \
 --model=$MODEL \
 --num_workers=10 \
 --optimizer=Adam \
---optimizer_lr=$Init_LR \
+--optimizer_lr=8e-4 \
 --save=$SAVE_PATH \
 --total_epochs=62 \
 --save_freq=1 \
