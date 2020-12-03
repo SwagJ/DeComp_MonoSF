@@ -282,7 +282,7 @@ class KITTI_Raw_Depth(data.Dataset):
                  images_root=None,
                  flip_augmentations=True,
                  preprocessing_crop=True,
-                 crop_size=[370, 1224],
+                 crop_size=[360, 1200],
                  num_examples=-1,
                  index_file=None):
 
@@ -308,8 +308,8 @@ class KITTI_Raw_Depth(data.Dataset):
         self._depth_list = []
         view1 = 'image_02/data'
         view2 = 'image_03/data'
-        depth1 = 'proj_depth/groundtruth/image_02'
-        depth2 = 'proj_depth/groundtruth/image_03'
+        depth1 = 'completed_depth/image_02'
+        depth2 = 'completed_depth/image_03'
         ext = '.png'
         
         for item in filename_list:
@@ -375,6 +375,8 @@ class KITTI_Raw_Depth(data.Dataset):
         datename = dirname[:10]
         k_l1 = torch.from_numpy(self.intrinsic_dict_l[datename]).float()
         k_r1 = torch.from_numpy(self.intrinsic_dict_r[datename]).float()
+        #print("Disp size:",disp_list_np[0].shape)
+        #print("Image size:",img_list_np[0].shape)
         
         # input size
         h_orig, w_orig, _ = img_list_np[0].shape
@@ -414,6 +416,9 @@ class KITTI_Raw_Depth(data.Dataset):
         disp_l2_mask = disp_list_tensor[3]
         disp_r1_mask = disp_list_tensor[5]
         disp_r2_mask = disp_list_tensor[7]
+
+        #print("after cropping, Disp size:",disp_l1.shape)
+        #print("after cropping, Image size:",im_l1.shape)
        
         common_dict = {
             "index": index,
@@ -496,7 +501,7 @@ class KITTI_Raw_Depth_KittiSplit_Train(KITTI_Raw_Depth):
                  root,
                  flip_augmentations=True,
                  preprocessing_crop=True,
-                 crop_size=[370, 1224],
+                 crop_size=[360, 1200],
                  num_examples=-1):
         super(KITTI_Raw_Depth_KittiSplit_Train, self).__init__(
             args,
@@ -514,7 +519,7 @@ class KITTI_Raw_Depth_KittiSplit_Valid(KITTI_Raw_Depth):
                  root,
                  flip_augmentations=False,
                  preprocessing_crop=False,
-                 crop_size=[370, 1224],
+                 crop_size=[360, 1200],
                  num_examples=-1):
         super(KITTI_Raw_Depth_KittiSplit_Valid, self).__init__(
             args,
@@ -532,7 +537,7 @@ class KITTI_Raw_Depth_KittiSplit_Full(KITTI_Raw_Depth):
                  root,
                  flip_augmentations=True,
                  preprocessing_crop=True,
-                 crop_size=[370, 1224],
+                 crop_size=[360, 1200],
                  num_examples=-1):
         super(KITTI_Raw_Depth_KittiSplit_Full, self).__init__(
             args,
