@@ -2149,3 +2149,182 @@ class Loss_SceneFlow_SelfSup_FeatMetReg(nn.Module):
 
 		return loss_dict
 
+
+class Loss_SceneFlow_SemiDepthSup(nn.Module):
+	def __init__(self, args):
+		super(Loss_SceneFlow_SemiDepthSup, self).__init__()        
+
+		self._weights = [4.0, 2.0, 1.0, 1.0, 1.0]
+		self._ssim_w = 0.85
+		self._disp_smooth_w = 0.1
+		self._sf_3d_pts = 0.2
+		self._sf_3d_sm = 200
+		self._unsup_loss = Loss_SceneFlow_SelfSup(args)
+
+	def sceneflow_loss(self, sf_f, sf_b, disp_l1, disp_l2, disp_occ_l1, disp_occ_l2, k_l1_aug, k_l2_aug, img_l1_aug, img_l2_aug, aug_size, ii):
+
+		_, _, h_dp, w_dp = sf_f.size()
+		disp_l1 = disp_l1 * w_dp
+		disp_l2 = disp_l2 * w_dp
+
+		## scale
+		local_scale = torch.zeros_like(aug_size)
+		local_scale[:, 0] = h_dp
+		local_scale[:, 1] = w_dp         
+
+		pts1, k1_scale = pixel2pts_ms(k_l1_aug, disp_l1, local_scale / aug_size)
+		pts2, k2_scale = pixel2pts_ms(k_l2_aug, disp_l2, local_scale / aug_size)
+
+		_, pts1_tf, coord1 = pts2pixel_ms(k1_scale, pts1, sf_f, [h_dp, w_dp])
+		_, pts2_tf, coord2 = pts2pixel_ms(k2_scale, pts2, sf_b, [h_dp, w_dp]) 
+
+		pts2_warp = reconstructPts(coord1, pts2)
+		pts1_warp = reconstructPts(coord2, pts1) 
+
+		flow_f = projectSceneFlow2Flow(k1_scale, sf_f, disp_l1)
+		flow_b = projectSceneFlow2Flow(k2_scale, sf_b, disp_l2)
+		occ_map_b = _adaptive_disocc_detection(flow_f).detach() * disp_occ_l2
+		occ_map_f = _adaptive_disocc_detection(flow_b).detach() * disp_occ_l1
+
+		## Image reconstruction loss
+		img_l2_warp = reconstructImg(coord1, img_l2_aug)
+		img_l1_warp = reconstructImg(coord2, img_l1_aug)
+
+		img_diff1 = (_elementwise_l1(img_l1_aug, img_l2_warp) * (1.0 - self._ssim_w) + _SSIM(img_l1_aug, img_l2_warp) * self._ssim_w).mean(dim=1, keepdim=True)
+		img_diff2 = (_elementwise_l1(img_l2_aug, img_l1_warp) * (1.0 - self._ssim_w) + _SSIM(img_l2_aug, img_l1_warp) * self._ssim_w).mean(dim=1, keepdim=True)
+		loss_im1 = img_diff1[occ_map_f].mean()
+		loss_im2 = img_diff2[occ_map_b].mean()
+		img_diff1[~occ_map_f].detach_()
+		img_diff2[~occ_map_b].detach_()
+		loss_im = loss_im1 + loss_im2
+		
+		## Point reconstruction Loss
+		pts_norm1 = torch.norm(pts1, p=2, dim=1, keepdim=True)
+		pts_norm2 = torch.norm(pts2, p=2, dim=1, keepdim=True)
+		pts_diff1 = _elementwise_epe(pts1_tf, pts2_warp).mean(dim=1, keepdim=True) / (pts_norm1 + 1e-8)
+		pts_diff2 = _elementwise_epe(pts2_tf, pts1_warp).mean(dim=1, keepdim=True) / (pts_norm2 + 1e-8)
+		loss_pts1 = pts_diff1[occ_map_f].mean()
+		loss_pts2 = pts_diff2[occ_map_b].mean()
+		pts_diff1[~occ_map_f].detach_()
+		pts_diff2[~occ_map_b].detach_()
+		loss_pts = loss_pts1 + loss_pts2
+
+		## 3D motion smoothness loss
+		loss_3d_s = ( (_smoothness_motion_2nd(sf_f, img_l1_aug, beta=10.0) / (pts_norm1 + 1e-8)).mean() + (_smoothness_motion_2nd(sf_b, img_l2_aug, beta=10.0) / (pts_norm2 + 1e-8)).mean() ) / (2 ** ii)
+
+		## Loss Summnation
+		sceneflow_loss = loss_im + self._sf_3d_pts * loss_pts + self._sf_3d_sm * loss_3d_s
+		
+		return sceneflow_loss, loss_im, loss_pts, loss_3d_s
+
+	def _depth2disp_kitti_K(self, depth, k_value):
+		disp = k_value.unsqueeze(1).unsqueeze(1).unsqueeze(1) * 0.54 / depth
+
+		return disp
+
+	def forward(self, output_dict, target_dict):
+
+		loss_dict = {}
+
+		unsup_loss_dict = self._unsup_loss(output_dict, target_dict)
+		unsup_loss = unsup_loss_dict['total_loss']
+
+		batch_size = target_dict['input_l1'].size(0)
+		loss_sf_sum = 0
+		loss_dp_sum = 0
+		loss_sf_2d = 0
+		loss_sf_3d = 0
+		loss_sf_sm = 0
+
+		## Ground Truth
+		k_l1_aug = target_dict['input_k_l1_aug']
+		k_l2_aug = target_dict['input_k_l2_aug']
+		aug_size = target_dict['aug_size']
+
+		disp_r1_dict = output_dict['output_dict_r']['disp_l1']
+		disp_r2_dict = output_dict['output_dict_r']['disp_l2']
+
+		gt_disp_l1 = target_dict['disp_l1']
+		gt_disp_l2 = target_dict['disp_l2']
+		gt_disp_r1 = target_dict['disp_r1']
+		gt_disp_r2 = target_dict['disp_r2']
+
+		gt_disp_l1_mask = target_dict['disp_l1_mask']
+		gt_disp_l2_mask = target_dict['disp_l2_mask']
+		gt_disp_r1_mask = target_dict['disp_r1_mask']
+		gt_disp_r2_mask = target_dict['disp_r2_mask']
+
+		b, _, h_dp, w_dp = gt_disp_l1.size()
+
+		for ii, (sf_f, sf_b, disp_l1, disp_l2, disp_r1, disp_r2) in enumerate(zip(output_dict['flow_f'], output_dict['flow_b'], output_dict['disp_l1'], output_dict['disp_l2'], disp_r1_dict, disp_r2_dict)):
+
+			assert(sf_f.size()[2:4] == sf_b.size()[2:4])
+			assert(sf_f.size()[2:4] == disp_l1.size()[2:4])
+			assert(sf_f.size()[2:4] == disp_l2.size()[2:4])
+			
+			## For image reconstruction loss
+			img_l1_aug = interpolate2d_as(target_dict["input_l1_aug"], sf_f)
+			img_l2_aug = interpolate2d_as(target_dict["input_l2_aug"], sf_b)
+			img_r1_aug = interpolate2d_as(target_dict["input_r1_aug"], sf_f)
+			img_r2_aug = interpolate2d_as(target_dict["input_r2_aug"], sf_b)
+
+			gt_disp_l1 = gt_disp_l1.to(disp_l1.device)
+			gt_disp_l2 = gt_disp_l2.to(disp_l1.device)
+			## Disp Loss
+			disp_occ_l1 = _adaptive_disocc_detection_disp(disp_r1).detach()
+			disp_occ_l2 = _adaptive_disocc_detection_disp(disp_r2).detach()
+
+
+			disp_l1_up = interpolate2d_as(disp_l1, gt_disp_l1, mode="bilinear") * w_dp
+			disp_l2_up = interpolate2d_as(disp_l2, gt_disp_l2, mode="bilinear") * w_dp
+
+			gt_disp_l1 = self._depth2disp_kitti_K(gt_disp_l1, target_dict['input_k_l1_aug'][:, 0, 0])
+			gt_disp_l2 = self._depth2disp_kitti_K(gt_disp_l2, target_dict['input_k_l2_aug'][:, 0, 0])
+
+			valid_abs_rel_l1 = torch.abs(gt_disp_l1.to(disp_l1.device) - disp_l1_up) * gt_disp_l1_mask.to(disp_l1.device)
+			valid_abs_rel_l1[gt_disp_l1_mask == 0].detach_()
+			disp_l1_loss = valid_abs_rel_l1[gt_disp_l1_mask != 0].mean()
+
+			valid_abs_rel_l2 = torch.abs(gt_disp_l2.to(disp_l1.device) - disp_l2_up) * gt_disp_l2_mask.to(disp_l1.device)
+			valid_abs_rel_l2[gt_disp_l2_mask == 0].detach_()
+			disp_l2_loss = valid_abs_rel_l2[gt_disp_l2_mask != 0].mean()	
+
+			loss_dp_sum = loss_dp_sum + (disp_l1_loss + disp_l2_loss) * self._weights[ii]
+
+
+
+			## Sceneflow Loss           
+			loss_sceneflow, loss_im, loss_pts, loss_3d_s = self.sceneflow_loss(sf_f, sf_b, 
+																			disp_l1, disp_l2,
+																			disp_occ_l1, disp_occ_l2,
+																			k_l1_aug, k_l2_aug,
+																			img_l1_aug, img_l2_aug, 
+																			aug_size, ii)
+
+			loss_sf_sum = loss_sf_sum + loss_sceneflow * self._weights[ii]            
+			loss_sf_2d = loss_sf_2d + loss_im            
+			loss_sf_3d = loss_sf_3d + loss_pts
+			loss_sf_sm = loss_sf_sm + loss_3d_s
+
+
+		# finding weight
+		u_loss = unsup_loss.detach()
+		d_loss = loss_dp_sum.detach()
+		sf_loss = loss_sf_sum.detach()
+
+		max_val = torch.max(torch.max(sf_loss, d_loss), u_loss)
+
+		u_weight = max_val / u_loss
+		d_weight = max_val / d_loss 
+		f_weight = max_val / sf_loss 
+
+		total_loss = unsup_loss * u_weight + loss_dp_sum * d_weight + loss_sf_sum * f_weight
+		loss_dict["unsup"] = unsup_loss
+		loss_dict["dp"] = loss_dp_sum
+		loss_dict["sf"] = loss_sf_sum
+		loss_dict["s2"] = loss_sf_2d
+		loss_dict["s3"] = loss_sf_3d
+		loss_dict["total_loss"] = total_loss
+
+		return loss_dict
+
