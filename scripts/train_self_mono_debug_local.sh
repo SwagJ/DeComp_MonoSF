@@ -36,12 +36,12 @@ LR_GAMMA=0.5
 
 ALIAS="-kitti-raw-"
 TIME=$(date +"%Y%m%d-%H%M%S")
-SAVE_PATH="$EXPERIMENTS_HOME/lr_study/$LR_Type/Init$Init_LR_with_gamma$LR_GAMMA/23_39_47_54"
+SAVE_PATH="$EXPERIMENTS_HOME/debug"
 
 
 # training configuration
 python ../main.py \
---batch_size=4 \
+--batch_size=3 \
 --batch_size_val=1 \
 --checkpoint=$CHECKPOINT \
 --lr_scheduler=$LR_Type \
