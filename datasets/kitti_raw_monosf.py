@@ -713,11 +713,11 @@ class KITTI_Raw_Warpping_Sf(data.Dataset):
 			fulldisp_list_np = kitti_crop_image_list(fulldisp_list_np, crop_info)
 			k_l1, k_r1 = kitti_adjust_intrinsic(k_l1, k_r1, crop_info)
 
-		print("im shape:",img_list_np[0].shape,img_list_np[1].shape)
-		print("disp shape:", fulldisp_list_np[0].shape,fulldisp_list_np[2].shape)
-		print("warpped_im shape:", warpped_list_np[0].shape, warpped_list_np[1].shape)
-		print("sf shape:", sf_list_np[0].shape, sf_list_np[1].shape)
-		print("masks shape:", valid_sf_list_np[0].shape,valid_sf_list_np[1].shape,valid_pixels_list_np[0].shape,valid_pixels_list_np[1].shape)
+		#print("im shape:",img_list_np[0].shape,img_list_np[1].shape)
+		#print("disp shape:", fulldisp_list_np[0].shape,fulldisp_list_np[2].shape)
+		#print("warpped_im shape:", warpped_list_np[0].shape, warpped_list_np[1].shape)
+		#print("sf shape:", sf_list_np[0].shape, sf_list_np[1].shape)
+		#print("masks shape:", valid_sf_list_np[0].shape,valid_sf_list_np[1].shape,valid_pixels_list_np[0].shape,valid_pixels_list_np[1].shape)
 		
 		# to tensors
 		img_list_tensor = [self._to_tensor(img) for img in img_list_np]
