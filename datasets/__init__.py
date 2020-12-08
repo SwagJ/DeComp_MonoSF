@@ -15,6 +15,7 @@ KITTI_2015_Test 						= kitti_2015_test.KITTI_2015_Test
 KITTI_Raw_KittiSplit_Train_mnsf 	= kitti_raw_monosf.KITTI_Raw_KittiSplit_Train
 KITTI_Raw_KittiSplit_Valid_mnsf 	= kitti_raw_monosf.KITTI_Raw_KittiSplit_Valid
 KITTI_Raw_KittiSplit_Full_mnsf 		= kitti_raw_monosf.KITTI_Raw_KittiSplit_Full
+
 KITTI_Raw_EigenSplit_Train_mnsf 	= kitti_raw_monosf.KITTI_Raw_EigenSplit_Train
 KITTI_Raw_EigenSplit_Valid_mnsf 	= kitti_raw_monosf.KITTI_Raw_EigenSplit_Valid
 KITTI_Raw_EigenSplit_Full_mnsf 		= kitti_raw_monosf.KITTI_Raw_EigenSplit_Full
@@ -22,6 +23,10 @@ KITTI_Raw_EigenSplit_Full_mnsf 		= kitti_raw_monosf.KITTI_Raw_EigenSplit_Full
 KITTI_Raw_Depth_KittiSplit_Train_mnsf 	= kitti_raw_monosf.KITTI_Raw_Depth_KittiSplit_Train
 KITTI_Raw_Depth_KittiSplit_Valid_mnsf 	= kitti_raw_monosf.KITTI_Raw_Depth_KittiSplit_Valid
 KITTI_Raw_Depth_KittiSplit_Full_mnsf	= kitti_raw_monosf.KITTI_Raw_Depth_KittiSplit_Full
+
+KITTI_Complete_Depth_KittiSplit_Train_mnsf 	= kitti_raw_monosf.KITTI_Complete_Depth_KittiSplit_Train
+KITTI_Complete_Depth_KittiSplit_Valid_mnsf 	= kitti_raw_monosf.KITTI_Complete_Depth_KittiSplit_Valid
+KITTI_Complete_Depth_KittiSplit_Full_mnsf	= kitti_raw_monosf.KITTI_Complete_Depth_KittiSplit_Full
 
 KITTI_Raw_Warpping_Sf_KittiSplit_Train_mnsf 	= kitti_raw_monosf.KITTI_Raw_Warpping_Sf_KittiSplit_Train
 KITTI_Raw_Warpping_Sf_KittiSplit_Valid_mnsf 	= kitti_raw_monosf.KITTI_Raw_Warpping_Sf_KittiSplit_Valid
