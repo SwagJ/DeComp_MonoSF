@@ -5,7 +5,7 @@
 #SBATCH --gres=gpu:1
 #SBATCH --mem=50G
 #SBATCH --mail-type=ALL
-#SBATCH --constraint='turing|pascal'
+#SBATCH --constraint='turing|titan_xp'
 
 source /scratch_net/phon/majing/anaconda3/etc/profile.d/conda.sh
 conda activate self-mono
@@ -21,8 +21,6 @@ MODEL=MonoSF_Full
 
 # save path
 
-CHECKPOINT=None
-
 # Loss and Augmentation
 Train_Dataset=KITTI_Raw_KittiSplit_Train_mnsf
 Train_Augmentation=Augmentation_SceneFlow
@@ -34,11 +32,12 @@ Valid_Loss_Function=Loss_SceneFlow_SelfSup_FeatMetric
 
 Init_LR=2e-4
 LR_Type=MultiStepLR
-LR_Milestones=[23, 39, 47, 54]
+LR_Milestones=[8, 23, 39, 47, 54]
 
-ALIAS="-kitti-raw-"
+ALIAS="-kitti-featmet-"
 TIME=$(date +"%Y%m%d-%H%M%S")
-SAVE_PATH="$EXPERIMENTS_HOME/lr_study/$LR_Type/$Init_LR/$LR_Milestones/"
+SAVE_PATH="$EXPERIMENTS_HOME/$ALIAS/$Train_Loss_Function/"
+CHECKPOINT="$EXPERIMENTS_HOME/$ALIAS/$Train_Loss_Function/checkpoint_latest.ckpt"
 
 
 
@@ -50,8 +49,8 @@ python ../main.py \
 --batch_size_val=1 \
 --checkpoint=$CHECKPOINT \
 --lr_scheduler=MultiStepLR \
---lr_scheduler_gamma=0.5 \
---lr_scheduler_milestones="[23, 39, 47, 54]" \
+--lr_scheduler_gamma=0.4 \
+--lr_scheduler_milestones="[8, 23, 39, 47, 54]" \
 --model=$MODEL \
 --num_workers=10 \
 --optimizer=Adam \

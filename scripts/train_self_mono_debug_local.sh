@@ -21,13 +21,13 @@ MODEL=MonoSF_Full
 CHECKPOINT=None
 
 # Loss and Augmentation
-Train_Dataset=KITTI_Comb_Train_Depth
-Train_Augmentation=Augmentation_SceneFlow_Depth_Sup
-Train_Loss_Function=Loss_SceneFlow_SemiDepthSup
+Train_Dataset=KITTI_Raw_Warpping_Sf_KittiSplit_Train_mnsf
+Train_Augmentation=Augmentation_SceneFlow_Sf_Sup
+Train_Loss_Function=Loss_SceneFlow_Sf_Sup
 
-Valid_Dataset=KITTI_Raw_KittiSplit_Valid_mnsf
+Valid_Dataset=KITTI_Raw_Warpping_Sf_KittiSplit_Valid_mnsf
 Valid_Augmentation=Augmentation_Resize_Only
-Valid_Loss_Function=Loss_SceneFlow_SelfSup
+Valid_Loss_Function=Loss_SceneFlow_Sf_Sup
 
 Init_LR=2e-4
 LR_Type=MultiStepLR
@@ -41,7 +41,7 @@ SAVE_PATH="$EXPERIMENTS_HOME/debug"
 
 # training configuration
 python ../main.py \
---batch_size=3 \
+--batch_size=4 \
 --batch_size_val=1 \
 --checkpoint=$CHECKPOINT \
 --lr_scheduler=$LR_Type \
@@ -50,10 +50,10 @@ python ../main.py \
 --model=$MODEL \
 --num_workers=10 \
 --optimizer=Adam \
---optimizer_lr=8e-4 \
+--optimizer_lr=2e-4 \
 --save=$SAVE_PATH \
 --total_epochs=62 \
---save_freq=1 \
+--save_freq=5 \
 --training_augmentation=$Train_Augmentation \
 --training_augmentation_photometric=True \
 --training_dataset=$Train_Dataset \
@@ -61,7 +61,6 @@ python ../main.py \
 --training_dataset_flip_augmentations=True \
 --training_dataset_preprocessing_crop=True \
 --training_dataset_num_examples=-1 \
---depthsup_comb=True \
 --training_key=total_loss \
 --training_loss=$Train_Loss_Function \
 --validation_augmentation=$Valid_Augmentation \

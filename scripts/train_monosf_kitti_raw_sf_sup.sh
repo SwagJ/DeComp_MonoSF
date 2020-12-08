@@ -1,27 +1,49 @@
 #!/bin/bash
 
+# For SLURM cluster only
+#SBATCH	--output=/scratch_net/phon/majing/src/log/%j.out
+#SBATCH --gres=gpu:1
+#SBATCH --mem=50G
+#SBATCH --mail-type=ALL
+#SBATCH --constraint='turing|pascal'
+
+source /scratch_net/phon/majing/anaconda3/etc/profile.d/conda.sh
+conda activate self-mono
+
+
 # experiments and datasets meta
-KITTI_RAW_HOME="/disk_hdd/kitti_full/"
-EXPERIMENTS_HOME="/disk_ssd/Self_Mono_Experiments/"
+KITTI_RAW_HOME="/scratch_net/phon/majing/datasets/kitti_full/"
+#KITTI_RAW_HOME="/disk_hdd/kitti_full/"
+EXPERIMENTS_HOME="/scratch_net/phon/majing/src/exps"
 
 # model
 MODEL=MonoSF_Full
 
 # save path
+
 CHECKPOINT=None
 
 # Loss and Augmentation
-Train_Dataset=KITTI_Raw_Depth_KittiSplit_Train_mnsf
-Train_Augmentation=Augmentation_SceneFlow_Depth_Sup
-Train_Loss_Function=Loss_SceneFlow_Depth_Sup
+Train_Dataset=KITTI_Raw_Warpping_Sf_KittiSplit_Train_mnsf
+Train_Augmentation=Augmentation_SceneFlow_Sf_Sup
+Train_Loss_Function=Loss_SceneFlow_Sf_Sup
 
-Valid_Dataset=KITTI_Raw_Depth_KittiSplit_Valid_mnsf
+Valid_Dataset=KITTI_Raw_Warpping_Sf_KittiSplit_Valid_mnsf
 Valid_Augmentation=Augmentation_Resize_Only
-Valid_Loss_Function=Loss_SceneFlow_Depth_Sup
+Valid_Loss_Function=Loss_SceneFlow_Sf_Sup
 
-ALIAS="-kitti-dep-"
+Init_LR=2e-4
+LR_Type=MultiStepLR
+LR_Milestones=[8, 23, 39, 47, 54]
+
+ALIAS="-kitti-sf-sup-"
 TIME=$(date +"%Y%m%d-%H%M%S")
-SAVE_PATH="$EXPERIMENTS_HOME/$MODEL$ALIAS$TIME/$Train_Dataset/$Train_Loss_Function/$Train_Augmentation"
+SAVE_PATH="$EXPERIMENTS_HOME/$ALIAS/"
+#CHECKPOINT="$EXPERIMENTS_HOME/$ALIAS/checkpoint_latest.ckpt"
+
+
+
+
 
 # training configuration
 python ../main.py \
@@ -52,3 +74,6 @@ python ../main.py \
 --validation_dataset_preprocessing_crop=False \
 --validation_key=total_loss \
 --validation_loss=$Valid_Loss_Function \
+
+
+

@@ -24,7 +24,7 @@ MODEL=MonoSF_Full
 CHECKPOINT=None
 
 # Loss and Augmentation
-Train_Dataset=KITTI_Comb_Train_Depth
+Train_Dataset=KITTI_Raw_KittiSplit_Train
 Train_Augmentation=Augmentation_SceneFlow_Depth_Sup
 Train_Loss_Function=Loss_SceneFlow_SemiDepthSup
 
