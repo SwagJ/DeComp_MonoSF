@@ -112,6 +112,8 @@ def reconstructImg(coord, img):
 
 
 def reconstructPts(coord, pts):
+    print("pts shape:", pts.shape)
+    print("coord shape:", coord.shape)
     grid = coord.transpose(1, 2).transpose(2, 3)
     pts_warp = tf.grid_sample(pts, grid)
 

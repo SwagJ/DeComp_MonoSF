@@ -239,6 +239,7 @@ class Loss_SceneFlow_SelfSup(nn.Module):
 		## Point reconstruction Loss
 		pts_norm1 = torch.norm(pts1, p=2, dim=1, keepdim=True)
 		pts_norm2 = torch.norm(pts2, p=2, dim=1, keepdim=True)
+
 		pts_diff1 = _elementwise_epe(pts1_tf, pts2_warp).mean(dim=1, keepdim=True) / (pts_norm1 + 1e-8)
 		pts_diff2 = _elementwise_epe(pts2_tf, pts1_warp).mean(dim=1, keepdim=True) / (pts_norm2 + 1e-8)
 		loss_pts1 = pts_diff1[occ_map_f].mean()
@@ -2421,7 +2422,7 @@ class Loss_SceneFlow_Sf_Sup(nn.Module):
 		gt_im_l_mask = target_dict['valid_pixels_l'].to(disp_r1_dict[0].device)
 		gt_im_r_mask = target_dict['valid_pixels_r'].to(disp_r1_dict[0].device)
 
-		for ii, (sf_f_l, sf_f_r, disp_l1, disp_l2, disp_r1, disp_r2) in enumerate(zip(output_dict['flow_f'], sf_fr_dict, output_dict['disp_l1'], output_dict['disp_l2'], disp_r1_dict, disp_r2_dict)):
+		for ii, (sf_f_l, sf_f_r, disp_l1, disp_l2, disp_r1, disp_r2) in enumerate(zip(output_dict['flow_f_pp'], sf_fr_dict, output_dict['disp_l1'], output_dict['disp_l2'], disp_r1_dict, disp_r2_dict)):
 			assert(sf_f_l.size()[2:4] == disp_l1.size()[2:4])
 			assert(sf_f_l.size()[2:4] == disp_l2.size()[2:4])
 			
@@ -2431,7 +2432,7 @@ class Loss_SceneFlow_Sf_Sup(nn.Module):
 			img_r1_aug = interpolate2d_as(target_dict["input_r1_aug"], sf_f_r)
 			img_r2_aug = interpolate2d_as(target_dict["input_r2_aug"], sf_f_r)
 
-			im_mask = interpolate2d_as(gt_im_r_mask*gt_im_l_mask, disp_r1)
+			#im_mask = interpolate2d_as(gt_im_r_mask*gt_im_l_mask, disp_r1)
 
 			## Disp Loss
 			loss_disp_l1, disp_occ_l1 = self.depth_loss_left_img1(disp_l1, disp_r1, img_l1_aug, img_r1_aug, ii)
@@ -2440,13 +2441,13 @@ class Loss_SceneFlow_Sf_Sup(nn.Module):
 
 
 			## Sceneflow Loss           
-			gt_sf_l_down = interpolate2d_as(gt_sf_l, sf_f_l)
+			sf_f_l_up = interpolate2d_as(sf_f_l, gt_sf_l)
 			#gt_sf_r_down = interpolate2d_as(gt_sf_r, sf_f_r)
-			sf_l_mask_down = interpolate2d_as(gt_sf_l_mask, sf_f_l)
+			disp_occ_l1 = interpolate2d_as(disp_occ_l1.float(), gt_sf_l_mask)
 			#sf_r_mask_down = interpolate2d_as(gt_sf_r_mask, sf_f_r)
-			sf_mask = sf_l_mask_down * disp_occ_l1.float()
+			sf_mask = gt_sf_l_mask * disp_occ_l1.float()
 
-			valid_epe_l = _elementwise_robust_epe_char(sf_f_l, gt_sf_l_down) * sf_mask
+			valid_epe_l = _elementwise_robust_epe_char(sf_f_l_up, gt_sf_l) * sf_mask
 			valid_epe_l[sf_mask == 0].detach_()
 			flow_l_loss = valid_epe_l[sf_mask != 0].mean()
 

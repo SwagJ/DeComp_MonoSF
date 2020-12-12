@@ -148,7 +148,7 @@ class MonoSceneFlow(nn.Module):
         ## Right
         ## ss: train val 
         ## ft: train 
-        if self.training or (not self._args.finetuning and not self._args.evaluation):
+        if self.training or (not self._args.finetuning and not self._args.evaluation and not self._args.sf_sup):
             input_r1_flip = torch.flip(input_dict['input_r1_aug'], [3])
             input_r2_flip = torch.flip(input_dict['input_r2_aug'], [3])
             k_r1_flip = input_dict["input_k_r1_flip_aug"]
@@ -170,7 +170,7 @@ class MonoSceneFlow(nn.Module):
         ## Post Processing 
         ## ss:           eval
         ## ft: train val eval
-        if self._args.evaluation or self._args.finetuning:
+        if self._args.evaluation or self._args.finetuning or self._args.sf_sup:
 
             input_l1_flip = torch.flip(input_dict['input_l1_aug'], [3])
             input_l2_flip = torch.flip(input_dict['input_l2_aug'], [3])
