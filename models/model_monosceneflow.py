@@ -144,11 +144,15 @@ class MonoSceneFlow(nn.Module):
 
         ## Left
         output_dict = self.run_pwc(input_dict, input_dict['input_l1_aug'], input_dict['input_l2_aug'], input_dict['input_k_l1_aug'], input_dict['input_k_l2_aug'])
+
+        #print("Training:", self.training)
+        #print("Evaluation:", self._args.evaluation)
+        #print("SF_Sup:", self._args.sf_sup)
         
         ## Right
         ## ss: train val 
         ## ft: train 
-        if self.training or (not self._args.finetuning and not self._args.evaluation and not self._args.sf_sup):
+        if self.training or (not self._args.finetuning and not self._args.evaluation):
             input_r1_flip = torch.flip(input_dict['input_r1_aug'], [3])
             input_r2_flip = torch.flip(input_dict['input_r2_aug'], [3])
             k_r1_flip = input_dict["input_k_r1_flip_aug"]
@@ -166,6 +170,7 @@ class MonoSceneFlow(nn.Module):
                 #print("output_dict_r[disp_l2] size:", output_dict_r['disp_l1'][ii].size())
 
             output_dict['output_dict_r'] = output_dict_r
+            #print("generating right output dict")
 
         ## Post Processing 
         ## ss:           eval

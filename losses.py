@@ -2397,6 +2397,7 @@ class Loss_SceneFlow_Sf_Sup(nn.Module):
 	def forward(self, output_dict, target_dict):
 
 		loss_dict = {}
+		#print(output_dict.keys())
 
 		batch_size = target_dict['input_l1'].size(0)
 		loss_sf_sum = 0
