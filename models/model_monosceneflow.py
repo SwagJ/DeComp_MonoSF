@@ -97,7 +97,9 @@ class MonoSceneFlow(nn.Module):
             if l == 0:
                 x1_out, flow_f, disp_l1 = self.flow_estimators[l](torch.cat([out_corr_relu_f, x1], dim=1))
                 x2_out, flow_b, disp_l2 = self.flow_estimators[l](torch.cat([out_corr_relu_b, x2], dim=1))
+                #print("bottom layer dim:",x1_out.shape,flow_f.shape,disp_l1.shape)
             else:
+                #print("out dims:",out_corr_relu_f.shape,x1.shape,x1_out.shape,flow_f.shape,disp_l1.shape)
                 x1_out, flow_f_res, disp_l1 = self.flow_estimators[l](torch.cat([out_corr_relu_f, x1, x1_out, flow_f, disp_l1], dim=1))
                 x2_out, flow_b_res, disp_l2 = self.flow_estimators[l](torch.cat([out_corr_relu_b, x2, x2_out, flow_b, disp_l2], dim=1))
                 flow_f = flow_f + flow_f_res
@@ -143,6 +145,8 @@ class MonoSceneFlow(nn.Module):
         output_dict = {}
 
         ## Left
+        #print("input image size:",input_dict['input_l1_aug'].shape)
+        #print("input image size:",input_dict['input_l2_aug'].shape)
         output_dict = self.run_pwc(input_dict, input_dict['input_l1_aug'], input_dict['input_l2_aug'], input_dict['input_k_l1_aug'], input_dict['input_k_l2_aug'])
 
         #print("Training:", self.training)

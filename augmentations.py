@@ -588,6 +588,8 @@ class Augmentation_Resize_Only(nn.Module):
         sy = self._imgsize[0] / hh
         sx = self._imgsize[1] / ww
 
+        #print("Resized image is of ",self._imgsize)
+
         # Image resizing
         im_l1 = interpolate2d(example_dict["input_l1"], self._imgsize)
         im_l2 = interpolate2d(example_dict["input_l2"], self._imgsize)
@@ -640,8 +642,6 @@ class Augmentation_Resize_Only(nn.Module):
         example_dict["aug_size"] = aug_size
 
         return example_dict
-
-
 
 
 ###################################################################

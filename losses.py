@@ -513,6 +513,43 @@ class Eval_SceneFlow_KITTI_Test(nn.Module):
 
 		return loss_dict
 
+class Eval_SceneFlow_YouTube_Test(nn.Module):
+	def __init__(self):
+		super(Eval_SceneFlow_KITTI_Test, self).__init__()
+
+	def forward(self, output_dict, target_dict):
+
+		loss_dict = {}
+
+		##################################################
+		## Depth 1
+		##################################################
+		input_l1 = target_dict['input_l1']
+		#intrinsics = target_dict['input_k_l1']
+
+		out_disp_l1 = interpolate2d_as(output_dict["disp_l1_pp"][0], input_l1, mode="bilinear") * input_l1.size(3)
+		out_depth_l1 = _disp2depth_kitti_K(out_disp_l1, intrinsics[:, 0, 0])
+		out_depth_l1 = torch.clamp(out_depth_l1, 1e-3, 80)
+		output_dict["out_disp_l_pp"] = out_disp_l1
+
+		##################################################
+		## Optical Flow Eval
+		##################################################
+		out_sceneflow = interpolate2d_as(output_dict['flow_f_pp'][0], input_l1, mode="bilinear")
+		out_flow = projectSceneFlow2Flow(target_dict['input_k_l1'], out_sceneflow, output_dict["out_disp_l_pp"])        
+		output_dict["out_flow_pp"] = out_flow
+
+		##################################################
+		## Depth 2
+		##################################################
+		out_depth_l1_next = out_depth_l1 + out_sceneflow[:, 2:3, :, :]
+		out_disp_l1_next = _depth2disp_kitti_K(out_depth_l1_next, intrinsics[:, 0, 0])
+		output_dict["out_disp_l_pp_next"] = out_disp_l1_next        
+
+		loss_dict['sf'] = (out_disp_l1_next * 0).sum()
+
+		return loss_dict
+
 
 class Eval_SceneFlow_KITTI_Train(nn.Module):
 	def __init__(self, args):
