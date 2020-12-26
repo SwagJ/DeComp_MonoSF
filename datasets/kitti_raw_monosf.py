@@ -45,6 +45,8 @@ class KITTI_Raw(data.Dataset):
 		view1 = 'image_02/data'
 		view2 = 'image_03/data'
 		ext = '.png'
+
+		#print(images_root)
 		
 		for item in filename_list:
 			date = item[0][:10]
@@ -55,6 +57,7 @@ class KITTI_Raw(data.Dataset):
 			name_l2 = os.path.join(images_root, date, scene, view1, idx_tgt) + ext
 			name_r1 = os.path.join(images_root, date, scene, view2, idx_src) + ext
 			name_r2 = os.path.join(images_root, date, scene, view2, idx_tgt) + ext
+
 
 			if os.path.isfile(name_l1) and os.path.isfile(name_l2) and os.path.isfile(name_r1) and os.path.isfile(name_r2):
 				self._image_list.append([name_l1, name_l2, name_r1, name_r2])
@@ -304,7 +307,7 @@ class KITTI_Raw_Depth(data.Dataset):
 
 		## loading image -----------------------------------
 		if not os.path.isdir(images_root):
-			raise ValueError("Image directory '%s' not found!")
+			raise ValueError("Image directory '%s' not found!",images_root)
 
 		filename_list = [line.rstrip().split(' ') for line in index_file.readlines()]
 		self._image_list = []

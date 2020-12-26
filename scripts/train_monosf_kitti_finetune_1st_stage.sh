@@ -11,7 +11,7 @@ MODEL=MonoSceneFlow_fullmodel
 ALIAS="-kitti_ft-"
 TIME=$(date +"%Y%m%d-%H%M%S")
 SAVE_PATH="$EXPERIMENTS_HOME/$MODEL$ALIAS$TIME"
-CHECKPOINT="checkpoints/full_model_kitti/checkpoint_latest.ckpt"
+CHECKPOINT="./checkpoints/full_model_kitti/checkpoint_latest.ckpt"
 
 # Loss and Augmentation
 Train_Dataset=KITTI_Comb_Train

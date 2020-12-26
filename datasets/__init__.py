@@ -39,6 +39,7 @@ KITTI_Raw_KittiSplit_Valid_monodepth	= kitti_raw_monodepth.KITTI_Raw_KittiSplit_
 
 KITTI_Comb_Train		= kitti_comb_mnsf.KITTI_Comb_Train
 KITTI_Comb_Train_Depth  = kitti_comb_mnsf.KITTI_Comb_Train_Depth
+KITTI_Comb_Val_Depth    = kitti_comb_mnsf.KITTI_Comb_Val_Depth
 KITTI_Comb_Val			= kitti_comb_mnsf.KITTI_Comb_Val
 KITTI_Comb_Full			= kitti_comb_mnsf.KITTI_Comb_Full
 

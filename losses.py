@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function
 import torch
 import torch.nn as nn
 import torch.nn.functional as tf
+import numpy as np
 
 from models.forwardwarp_package.forward_warp import forward_warp
 from utils.interpolation import interpolate2d_as
@@ -394,6 +395,8 @@ class Loss_SceneFlow_SemiSupFinetune(nn.Module):
 			disp_loss = disp_loss + (disp_l1_loss + disp_l2_loss) * self._weights[ii]
 			flow_loss = flow_loss + flow_l1_loss * self._weights[ii]
 
+			print(ii, disp_loss)
+
 		# finding weight
 		u_loss = unsup_loss.detach()
 		d_loss = disp_loss.detach()
@@ -489,43 +492,6 @@ class Eval_SceneFlow_KITTI_Test(nn.Module):
 		##################################################
 		input_l1 = target_dict['input_l1']
 		intrinsics = target_dict['input_k_l1']
-
-		out_disp_l1 = interpolate2d_as(output_dict["disp_l1_pp"][0], input_l1, mode="bilinear") * input_l1.size(3)
-		out_depth_l1 = _disp2depth_kitti_K(out_disp_l1, intrinsics[:, 0, 0])
-		out_depth_l1 = torch.clamp(out_depth_l1, 1e-3, 80)
-		output_dict["out_disp_l_pp"] = out_disp_l1
-
-		##################################################
-		## Optical Flow Eval
-		##################################################
-		out_sceneflow = interpolate2d_as(output_dict['flow_f_pp'][0], input_l1, mode="bilinear")
-		out_flow = projectSceneFlow2Flow(target_dict['input_k_l1'], out_sceneflow, output_dict["out_disp_l_pp"])        
-		output_dict["out_flow_pp"] = out_flow
-
-		##################################################
-		## Depth 2
-		##################################################
-		out_depth_l1_next = out_depth_l1 + out_sceneflow[:, 2:3, :, :]
-		out_disp_l1_next = _depth2disp_kitti_K(out_depth_l1_next, intrinsics[:, 0, 0])
-		output_dict["out_disp_l_pp_next"] = out_disp_l1_next        
-
-		loss_dict['sf'] = (out_disp_l1_next * 0).sum()
-
-		return loss_dict
-
-class Eval_SceneFlow_YouTube_Test(nn.Module):
-	def __init__(self):
-		super(Eval_SceneFlow_KITTI_Test, self).__init__()
-
-	def forward(self, output_dict, target_dict):
-
-		loss_dict = {}
-
-		##################################################
-		## Depth 1
-		##################################################
-		input_l1 = target_dict['input_l1']
-		#intrinsics = target_dict['input_k_l1']
 
 		out_disp_l1 = interpolate2d_as(output_dict["disp_l1_pp"][0], input_l1, mode="bilinear") * input_l1.size(3)
 		out_depth_l1 = _disp2depth_kitti_K(out_disp_l1, intrinsics[:, 0, 0])
@@ -2493,45 +2459,50 @@ class Loss_SceneFlow_SemiDepthSup(nn.Module):
 			valid_abs_rel_l1[gt_disp_l1_mask == 0].detach_()
 			disp_l1_loss = valid_abs_rel_l1[gt_disp_l1_mask != 0].mean()
 
+			print(gt_disp_l1_mask.sum())
+
 			valid_abs_rel_l2 = torch.abs(gt_disp_l2.to(disp_l1.device) - disp_l2_up) * gt_disp_l2_mask.to(disp_l1.device)
 			valid_abs_rel_l2[gt_disp_l2_mask == 0].detach_()
 			disp_l2_loss = valid_abs_rel_l2[gt_disp_l2_mask != 0].mean()	
 
 			loss_dp_sum = loss_dp_sum + (disp_l1_loss + disp_l2_loss) * self._weights[ii]
+			print(ii, loss_dp_sum)
 
 
 
 			## Sceneflow Loss           
-			loss_sceneflow, loss_im, loss_pts, loss_3d_s = self.sceneflow_loss(sf_f, sf_b, 
-																			disp_l1, disp_l2,
-																			disp_occ_l1, disp_occ_l2,
-																			k_l1_aug, k_l2_aug,
-																			img_l1_aug, img_l2_aug, 
-																			aug_size, ii)
+			#loss_sceneflow, loss_im, loss_pts, loss_3d_s = self.sceneflow_loss(sf_f, sf_b, 
+			#																disp_l1, disp_l2,
+		#																	disp_occ_l1, disp_occ_l2,
+		#																	k_l1_aug, k_l2_aug,
+		#																	img_l1_aug, img_l2_aug, 
+		#																	aug_size, ii)
 
-			loss_sf_sum = loss_sf_sum + loss_sceneflow * self._weights[ii]            
-			loss_sf_2d = loss_sf_2d + loss_im            
-			loss_sf_3d = loss_sf_3d + loss_pts
-			loss_sf_sm = loss_sf_sm + loss_3d_s
-
+			#loss_sf_sum = loss_sf_sum + loss_sceneflow * self._weights[ii]            
+			#loss_sf_2d = loss_sf_2d + loss_im            
+			#loss_sf_3d = loss_sf_3d + loss_pts
+			#loss_sf_sm = loss_sf_sm + loss_3d_s
 
 		# finding weight
 		u_loss = unsup_loss.detach()
 		d_loss = loss_dp_sum.detach()
-		sf_loss = loss_sf_sum.detach()
+		#sf_loss = loss_sf_sum.detach()
 
-		max_val = torch.max(torch.max(sf_loss, d_loss), u_loss)
+		print("\ndisp loss, unsup loss", d_loss, u_loss)
+
+		max_val = torch.max(d_loss, u_loss)
 
 		u_weight = max_val / u_loss
 		d_weight = max_val / d_loss 
-		f_weight = max_val / sf_loss 
+		#f_weight = max_val / sf_loss 
+		weight = torch.max(u_weight,d_weight)
 
-		total_loss = unsup_loss * u_weight + loss_dp_sum * d_weight + loss_sf_sum * f_weight
+		total_loss = unsup_loss + loss_dp_sum / weight 
 		loss_dict["unsup"] = unsup_loss
 		loss_dict["dp"] = loss_dp_sum
-		loss_dict["sf"] = loss_sf_sum
-		loss_dict["s2"] = loss_sf_2d
-		loss_dict["s3"] = loss_sf_3d
+		#loss_dict["sf"] = loss_sf_sum
+		#loss_dict["s2"] = loss_sf_2d
+		#loss_dict["s3"] = loss_sf_3d
 		loss_dict["total_loss"] = total_loss
 
 		return loss_dict

@@ -138,14 +138,14 @@ class KITTI_Comb_Train(ConcatDataset):
 		
 		self.dataset1 = KITTI_2015_MonoSceneFlow(
 			args, 
-			root + '/KITTI_flow/', 
+			root + '/kitti_flow/', 
 			preprocessing_crop=True, 
 			crop_size=[370, 1224], 
 			dstype="train")
 
 		self.dataset2 = KITTI_Raw_for_Finetune(
 			args, 
-			root + '/KITTI_raw_noPCL/',
+			root + '/kitti_raw/',
 			flip_augmentations=True,
 			preprocessing_crop=True,
 			crop_size=[370, 1224],
@@ -164,7 +164,7 @@ class KITTI_Comb_Val(KITTI_2015_MonoSceneFlow):
 				 crop_size=[370, 1224]):
 		super(KITTI_Comb_Val, self).__init__(
 			args,
-			data_root=root + '/KITTI_flow/',          
+			data_root=root + '/kitti_flow/',          
 			preprocessing_crop=preprocessing_crop,
 			crop_size=crop_size,
 			dstype="valid")
@@ -176,14 +176,14 @@ class KITTI_Comb_Full(ConcatDataset):
 
 		self.dataset1 = KITTI_2015_MonoSceneFlow(
 			args, 
-			root + '/KITTI_flow/', 
+			root + '/kitti_flow/', 
 			preprocessing_crop=True,
 			crop_size=[370, 1224], 
 			dstype="full")
 
 		self.dataset2 = KITTI_Raw_for_Finetune(
 			args, 
-			root + '/KITTI_raw_noPCL/',
+			root + '/kitti_raw/',
 			flip_augmentations=True,
 			preprocessing_crop=True,
 			crop_size=[370, 1224],
@@ -196,7 +196,7 @@ class KITTI_Comb_Full(ConcatDataset):
 
 
 
-class KITTI_Raw_for_DepthSup(KITTI_Raw):
+class KITTI_Raw_for_SemiDepthSup(KITTI_Raw):
 	def __init__(self,
 				 args,
 				 root,
@@ -205,7 +205,7 @@ class KITTI_Raw_for_DepthSup(KITTI_Raw):
 				 crop_size=[370, 1224],
 				 num_examples=-1,
 				 index_file=""):
-		super(KITTI_Raw_for_DepthSup, self).__init__(
+		super(KITTI_Raw_for_SemiDepthSup, self).__init__(
 			args,
 			images_root=root,
 			flip_augmentations=flip_augmentations,
@@ -319,16 +319,16 @@ class KITTI_Comb_Train_Depth(ConcatDataset):
 		
 		self.dataset1 = KITTI_Raw_Depth_KittiSplit_Train(
 			args, 
-			root=root,
+			root=root + '/kitti_raw/',
 			flip_augmentations=flip_augmentations,
 			preprocessing_crop=preprocessing_crop,
 			crop_size=crop_size,
 			num_examples=num_examples,
 			index_file="index_txt/kitti_train.txt")
 
-		self.dataset2 = KITTI_Raw_for_DepthSup(
+		self.dataset2 = KITTI_Raw_for_SemiDepthSup(
 			args, 
-			root=root,
+			root=root + '/kitti_raw/',
 			flip_augmentations=flip_augmentations,
 			preprocessing_crop=preprocessing_crop,
 			crop_size=crop_size,
@@ -339,18 +339,22 @@ class KITTI_Comb_Train_Depth(ConcatDataset):
 			datasets=[self.dataset1, self.dataset2])
 
 
-# class KITTI_Comb_Val_Depth(KITTI_2015_MonoSceneFlow):
-# 	def __init__(self,
-# 				 args,
-# 				 root,
-# 				 preprocessing_crop=False,
-# 				 crop_size=[370, 1224]):
-# 		super(KITTI_Comb_Val, self).__init__(
-# 			args,
-# 			data_root=root + '/KITTI_flow/',          
-# 			preprocessing_crop=preprocessing_crop,
-# 			crop_size=crop_size,
-# 			dstype="valid")
+class KITTI_Comb_Val_Depth(KITTI_Raw):
+	def __init__(self,
+				 args,
+				 root,
+				 flip_augmentations=False,
+				 preprocessing_crop=False,
+				 crop_size=[370, 1224],
+				 num_examples=-1):
+		super(KITTI_Comb_Val_Depth, self).__init__(
+			args,
+			images_root=root + '/kitti_raw/',
+			flip_augmentations=flip_augmentations,
+			preprocessing_crop=preprocessing_crop,
+			crop_size=crop_size,
+			num_examples=num_examples,
+			index_file="index_txt/kitti_valid.txt")
 
 
 
