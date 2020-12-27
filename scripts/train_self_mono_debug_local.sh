@@ -16,20 +16,20 @@ EXPERIMENTS_HOME="/disk_ssd/self-mono-debug"
 KITTI_COMB_HOME="/disk_hdd/kitti_full"
 
 # model
-MODEL=MonoSF_Full
+MODEL=MonoSF_Disp_Exp
 
 # save path
 #CHECKPOINT="checkpoints/full_model_kitti/checkpoint_latest.ckpt"
 CHECKPOINT=None
 
 # Loss and Augmentation
-Train_Dataset=KITTI_Raw_Warpping_Sf_KittiSplit_Train_mnsf
-Train_Augmentation=Augmentation_SceneFlow_Sf_Sup
-Train_Loss_Function=Loss_SceneFlow_Sf_Sup
+Train_Dataset=KITTI_Raw_KittiSplit_Train_mnsf
+Train_Augmentation=Augmentation_SceneFlow
+Train_Loss_Function=Loss_SelfSup_SF_Disp_Exp
 
-Valid_Dataset=KITTI_Raw_Warpping_Sf_KittiSplit_Valid_mnsf
+Valid_Dataset=KITTI_Raw_KittiSplit_Valid_mnsf
 Valid_Augmentation=Augmentation_Resize_Only
-Valid_Loss_Function=Loss_SceneFlow_Sf_Sup
+Valid_Loss_Function=Loss_SelfSup_SF_Disp_Exp
 ALIAS="-kitti-raw-"
 TIME=$(date +"%Y%m%d-%H%M%S")
 SAVE_PATH="$EXPERIMENTS_HOME/debug"
@@ -37,7 +37,7 @@ SAVE_PATH="$EXPERIMENTS_HOME/debug"
 
 # training configuration
 python ../main.py \
---batch_size=4 \
+--batch_size=2 \
 --batch_size_val=1 \
 --finetuning=False \
 --checkpoint=$CHECKPOINT \

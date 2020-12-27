@@ -12,12 +12,12 @@ conda activate self-mono
 
 
 # experiments and datasets meta
-KITTI_RAW_HOME="/scratch_net/phon/majing/datasets/kitti_full/"
+KITTI_RAW_HOME="/scratch_net/phon/majing/datasets/kitti_raw/"
 #KITTI_RAW_HOME="/disk_hdd/kitti_full/"
 EXPERIMENTS_HOME="/scratch_net/phon/majing/src/exps"
 
 # model
-MODEL=MonoSF_Full
+MODEL=MonoSF_Disp_Exp
 
 # save path
 
@@ -26,13 +26,13 @@ CHECKPOINT=None
 # Loss and Augmentation
 Train_Dataset=KITTI_Raw_KittiSplit_Train_mnsf
 Train_Augmentation=Augmentation_SceneFlow
-Train_Loss_Function=Loss_SceneFlow_SelfSup
+Train_Loss_Function=Loss_SelfSup_SF_Disp_Exp
 
 Valid_Dataset=KITTI_Raw_KittiSplit_Valid_mnsf
 Valid_Augmentation=Augmentation_Resize_Only
-Valid_Loss_Function=Loss_SceneFlow_SelfSup
+Valid_Loss_Function=Loss_SelfSup_SF_Disp_Exp
 
-ALIAS="-self-mono-og-"
+ALIAS="-flow-exp-times-disp-"
 SAVE_PATH="$EXPERIMENTS_HOME/$ALIAS/"
 
 #CHECKPOINT="$EXPERIMENTS_HOME/$ALIAS/checkpoint_latest.ckpt"
