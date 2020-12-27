@@ -9,6 +9,7 @@ from . import model_monodepth_ablation
 
 MonoSF_Full		=	model_monosceneflow.MonoSceneFlow
 MonoSF_Disp_Exp		=	model_monosceneflow.MonoSF_Disp_Exp
+MonoSF_Disp_Exp_Plus		=	model_monosceneflow.MonoSF_Disp_Exp_Plus
 
 ##########################################################################################
 ## Monocular Scene Flow - The models for the ablation studies
