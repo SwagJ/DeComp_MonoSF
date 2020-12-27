@@ -13,7 +13,7 @@ class CustomBatchSampler(Sampler):
         self.sample_cnt = [0 for samp in self.samplers]
         self.iters = [iter(samp) for samp in self.samplers]
 
-        self.batch_size = [1, 3]
+        self.batch_size = [2, 2]
 
     def __iter__(self):       
 

@@ -684,8 +684,9 @@ class KITTI_Raw_Warpping_Sf(data.Dataset):
 		warpped_dict = threed_warp(img_list_np[0],fulldisp_list_np[0],img_list_np[1],fulldisp_list_np[2],self.intrinsic_dict_l[datename],self.intrinsic_dict_r[datename])
 		warpped_list_np = [warpped_dict["warpped_im_l"],warpped_dict["warpped_im_r"]]
 		sf_list_np = [warpped_dict["sf_l"],warpped_dict["sf_r"]]
+		sf_b_list_np = [warpped_dict["sf_bl"],warpped_dict["sf_br"]]
 		valid_sf_list_np = [warpped_dict["valid_l"],warpped_dict["valid_r"]]
-		valid_pixels_list_np = [warpped_dict["void_pixels_l"],warpped_dict["void_pixels_r"]]
+		valid_pixels_list_np = [warpped_dict["valid_pixels_l"],warpped_dict["valid_pixels_r"]]
 
 
 		k_l1 = torch.from_numpy(self.intrinsic_dict_l[datename]).float()
@@ -710,6 +711,7 @@ class KITTI_Raw_Warpping_Sf(data.Dataset):
 			img_list_np = kitti_crop_image_list(img_list_np, crop_info)
 			warpped_list_np = kitti_crop_image_list(warpped_list_np,crop_info)
 			sf_list_np = kitti_crop_image_list(sf_list_np,crop_info)
+			sf_b_list_np = kitti_crop_image_list(sf_b_list_np,crop_info)
 			valid_pixels_list_np = kitti_crop_image_list(valid_pixels_list_np,crop_info)
 			valid_sf_list_np = kitti_crop_image_list(valid_sf_list_np,crop_info)
 			#disp_list_np = kitti_crop_image_list(disp_list_np, crop_info)
@@ -726,6 +728,7 @@ class KITTI_Raw_Warpping_Sf(data.Dataset):
 		img_list_tensor = [self._to_tensor(img) for img in img_list_np]
 		warpped_list_tensor = [self._to_tensor(img) for img in warpped_list_np]
 		sf_list_tensor = [numpy2torch(img) for img in sf_list_np]
+		sf_b_list_tensor = [numpy2torch(img) for img in sf_b_list_np]
 		valid_sf_list_tensor = [numpy2torch(img) for img in valid_sf_list_np]
 		valid_pixels_list_tensor = [numpy2torch(img) for img in valid_pixels_list_np]
 		fulldisp_list_tensor = [numpy2torch(img) for img in fulldisp_list_np]
@@ -734,6 +737,7 @@ class KITTI_Raw_Warpping_Sf(data.Dataset):
 			fulldisp_list_tensor[2*i] = self.interpolate2d_as(fulldisp_list_tensor[2*i],img_list_tensor[i])
 			warpped_list_tensor[i] = self.interpolate2d_as(warpped_list_tensor[i],img_list_tensor[i])
 			sf_list_tensor[i] = self.interpolate2d_as(sf_list_tensor[i],img_list_tensor[i])
+			sf_b_list_tensor[i] = self.interpolate2d_as(sf_b_list_tensor[i],img_list_tensor[i])
 			valid_sf_list_tensor[i] = self.interpolate2d_as(valid_sf_list_tensor[i],img_list_tensor[i])
 			valid_pixels_list_tensor[i] = self.interpolate2d_as(valid_pixels_list_tensor[i],img_list_tensor[i])
 
@@ -748,6 +752,8 @@ class KITTI_Raw_Warpping_Sf(data.Dataset):
 		warpped_im_r = warpped_list_tensor[1]
 		sf_l = sf_list_tensor[0]
 		sf_r = sf_list_tensor[1]
+		sf_bl = sf_b_list_tensor[0]
+		sf_br = sf_b_list_tensor[1]
 		valid_sf_l = valid_sf_list_tensor[0]
 		valid_sf_r = valid_sf_list_tensor[1]
 		valid_pixels_l = valid_pixels_list_tensor[0]
@@ -776,6 +782,8 @@ class KITTI_Raw_Warpping_Sf(data.Dataset):
 			warpped_im_r_flip = torch.flip(warpped_im_r, dims=[2])
 			sf_l_flip = torch.flip(sf_l, dims=[2])
 			sf_r_flip = torch.flip(sf_r, dims=[2])
+			sf_bl_flip = torch.flip(sf_bl, dims=[2])
+			sf_br_flip = torch.flip(sf_br, dims=[2])
 			valid_sf_l_flip = torch.flip(valid_sf_l, dims=[2])
 			valid_sf_r_flip = torch.flip(valid_sf_r, dims=[2])
 			valid_pixels_l_flip = torch.flip(valid_pixels_l, dims=[2])
@@ -795,6 +803,8 @@ class KITTI_Raw_Warpping_Sf(data.Dataset):
 				"input_k_r2": k_l1,
 				"sf_l": sf_r_flip,
 				"sf_r": sf_l_flip,
+				"sf_bl": sf_br_flip,
+				"sf_br": sf_bl_flip,
 				"valid_sf_l": valid_sf_r_flip,
 				"valid_sf_r": valid_sf_l_flip,
 				"valid_pixels_l": valid_pixels_r_flip,
@@ -813,6 +823,8 @@ class KITTI_Raw_Warpping_Sf(data.Dataset):
 				"input_k_r2": k_l1,
 				"sf_l": sf_l,
 				"sf_r": sf_r,
+				"sf_bl": sf_br,
+				"sf_br": sf_bl,
 				"valid_sf_l": valid_sf_l,
 				"valid_sf_r": valid_sf_r,
 				"valid_pixels_l": valid_pixels_l,

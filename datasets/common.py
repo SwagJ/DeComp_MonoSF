@@ -176,7 +176,7 @@ def get_shear_z(sx=0,sy=0):
 	return Shz
 
 def get_valid_map(new_coords,h,w):
-	return (new_coords[:,0] <= w) * (new_coords[:,1] <= h) 
+	return (new_coords[:,0] < w) * (new_coords[:,0] >= 0) * (new_coords[:,1] < h) * (new_coords[:,1] >= 0) 
 
 def perform_shearing(cam_coords_l,cam_coords_r):
 	sh = get_shear_y(random.uniform(-0.05,0.05),random.uniform(-0.05,0.05))
@@ -196,12 +196,24 @@ def perform_rotate(cam_coords_l,cam_coords_r):
 	return np.matmul(cam_coords_l,R),np.matmul(cam_coords_r,R)
 
 def perform_trans(cam_coords_l,cam_coords_r,depth_min):
-	tz = random.uniform(-depth_min/4,0)
+	tz = random.uniform(-depth_min,0)
 	T = [0,0,tz]
 	valid_area_l = cam_coords_l[:,2] >= -T[-1]
 	cam_coords_l[valid_area_l,-1] = cam_coords_l[valid_area_l,-1] + T[-1]
 	valid_area_r = cam_coords_r[:,2] >= -T[-1]
-	cam_coords_r[valid_area_r,-1] = cam_coords_l[valid_area_l,-1] + T[-1]
+	cam_coords_r[valid_area_r,-1] = cam_coords_r[valid_area_r,-1] + T[-1]
+	return cam_coords_l,cam_coords_r
+
+def perform_scaling(cam_coords_l,cam_coords_r):
+	scaling_x = random.uniform(0,0.05)
+	scaling_y = random.uniform(0,0.05)
+	scaling_z = random.uniform(0,0.05)
+	cam_coords_l[:,0] = cam_coords_l[:,0] * scaling_x
+	cam_coords_l[:,1] = cam_coords_l[:,1] * scaling_y
+	cam_coords_l[:,2] = cam_coords_l[:,2] * scaling_z
+	cam_coords_r[:,0] = cam_coords_r[:,0] * scaling_x
+	cam_coords_r[:,1] = cam_coords_r[:,1] * scaling_y
+	cam_coords_r[:,2] = cam_coords_r[:,2] * scaling_z
 	return cam_coords_l,cam_coords_r
 
 def threed_warp(image_l,depth_l,image_r,depth_r,intrinsic_l,intrinsic_r):
@@ -220,7 +232,10 @@ def threed_warp(image_l,depth_l,image_r,depth_r,intrinsic_l,intrinsic_r):
 	cam_coords_r = (inv_intrinsic_l[:3, :3] @ image_coord_r * depth_r.flatten()).T
 
 	# rotation
-	aug_cam_coords_l,aug_cam_coords_r = perform_rotate(cam_coords_l,cam_coords_r)
+	if torch.rand(1) > 0.5:
+		aug_cam_coords_l,aug_cam_coords_r = perform_rotate(cam_coords_l,cam_coords_r)
+	else: 
+		aug_cam_coords_l,aug_cam_coords_r = perform_scaling(cam_coords_l,cam_coords_r)
 	# shearing
 	aug_cam_coords_l,aug_cam_coords_r = perform_shearing(aug_cam_coords_l,aug_cam_coords_r)
 	#translation
@@ -241,9 +256,12 @@ def threed_warp(image_l,depth_l,image_r,depth_r,intrinsic_l,intrinsic_r):
 	new_img_yr = new_image_coords_r[:,1].reshape(height_r,width_r).astype(np.float32)
 
 	warpped_im_l = cv2.remap(image_l,new_img_xl,new_img_yl,cv2.INTER_LINEAR)
-	void_pixels_l = (warpped_im_l == 0).all(-1).astype(np.float32)
+	valid_pixels_l = (warpped_im_l != 0).all(-1).astype(np.float32)
 	warpped_im_r = cv2.remap(image_r,new_img_xr,new_img_yr,cv2.INTER_LINEAR)
-	void_pixels_r = (warpped_im_r == 0).all(-1).astype(np.float32)
+	valid_pixels_r = (warpped_im_r != 0).all(-1).astype(np.float32)
+
+	sf_bl = -cv2.remap(sf_l,new_img_xl,new_img_yl,cv2.INTER_LINEAR)
+	sf_br = -cv2.remap(sf_r,new_img_xr,new_img_yr,cv2.INTER_LINEAR)
 	#cv2.imwrite("l.png", warpped_im_l)
 	#cv2.imwrite("r.png", warpped_im_r)
 	#cv2.imwrite("l_og.png", image_l)
@@ -252,11 +270,13 @@ def threed_warp(image_l,depth_l,image_r,depth_r,intrinsic_l,intrinsic_r):
 	out_dict = {
 		"sf_l":sf_l,
 		"sf_r":sf_r,
+		"sf_bl":sf_bl,
+		"sf_br":sf_br,
 		"warpped_im_l":warpped_im_l,
 		"warpped_im_r":warpped_im_r,
 		"valid_l":np.expand_dims(valid_l, axis=2),
 		"valid_r":np.expand_dims(valid_r, axis=2),
-		"void_pixels_l":np.expand_dims(void_pixels_l,axis=2),
-		"void_pixels_r":np.expand_dims(void_pixels_r,axis=2)
+		"valid_pixels_l":np.expand_dims(valid_pixels_l,axis=2),
+		"valid_pixels_r":np.expand_dims(valid_pixels_r,axis=2)
 	}
 	return out_dict

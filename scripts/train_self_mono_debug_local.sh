@@ -23,13 +23,13 @@ MODEL=MonoSF_Full
 CHECKPOINT=None
 
 # Loss and Augmentation
-Train_Dataset=KITTI_Comb_Train_Depth
-Train_Augmentation=Augmentation_SceneFlow_Depth_Sup
-Train_Loss_Function=Loss_SceneFlow_SemiDepthSup
+Train_Dataset=KITTI_Raw_Warpping_Sf_KittiSplit_Train_mnsf
+Train_Augmentation=Augmentation_SceneFlow_Sf_Sup
+Train_Loss_Function=Loss_SceneFlow_Sf_Sup
 
-Valid_Dataset=KITTI_Comb_Val_Depth
+Valid_Dataset=KITTI_Raw_Warpping_Sf_KittiSplit_Valid_mnsf
 Valid_Augmentation=Augmentation_Resize_Only
-Valid_Loss_Function=Loss_SceneFlow_SelfSup
+Valid_Loss_Function=Loss_SceneFlow_Sf_Sup
 ALIAS="-kitti-raw-"
 TIME=$(date +"%Y%m%d-%H%M%S")
 SAVE_PATH="$EXPERIMENTS_HOME/debug"
@@ -49,15 +49,16 @@ python ../main.py \
 --optimizer=Adam \
 --optimizer_lr=2e-4 \
 --save=$SAVE_PATH \
---total_epochs=343 \
+--total_epochs=62 \
+--sf_sup=True \
 --training_augmentation=$Train_Augmentation \
 --training_augmentation_photometric=True \
 --training_dataset=$Train_Dataset \
---training_dataset_root=$KITTI_COMB_HOME \
+--training_dataset_root=$KITTI_RAW_HOME \
 --training_loss=$Train_Loss_Function \
 --training_key=total_loss \
 --validation_augmentation=$Valid_Augmentation \
 --validation_dataset=$Valid_Dataset \
---validation_dataset_root=$KITTI_COMB_HOME \
+--validation_dataset_root=$KITTI_RAW_HOME \
 --validation_key=sf \
 --validation_loss=$Valid_Loss_Function \
