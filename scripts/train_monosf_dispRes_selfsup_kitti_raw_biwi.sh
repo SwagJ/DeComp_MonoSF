@@ -32,7 +32,7 @@ Valid_Dataset=KITTI_Raw_KittiSplit_Valid_mnsf
 Valid_Augmentation=Augmentation_Resize_Only
 Valid_Loss_Function=Loss_SceneFlow_SelfSup
 
-ALIAS="-self-mono-og-"
+ALIAS="-self-mono-dispRes-"
 SAVE_PATH="$EXPERIMENTS_HOME/$ALIAS/"
 
 #CHECKPOINT="$EXPERIMENTS_HOME/$ALIAS/checkpoint_latest.ckpt"
