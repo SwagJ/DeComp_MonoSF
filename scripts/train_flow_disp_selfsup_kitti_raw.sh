@@ -17,22 +17,22 @@ KITTI_RAW_HOME="/scratch_net/phon/majing/datasets/kitti_raw/"
 EXPERIMENTS_HOME="/scratch_net/phon/majing/src/exps"
 
 # model
-MODEL=MonoSF_Full
+MODEL=MonoFlow_Disp
 
 # save path
-
+#CHECKPOINT="checkpoints/full_model_kitti/checkpoint_latest.ckpt"
 CHECKPOINT=None
 
 # Loss and Augmentation
 Train_Dataset=KITTI_Raw_KittiSplit_Train_mnsf
 Train_Augmentation=Augmentation_SceneFlow
-Train_Loss_Function=Loss_SceneFlow_SelfSup
+Train_Loss_Function=Loss_FlowDisp_SelfSup
 
 Valid_Dataset=KITTI_Raw_KittiSplit_Valid_mnsf
 Valid_Augmentation=Augmentation_Resize_Only
-Valid_Loss_Function=Loss_SceneFlow_SelfSup
+Valid_Loss_Function=Loss_FlowDisp_SelfSup
 
-ALIAS="-self-mono-og-"
+ALIAS="-self-mono-flow-disp-"
 SAVE_PATH="$EXPERIMENTS_HOME/$ALIAS/"
 
 #CHECKPOINT="$EXPERIMENTS_HOME/$ALIAS/checkpoint_latest.ckpt"

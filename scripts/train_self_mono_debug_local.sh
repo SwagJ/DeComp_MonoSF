@@ -16,7 +16,7 @@ EXPERIMENTS_HOME="/disk_ssd/self-mono-debug"
 KITTI_COMB_HOME="/disk_hdd/kitti_full"
 
 # model
-MODEL=MonoSceneFlow_Disp_Res
+MODEL=MonoFlow_Disp
 
 # save path
 #CHECKPOINT="checkpoints/full_model_kitti/checkpoint_latest.ckpt"
@@ -25,11 +25,11 @@ CHECKPOINT=None
 # Loss and Augmentation
 Train_Dataset=KITTI_Raw_KittiSplit_Train_mnsf
 Train_Augmentation=Augmentation_SceneFlow
-Train_Loss_Function=Loss_SceneFlow_SelfSup
+Train_Loss_Function=Loss_FlowDisp_SelfSup
 
 Valid_Dataset=KITTI_Raw_KittiSplit_Valid_mnsf
 Valid_Augmentation=Augmentation_Resize_Only
-Valid_Loss_Function=Loss_SceneFlow_SelfSup
+Valid_Loss_Function=Loss_FlowDisp_SelfSup
 ALIAS="-kitti-raw-"
 TIME=$(date +"%Y%m%d-%H%M%S")
 SAVE_PATH="$EXPERIMENTS_HOME/debug"
@@ -56,6 +56,7 @@ python ../main.py \
 --training_dataset=$Train_Dataset \
 --training_dataset_root=$KITTI_RAW_HOME \
 --training_loss=$Train_Loss_Function \
+--training_dataset_num_examples=6 \
 --training_key=total_loss \
 --validation_augmentation=$Valid_Augmentation \
 --validation_dataset=$Valid_Dataset \
