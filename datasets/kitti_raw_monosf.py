@@ -91,6 +91,7 @@ class KITTI_Raw(data.Dataset):
 		datename = dirname[:10]
 		k_l1 = torch.from_numpy(self.intrinsic_dict_l[datename]).float()
 		k_r1 = torch.from_numpy(self.intrinsic_dict_r[datename]).float()
+		#print("k_l1, k_l2:", k_l1 == k_r1)
 		
 		# input size
 		h_orig, w_orig, _ = img_list_np[0].shape

@@ -345,3 +345,9 @@ class Depth_Decoder_Simple_v1(nn.Module):
 	def forward(self, x):
 		disp1 = self.convs(x)
 		return disp1
+
+class Depth_Decoder_ResNet_Style(nn.Module):
+	def __init__(self, ch_in, ch_out):
+		super(Depth_Decoder_ResNet_Style,self).__init__()
+
+		self.conv0 = 

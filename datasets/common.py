@@ -280,3 +280,72 @@ def threed_warp(image_l,depth_l,image_r,depth_r,intrinsic_l,intrinsic_r):
 		"valid_pixels_r":np.expand_dims(valid_pixels_r,axis=2)
 	}
 	return out_dict
+
+def readPFM(file):
+	import re
+	file = open(file, 'rb')
+
+	color = None
+	width = None
+	height = None
+	scale = None
+	endian = None
+
+	header = file.readline().rstrip()
+	if header == b'PF':
+		color = True
+	elif header == b'Pf':
+		color = False
+	else:
+		raise Exception('Not a PFM file.')
+
+	dim_match = re.match(b'^(\d+)\s(\d+)\s$', file.readline())
+	if dim_match:
+		width, height = map(int, dim_match.groups())
+	else:
+		raise Exception('Malformed PFM header.')
+
+	scale = float(file.readline().rstrip())
+	if scale < 0: # little-endian
+		endian = '<'
+		scale = -scale
+	else:
+		endian = '>' # big-endian
+
+	data = np.fromfile(file, endian + 'f')
+	shape = (height, width, 3) if color else (height, width)
+
+	data = np.reshape(data, shape)
+	data = np.flipud(data)
+	return data, scale
+
+def generate_gt_expansion(flow,disp, dispC, intrinsic): 
+	d1 = np.abs(disp)
+	d2 = np.abs(disp + dispC)
+
+	flow[:,:,2] = np.logical_and(np.logical_and(flow[:,:,2]==1, d1!=0), d2!=0).astype(float)
+	shape = disp.shape
+	mesh = np.meshgrid(range(shape[1]),range(shape[0]))
+	xcoord = mesh[0].astype(float)
+	ycoord = mesh[1].astype(float)
+			
+	P0 = triangulation(d1, xcoord, ycoord, bl=1, fl = intrinsic[0,0], cx = intrinsic[0,2], cy = intrinsic[1,2])
+	P1 = triangulation(d2, xcoord + flow[:,:,0], ycoord + flow[:,:,1], bl=1, fl = intrinsic[0,0], cx = intrinsic[0,2], cy = intrinsic[1,2])
+	dis0 = P0[2]
+	dis1 = P1[2]
+
+	depth0 =  dis0.reshape(shape).astype(np.float32)
+	flow3d = (P1-P0)[:3].reshape((3,)+shape).transpose((1,2,0))
+
+	gt_normal = np.concatenate((d1[:,:,np.newaxis],d2[:,:,np.newaxis],d2[:,:,np.newaxis]),-1)
+
+	return depth0, gt_normal, flow3d
+
+def triangulation(disp, xcoord, ycoord, bl=1, fl = 450, cx = 479.5, cy = 269.5):
+	depth = bl*fl / disp # 450px->15mm focal length
+	X = (xcoord - cx) * depth / fl
+	Y = (ycoord - cy) * depth / fl
+	Z = depth
+	P = np.concatenate((X[np.newaxis],Y[np.newaxis],Z[np.newaxis]),0).reshape(3,-1)
+	P = np.concatenate((P,np.ones((1,P.shape[-1]))),0)
+	return P
