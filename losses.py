@@ -603,6 +603,187 @@ class Eval_SceneFlow_KITTI_Train(nn.Module):
 
 		return loss_dict
 
+##############################################
+# Eval for flow exp times depth network
+##############################################
+class Eval_Flow_ExpTimesDepth_KITTI_Train(nn.Module):
+	def __init__(self, args):
+		super(Eval_Flow_ExpTimesDepth_KITTI_Train, self).__init__()
+
+
+	def forward(self, output_dict, target_dict):
+
+		loss_dict = {}
+
+		gt_flow = target_dict['target_flow']
+		gt_flow_mask = (target_dict['target_flow_mask']==1).float()
+
+		gt_disp = target_dict['target_disp']
+		gt_disp_mask = (target_dict['target_disp_mask']==1).float()
+
+		gt_disp2_occ = target_dict['target_disp2_occ']
+		gt_disp2_mask = (target_dict['target_disp2_mask_occ']==1).float()
+
+		gt_sf_mask = gt_flow_mask * gt_disp_mask * gt_disp2_mask
+
+		intrinsics = target_dict['input_k_l1']                
+
+		##################################################
+		## Depth 1
+		##################################################
+
+		batch_size, _, _, width = gt_disp.size()
+
+		out_disp_l1 = interpolate2d_as(output_dict["disp_l1_pp"][0], gt_disp, mode="bilinear") * width
+		out_depth_l1 = _disp2depth_kitti_K(out_disp_l1, intrinsics[:, 0, 0])
+		out_depth_l1 = torch.clamp(out_depth_l1, 1e-3, 80)
+		gt_depth_l1 = _disp2depth_kitti_K(gt_disp, intrinsics[:, 0, 0])
+
+		dict_disp0_occ = eval_module_disp_depth(gt_disp, gt_disp_mask.bool(), out_disp_l1, gt_depth_l1, out_depth_l1)
+		
+		output_dict["out_disp_l_pp"] = out_disp_l1
+		output_dict["out_depth_l_pp"] = out_depth_l1
+
+		d0_outlier_image = dict_disp0_occ['otl_img']
+		loss_dict["d_abs"] = dict_disp0_occ['abs_rel']
+		loss_dict["d_sq"] = dict_disp0_occ['sq_rel']
+		loss_dict["d1"] = dict_disp0_occ['otl']
+
+		##################################################
+		## Optical Flow Eval
+		##################################################
+		
+		out_flow = interpolate2d_as(output_dict['flow_f_pp'][0], gt_flow, mode="bilinear")
+		#out_flow = projectSceneFlow2Flow(target_dict['input_k_l1'], out_sceneflow, output_dict["out_disp_l_pp"])
+
+		## Flow Eval
+		valid_epe = _elementwise_epe(out_flow, gt_flow) * gt_flow_mask
+		loss_dict["f_epe"] = (valid_epe.view(batch_size, -1).sum(1)).mean() / 91875.68
+		output_dict["out_flow_pp"] = out_flow
+
+		flow_gt_mag = torch.norm(target_dict["target_flow"], p=2, dim=1, keepdim=True) + 1e-8
+		flow_outlier_epe = (valid_epe > 3).float() * ((valid_epe / flow_gt_mag) > 0.05).float() * gt_flow_mask
+		loss_dict["f1"] = (flow_outlier_epe.view(batch_size, -1).sum(1)).mean() / 91875.68
+
+
+		##################################################
+		## Depth 2
+		##################################################
+
+		out_depth_l1_next = output_dict["disp_l1_pp"][0] * output_dict['exp_f_pp'][0]
+		out_depth_l1_next = interpolate2d_as(out_depth_l1_next, gt_disp2_occ, mode="bilinear")
+		out_disp_l1_next = _depth2disp_kitti_K(out_depth_l1_next, intrinsics[:, 0, 0])
+		gt_depth_l1_next = _disp2depth_kitti_K(gt_disp2_occ, intrinsics[:, 0, 0])
+
+		dict_disp1_occ = eval_module_disp_depth(gt_disp2_occ, gt_disp2_mask.bool(), out_disp_l1_next, gt_depth_l1_next, out_depth_l1_next)
+		
+		output_dict["out_disp_l_pp_next"] = out_disp_l1_next
+		output_dict["out_depth_l_pp_next"] = out_depth_l1_next
+
+		d1_outlier_image = dict_disp1_occ['otl_img']
+		loss_dict["d2"] = dict_disp1_occ['otl']
+
+
+		##################################################
+		## Scene Flow Eval
+		##################################################
+
+		outlier_sf = (flow_outlier_epe.bool() + d0_outlier_image.bool() + d1_outlier_image.bool()).float() * gt_sf_mask
+		loss_dict["sf"] = (outlier_sf.view(batch_size, -1).sum(1)).mean() / 91873.4
+
+		return loss_dict
+
+
+##############################################
+# Eval for flow exp times depth network
+##############################################
+class Eval_Flow_ExpPlusDepth_KITTI_Train(nn.Module):
+	def __init__(self, args):
+		super(Eval_Flow_ExpPlusDepth_KITTI_Train, self).__init__()
+
+
+	def forward(self, output_dict, target_dict):
+
+		loss_dict = {}
+
+		gt_flow = target_dict['target_flow']
+		gt_flow_mask = (target_dict['target_flow_mask']==1).float()
+
+		gt_disp = target_dict['target_disp']
+		gt_disp_mask = (target_dict['target_disp_mask']==1).float()
+
+		gt_disp2_occ = target_dict['target_disp2_occ']
+		gt_disp2_mask = (target_dict['target_disp2_mask_occ']==1).float()
+
+		gt_sf_mask = gt_flow_mask * gt_disp_mask * gt_disp2_mask
+
+		intrinsics = target_dict['input_k_l1']                
+
+		##################################################
+		## Depth 1
+		##################################################
+
+		batch_size, _, _, width = gt_disp.size()
+
+		out_disp_l1 = interpolate2d_as(output_dict["disp_l1_pp"][0], gt_disp, mode="bilinear") * width
+		out_depth_l1 = _disp2depth_kitti_K(out_disp_l1, intrinsics[:, 0, 0])
+		out_depth_l1 = torch.clamp(out_depth_l1, 1e-3, 80)
+		gt_depth_l1 = _disp2depth_kitti_K(gt_disp, intrinsics[:, 0, 0])
+
+		dict_disp0_occ = eval_module_disp_depth(gt_disp, gt_disp_mask.bool(), out_disp_l1, gt_depth_l1, out_depth_l1)
+		
+		output_dict["out_disp_l_pp"] = out_disp_l1
+		output_dict["out_depth_l_pp"] = out_depth_l1
+
+		d0_outlier_image = dict_disp0_occ['otl_img']
+		loss_dict["d_abs"] = dict_disp0_occ['abs_rel']
+		loss_dict["d_sq"] = dict_disp0_occ['sq_rel']
+		loss_dict["d1"] = dict_disp0_occ['otl']
+
+		##################################################
+		## Optical Flow Eval
+		##################################################
+		
+		out_flow = interpolate2d_as(output_dict['flow_f_pp'][0], gt_flow, mode="bilinear")
+		#out_flow = projectSceneFlow2Flow(target_dict['input_k_l1'], out_sceneflow, output_dict["out_disp_l_pp"])
+
+		## Flow Eval
+		valid_epe = _elementwise_epe(out_flow, gt_flow) * gt_flow_mask
+		loss_dict["f_epe"] = (valid_epe.view(batch_size, -1).sum(1)).mean() / 91875.68
+		output_dict["out_flow_pp"] = out_flow
+
+		flow_gt_mag = torch.norm(target_dict["target_flow"], p=2, dim=1, keepdim=True) + 1e-8
+		flow_outlier_epe = (valid_epe > 3).float() * ((valid_epe / flow_gt_mag) > 0.05).float() * gt_flow_mask
+		loss_dict["f1"] = (flow_outlier_epe.view(batch_size, -1).sum(1)).mean() / 91875.68
+
+
+		##################################################
+		## Depth 2
+		##################################################
+
+		out_depth_l1_next = output_dict["disp_l1_pp"][0] + output_dict['exp_f_pp'][0]
+		out_depth_l1_next = interpolate2d_as(out_depth_l1_next, gt_disp2_occ, mode="bilinear")
+		out_disp_l1_next = _depth2disp_kitti_K(out_depth_l1_next, intrinsics[:, 0, 0])
+		gt_depth_l1_next = _disp2depth_kitti_K(gt_disp2_occ, intrinsics[:, 0, 0])
+
+		dict_disp1_occ = eval_module_disp_depth(gt_disp2_occ, gt_disp2_mask.bool(), out_disp_l1_next, gt_depth_l1_next, out_depth_l1_next)
+		
+		output_dict["out_disp_l_pp_next"] = out_disp_l1_next
+		output_dict["out_depth_l_pp_next"] = out_depth_l1_next
+
+		d1_outlier_image = dict_disp1_occ['otl_img']
+		loss_dict["d2"] = dict_disp1_occ['otl']
+
+
+		##################################################
+		## Scene Flow Eval
+		##################################################
+
+		outlier_sf = (flow_outlier_epe.bool() + d0_outlier_image.bool() + d1_outlier_image.bool()).float() * gt_sf_mask
+		loss_dict["sf"] = (outlier_sf.view(batch_size, -1).sum(1)).mean() / 91873.4
+
+		return loss_dict
+
 
 
 ###############################################
@@ -3003,6 +3184,128 @@ class Loss_SelfSup_SF_Disp_Exp_Plus(nn.Module):
 		loss_dict["s_2"] = loss_sf_2d
 		loss_dict["s_3"] = loss_sf_3d
 		loss_dict["s_3s"] = loss_sf_sm
+		loss_dict["total_loss"] = total_loss
+
+		self.detaching_grad_of_outputs(output_dict['output_dict_r'])
+
+		return loss_dict
+
+
+
+class Loss_FlowDisp_SelfSup(nn.Module):
+	def __init__(self, args):
+		super(Loss_FlowDisp_SelfSup, self).__init__()
+				
+		self._weights = [4.0, 2.0, 1.0, 1.0, 1.0]
+		self._ssim_w = 0.85
+		self._disp_smooth_w = 0.1
+		self._sf_3d_pts = 0.2
+		self._sf_3d_sm = 200
+		self._warping_layer = WarpingLayer_Flow()
+
+	def depth_loss_left_img(self, disp_l, disp_r, img_l_aug, img_r_aug, ii):
+
+		img_r_warp = _generate_image_left(img_r_aug, disp_l)
+		left_occ = _adaptive_disocc_detection_disp(disp_r).detach()
+
+		## Photometric loss
+		img_diff = (_elementwise_l1(img_l_aug, img_r_warp) * (1.0 - self._ssim_w) + _SSIM(img_l_aug, img_r_warp) * self._ssim_w).mean(dim=1, keepdim=True)        
+		loss_img = (img_diff[left_occ]).mean()
+		img_diff[~left_occ].detach_()
+
+		## Disparities smoothness
+		loss_smooth = _smoothness_motion_2nd(disp_l, img_l_aug, beta=10.0).mean() / (2 ** ii)
+
+		return loss_img + self._disp_smooth_w * loss_smooth, left_occ
+
+
+	def flow_loss(self, sf_f, sf_b, img_l1, img_l2):
+
+		img_l2_warp = self._warping_layer(img_l2, sf_f)
+		img_l1_warp = self._warping_layer(img_l1, sf_b)
+		occ_map_f = _adaptive_disocc_detection(sf_b).detach()
+		occ_map_b = _adaptive_disocc_detection(sf_f).detach()
+
+		img_diff1 = (_elementwise_l1(img_l1, img_l2_warp) * (1.0 - self._ssim_w) + _SSIM(img_l1, img_l2_warp) * self._ssim_w).mean(dim=1, keepdim=True)
+		img_diff2 = (_elementwise_l1(img_l2, img_l1_warp) * (1.0 - self._ssim_w) + _SSIM(img_l2, img_l1_warp) * self._ssim_w).mean(dim=1, keepdim=True)
+		loss_im1 = img_diff1[occ_map_f].mean()
+		loss_im2 = img_diff2[occ_map_b].mean()
+		img_diff1[~occ_map_f].detach_()
+		img_diff2[~occ_map_b].detach_()
+		loss_im = loss_im1 + loss_im2
+
+		loss_smooth = _smoothness_motion_2nd(sf_f / 20.0, img_l1, beta=10.0).mean() + _smoothness_motion_2nd(sf_b / 20.0, img_l2, beta=10.0).mean()
+			
+		total_loss = (loss_im + 10.0 * loss_smooth)
+			
+		return total_loss, loss_im, loss_smooth
+
+	def detaching_grad_of_outputs(self, output_dict):
+		
+		for ii in range(0, len(output_dict['flow_f'])):
+			output_dict['flow_f'][ii].detach_()
+			output_dict['flow_b'][ii].detach_()
+			output_dict['disp_l1'][ii].detach_()
+			output_dict['disp_l2'][ii].detach_()
+
+		return None
+
+	def forward(self, output_dict, target_dict):
+
+		loss_dict = {}
+
+		batch_size = target_dict['input_l1'].size(0)
+		loss_sf_sum = 0
+		loss_dp_sum = 0
+		loss_sf_2d = 0
+		loss_sf_3d = 0
+		loss_sf_sm = 0
+		
+		k_l1_aug = target_dict['input_k_l1_aug']
+		k_l2_aug = target_dict['input_k_l2_aug']
+		aug_size = target_dict['aug_size']
+
+		disp_r1_dict = output_dict['output_dict_r']['disp_l1']
+		disp_r2_dict = output_dict['output_dict_r']['disp_l2']
+
+		for ii, (sf_f, sf_b, disp_l1, disp_l2, disp_r1, disp_r2) in enumerate(zip(output_dict['flow_f'], output_dict['flow_b'], output_dict['disp_l1'], output_dict['disp_l2'], disp_r1_dict, disp_r2_dict)):
+
+			assert(sf_f.size()[2:4] == sf_b.size()[2:4])
+			assert(sf_f.size()[2:4] == disp_l1.size()[2:4])
+			assert(sf_f.size()[2:4] == disp_l2.size()[2:4])
+			
+			## For image reconstruction loss
+			img_l1_aug = interpolate2d_as(target_dict["input_l1_aug"], sf_f)
+			img_l2_aug = interpolate2d_as(target_dict["input_l2_aug"], sf_b)
+			img_r1_aug = interpolate2d_as(target_dict["input_r1_aug"], sf_f)
+			img_r2_aug = interpolate2d_as(target_dict["input_r2_aug"], sf_b)
+
+			## Disp Loss
+			loss_disp_l1, disp_occ_l1 = self.depth_loss_left_img(disp_l1, disp_r1, img_l1_aug, img_r1_aug, ii)
+			loss_disp_l2, disp_occ_l2 = self.depth_loss_left_img(disp_l2, disp_r2, img_l2_aug, img_r2_aug, ii)
+			loss_dp_sum = loss_dp_sum + (loss_disp_l1 + loss_disp_l2) * self._weights[ii]
+
+
+			## Sceneflow Loss           
+			loss_flow, loss_im, loss_smooth = self.flow_loss(sf_f, sf_b, img_l1_aug, img_l2_aug)
+
+			loss_sf_sum = loss_sf_sum + loss_flow * self._weights[ii]            
+			loss_sf_2d = loss_sf_2d + loss_im
+			loss_sf_sm = loss_sf_sm + loss_smooth
+
+		# finding weight
+		f_loss = loss_sf_sum.detach()
+		d_loss = loss_dp_sum.detach()
+		max_val = torch.max(f_loss, d_loss)
+		f_weight = max_val / f_loss
+		d_weight = max_val / d_loss
+
+		total_loss = loss_sf_sum * f_weight + loss_dp_sum * d_weight
+
+		loss_dict = {}
+		loss_dict["dp"] = loss_dp_sum
+		loss_dict["flow"] = loss_sf_sum
+		loss_dict["im"] = loss_sf_2d
 		loss_dict["total_loss"] = total_loss
 
 		self.detaching_grad_of_outputs(output_dict['output_dict_r'])
