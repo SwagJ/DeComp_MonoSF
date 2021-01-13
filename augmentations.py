@@ -887,3 +887,24 @@ class Augmentation_SceneFlow_Sf_Sup(nn.Module):
 
         return example_dict
 
+###########################################################################
+#
+# Augmentation for Expansion
+#
+###########################################################################
+class Augmentation_Exp(nn.Module):
+    def __init__(self, args, photometric=True, imgsize=[256, 832]):
+        super(Augmentation_Exp, self).__init__()
+
+        # init
+        self._args = args
+        self._photometric = photometric
+        self._photo_augmentation = photometric
+        self._imgsize = imgsize
+
+
+    def forward(self, example_dict):
+
+        ## KITTI Random Crop
+        return example_dict
+

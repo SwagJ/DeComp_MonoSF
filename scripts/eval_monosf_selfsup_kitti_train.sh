@@ -2,7 +2,7 @@
 
 # DATASETS_HOME
 KITTI_HOME="/disk_hdd/kitti_flow"
-CHECKPOINT="/disk_ssd/Self_Mono_Experiments/-kitti-sf-sup-pp-/checkpoint_latest.ckpt"
+CHECKPOINT="/disk_ssd/Self_Mono_Experiments/-self-mono-dispRes-/checkpoint_latest.ckpt"
 
 # model
 MODEL=MonoSF_Full
@@ -12,7 +12,7 @@ Valid_Augmentation=Augmentation_Resize_Only
 Valid_Loss_Function=Eval_SceneFlow_KITTI_Train
 
 # training configuration
-SAVE_PATH="/disk_ssd/self-mono-eval/-kitti-sf-sup-pp--"
+SAVE_PATH="/disk_ssd/self-mono-eval/-self-mono-dispRes-"
 python ../main.py \
 --batch_size=1 \
 --batch_size_val=1 \

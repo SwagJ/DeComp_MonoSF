@@ -3311,3 +3311,61 @@ class Loss_FlowDisp_SelfSup(nn.Module):
 		self.detaching_grad_of_outputs(output_dict['output_dict_r'])
 
 		return loss_dict
+
+
+class Loss_Exp_Sup(nn.Module):
+	def __init__(self, args):
+		super(Loss_Exp_Sup, self).__init__()
+				
+		self._args = args
+		self.fac = 1 
+		self.maxdisp = 256
+
+	def forward(self, output_dict, input_dict):
+
+		loss_dict = {}
+
+		batch_size = input_dict['flow_f'].size(0)
+		loss_sf_sum = 0
+		loss_dp_sum = 0
+		loss_sf_2d = 0
+		loss_sf_3d = 0
+		loss_sf_sm = 0
+
+		gt_flow = input_dict['flow_f'][:,:2,:,:].cuda()
+		gt_flow_mask = (input_dict['flow_f'][:,2,:,:] == 1).float().unsqueeze(1).cuda()
+		in_range_mask = ((torch.abs(gt_flow) >= 0).sum(1) * (torch.abs(gt_flow) < 1000).prod(1)).unsqueeze(1).float().cuda()
+		#print("gt_flow shape and device", gt_flow.shape, gt_flow.device)
+		#print("gt_flow mask shape:", gt_flow_mask.shape)
+		#print("in_range_mask shape:", in_range_mask.shape)
+		#print("output flow device:", output_dict['flows_f'][-1].device)
+
+		# evaluate flow
+		out_flow = interpolate2d_as(output_dict['flows_f'][-1]*20, gt_flow, mode="bilinear")
+		#print("out_flow device:", out_flow.device)
+		valid_epe = _elementwise_epe(out_flow, gt_flow) * gt_flow_mask * in_range_mask
+		aepe = valid_epe.mean()
+
+		loss_dc_f = output_dict['loss_dc_f']
+		loss_iexp_f = output_dict['loss_iexp_f']
+		loss_dc_b = output_dict['loss_dc_b']
+		loss_iexp_b = output_dict['loss_iexp_b']
+		
+
+		# loss
+		iexp_f = loss_iexp_f.detach()
+		dc_f = loss_dc_f.detach()
+		iexp_b = loss_iexp_b.detach()
+		dc_b = loss_dc_b.detach()
+
+		total_loss = loss_dc_f + loss_iexp_b + loss_dc_b + loss_iexp_b
+
+		loss_dict = {}
+		loss_dict["iexp_f"] = iexp_f
+		loss_dict["dc_f"] = dc_f
+		loss_dict["iexp_b"] = iexp_b
+		loss_dict["dc_b"] = dc_b
+		loss_dict["aepe"] = aepe
+		loss_dict["total_loss"] = total_loss
+
+		return loss_dict

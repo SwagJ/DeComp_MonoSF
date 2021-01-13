@@ -173,9 +173,8 @@ class TrainingEpoch:
         # Return success flag, loss and output dictionary
         return loss_dict, output_dict
 
-    def run(self, model_and_loss, optimizer):
-
-        n_iter = 0
+    def run(self, model_and_loss, optimizer, epoch=0):
+        #print("loader len:",len(self._loader))
         model_and_loss.train()
         moving_averages_dict = None
         progressbar_args = {
@@ -187,10 +186,16 @@ class TrainingEpoch:
             "logging_on_close": True,
             "postfix": True
         }
+        n_iter = (epoch-1) * len(self._loader)
 
         # Perform training steps
         with create_progressbar(**progressbar_args) as progress:
             for example_dict in progress:
+                #print("dataset length:",len(progress))
+                with open('%s/iter_counts.txt'%(self._args.save), 'w') as f:
+                    f.write('%d'%n_iter)
+                #print(n_iter)
+
 
                 # perform step
                 loss_dict_per_step, output_dict = self._step(example_dict, model_and_loss, optimizer)
@@ -212,6 +217,7 @@ class TrainingEpoch:
                     moving_averages_postfix="_ema")
 
                 progress.set_postfix(progress_stats)
+                n_iter += 1
 
 
         # Return loss and output dictionary
@@ -480,7 +486,7 @@ def exec_runtime(args,
             # Create and run a training epoch
             # -------------------------------------------
             if train_loader is not None:
-                avg_loss_dict, _ = training_module.run(model_and_loss=model_and_loss, optimizer=optimizer)
+                avg_loss_dict, _ = training_module.run(model_and_loss=model_and_loss, optimizer=optimizer,epoch=epoch)
 
                 if args.evaluation is False:
                     tensorBoardWriter.add_scalar('Train/Loss', avg_loss_dict[args.training_key], epoch)

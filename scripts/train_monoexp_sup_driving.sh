@@ -4,17 +4,16 @@
 #SBATCH	--output=/scratch_net/phon/majing/src/log/%j.out
 #SBATCH --gres=gpu:1
 #SBATCH --mem=50G
+#SBATCH --mail-type=ALL
+#SBATCH --constraint='turing|titan_xp'
 
-#source /scratch_net/phon/majing/anaconda/bin/conda shell.bash hook
-#conda activate self-mono
+source /scratch_net/phon/majing/anaconda3/etc/profile.d/conda.sh
+conda activate self-mono
 
-
-# experiments and datasets meta
-#KITTI_RAW_HOME="/scratch_net/phon/majing/datasets/kitti_full/"
-KITTI_RAW_HOME="/disk_hdd/kitti_raw/"
-EXPERIMENTS_HOME="/disk_ssd/self-mono-debug"
-KITTI_COMB_HOME="/disk_hdd/kitti_full"
-SYNTH_DRIVING_HOME="/disk_ssd/driving"
+KITTI_RAW_HOME="/scratch_net/phon/majing/datasets/kitti_raw/"
+#KITTI_RAW_HOME="/disk_hdd/kitti_full/"
+EXPERIMENTS_HOME="/scratch_net/phon/majing/src/exps"
+SYNTH_DRIVING_HOME="/scratch_net/phon/majing/datasets/driving"
 
 # model
 MODEL=Mono_Expansion
@@ -31,10 +30,9 @@ Train_Loss_Function=Loss_Exp_Sup
 Valid_Dataset=Synth_Driving_Val
 Valid_Augmentation=Augmentation_Exp
 Valid_Loss_Function=Loss_Exp_Sup
-ALIAS="-kitti-raw-"
-TIME=$(date +"%Y%m%d-%H%M%S")
-SAVE_PATH="$EXPERIMENTS_HOME/debug"
 
+ALIAS="-monoexpansion-"
+SAVE_PATH="$EXPERIMENTS_HOME/$ALIAS/"
 
 # training configuration
 python ../main.py \
@@ -44,7 +42,7 @@ python ../main.py \
 --checkpoint=$CHECKPOINT \
 --lr_scheduler=MultiStepLR \
 --lr_scheduler_gamma=0.5 \
---lr_scheduler_milestones="[23, 39, 47, 54]"  \
+--lr_scheduler_milestones="[14, 39, 47, 54]"  \
 --model=$MODEL \
 --num_workers=16 \
 --optimizer=Adam \
