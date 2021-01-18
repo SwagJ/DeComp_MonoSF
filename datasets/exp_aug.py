@@ -216,7 +216,7 @@ class SpatialAug(object):
                     (self.grid_transform(cornergrid, transmat1, gridsize=[float(h),float(w)]).abs()>1).sum()) == 0:
                     break
         if i==49:
-            print('max_iter in augmentation')
+            #print('max_iter in augmentation')
             self.to_identity()
             self.left_multiply(1, 0, 0, 1, -.5 * tw, -.5 * th);
             self.left_multiply(1, 0, 0, 1, .5 * w, .5 * h);

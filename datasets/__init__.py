@@ -9,7 +9,10 @@ from . import kitti_eigen_test
 from . import synth_driving
 
 KITTI_2015_Train_Full_mnsf 				= kitti_2015_train.KITTI_2015_MonoSceneFlow_Full
+KITTI_2015_Train_Full_monoexp_eval			= kitti_2015_train.KITTI_2015_MonoExp_Eval_Full
 KITTI_2015_Train_Full_monodepth 		= kitti_2015_train.KITTI_2015_MonoDepth_Full
+KITTI_2015_MonoExp_Train				= kitti_2015_train.KITTI_2015_MonoExp_Train
+KITTI_2015_MonoExp_Val 					= kitti_2015_train.KITTI_2015_MonoExp_Val
 
 KITTI_2015_Test 						= kitti_2015_test.KITTI_2015_Test
 Audi_Test								= kitti_2015_test.Audi_Test

@@ -14,6 +14,7 @@
 KITTI_RAW_HOME="/disk_hdd/kitti_raw/"
 EXPERIMENTS_HOME="/disk_ssd/self-mono-debug"
 KITTI_COMB_HOME="/disk_hdd/kitti_full"
+KITTI_FLOW_HOME="/disk_hdd/kitti_full/kitti_flow"
 SYNTH_DRIVING_HOME="/disk_ssd/driving"
 
 # model
@@ -24,11 +25,11 @@ MODEL=Mono_Expansion
 CHECKPOINT=None
 
 # Loss and Augmentation
-Train_Dataset=Synth_Driving_Train
+Train_Dataset=KITTI_2015_MonoExp_Train
 Train_Augmentation=Augmentation_Exp
 Train_Loss_Function=Loss_Exp_Sup
 
-Valid_Dataset=Synth_Driving_Val
+Valid_Dataset=KITTI_2015_MonoExp_Val
 Valid_Augmentation=Augmentation_Exp
 Valid_Loss_Function=Loss_Exp_Sup
 ALIAS="-kitti-raw-"
@@ -38,9 +39,9 @@ SAVE_PATH="$EXPERIMENTS_HOME/debug"
 
 # training configuration
 python ../main.py \
---batch_size=4 \
+--batch_size=2 \
 --batch_size_val=1 \
---finetuning=False \
+--finetuning=True \
 --checkpoint=$CHECKPOINT \
 --lr_scheduler=MultiStepLR \
 --lr_scheduler_gamma=0.5 \
@@ -55,11 +56,11 @@ python ../main.py \
 --training_augmentation=$Train_Augmentation \
 --training_augmentation_photometric=True \
 --training_dataset=$Train_Dataset \
---training_dataset_root=$SYNTH_DRIVING_HOME \
+--training_dataset_root=$KITTI_FLOW_HOME \
 --training_loss=$Train_Loss_Function \
 --training_key=total_loss \
 --validation_augmentation=$Valid_Augmentation \
 --validation_dataset=$Valid_Dataset \
---validation_dataset_root=$SYNTH_DRIVING_HOME \
+--validation_dataset_root=$KITTI_FLOW_HOME \
 --validation_key=total_loss \
 --validation_loss=$Valid_Loss_Function \

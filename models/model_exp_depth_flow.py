@@ -102,9 +102,7 @@ class Mono_Expansion(nn.Module):
 		imgAux_f = input_dict['imgAux_f'].cuda()
 		flow_f = input_dict['flow_f'].cuda()
 		# past variables
-		imgAux_b = input_dict['imgAux_b'].cuda()
-		flow_b = input_dict['flow_b'].cuda()
-
+		#print(self._args.evaluation)
 		#print("Input shape:", flow_f.shape)
 		#forward pair
 		dchange_f, iexp_f, flows_f = self.net(input_dict['im0_f'].cuda(), input_dict['im1_f'].cuda())
@@ -147,7 +145,9 @@ class Mono_Expansion(nn.Module):
 
 
 
-		if not self._args.evaluation:
+		if (not self._args.evaluation) and (not self._args.finetuning):
+			imgAux_b = input_dict['imgAux_b'].cuda()
+			flow_b = input_dict['flow_b'].cuda()
 			dchange_b, iexp_b, flows_b = self.net(input_dict['im0_b'].cuda(), input_dict['im1_b'].cuda())
 			output_dict['dchange_b'] = dchange_b
 			output_dict['iexp_b'] = iexp_b

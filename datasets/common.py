@@ -9,6 +9,7 @@ import cv2
 import random
 import math
 from . import exp_aug as flow_transforms
+from PIL import Image
 
 width_to_date = dict()
 width_to_date[1242] = '2011_09_26'
@@ -85,6 +86,29 @@ def read_png_flow(flow_file):
 	flow[invalid_idx, 1] = 0
 	return flow[:, :, 0:2], (1 - invalid_idx * 1)[:, :, None]
 
+def read_png_file(flow_file):
+	"""
+	Read from KITTI .png file
+	:param flow_file: name of the flow file
+	:return: optical flow data in matrix
+	"""
+	flow = cv2.imread(flow_file,-1)[:,:,::-1].astype(np.float64)
+ #   flow_object = png.Reader(filename=flow_file)
+ #   flow_direct = flow_object.asDirect()
+ #   flow_data = list(flow_direct[2])
+ #   (w, h) = flow_direct[3]['size']
+ #   #print("Reading %d x %d flow file in .png format" % (h, w))
+ #   flow = np.zeros((h, w, 3), dtype=np.float64)
+ #   for i in range(len(flow_data)):
+ #       flow[i, :, 0] = flow_data[i][0::3]
+ #       flow[i, :, 1] = flow_data[i][1::3]
+ #       flow[i, :, 2] = flow_data[i][2::3]
+
+	invalid_idx = (flow[:, :, 2] == 0)
+	flow[:, :, 0:2] = (flow[:, :, 0:2] - 2 ** 15) / 64.0
+	flow[invalid_idx, 0] = 0
+	flow[invalid_idx, 1] = 0
+	return flow
 
 def read_png_disp(disp_file):
 	disp_np = io.imread(disp_file).astype(np.uint16) / 256.0
@@ -92,12 +116,17 @@ def read_png_disp(disp_file):
 	mask_disp = (disp_np > 0).astype(np.float64)
 	return disp_np, mask_disp
 
+def read_full_disp(path):
+	data = Image.open(path)
+	data = np.ascontiguousarray(data,dtype=np.float32)/256
+	return data
+
 		
 def read_raw_calib_file(filepath):
 	# From https://github.com/utiasSTARS/pykitti/blob/master/pykitti/utils.py
 	"""Read in a calibration file and parse into a dictionary."""
 	data = {}
-
+	#print(filepath)
 	with open(filepath, 'r') as f:
 		for line in f.readlines():
 			key, value = line.split(':', 1)
@@ -146,6 +175,32 @@ def read_calib_into_dict(path_dir):
 		intrinsic_dict_r[date] = P_rect_03[:3, :3]
 
 	return intrinsic_dict_l, intrinsic_dict_r
+
+def read_full_calib_into_dict(path_dir):
+
+	calibration_file_list = ['2011_09_26', '2011_09_28', '2011_09_29', '2011_09_30', '2011_10_03']
+	intrinsic_dict_l = {}
+	intrinsic_dict_r = {}
+
+	for ii, date in enumerate(calibration_file_list):
+		file_name = "cam_intrinsics/calib_cam_to_cam_" + date + '.txt'
+		file_name_full = os.path.join(path_dir, file_name)
+		file_data = read_raw_calib_file(file_name_full)
+		P_rect_02 = np.reshape(file_data['P_rect_02'], (3, 4))
+		P_rect_03 = np.reshape(file_data['P_rect_03'], (3, 4))
+		intrinsic_dict_l[date] = P_rect_02
+		intrinsic_dict_r[date] = P_rect_03
+
+	return intrinsic_dict_l, intrinsic_dict_r
+
+def process_calib_into_dict(P_rect_20, P_rect_30):
+	data = {}
+	data['K_cam2'] = P_rect_20[0:3, 0:3]
+	data['K_cam3'] = P_rect_30[0:3, 0:3]
+	data['b20'] = P_rect_20[0, 3] / P_rect_20[0, 0]
+	data['b30'] = P_rect_30[0, 3] / P_rect_30[0, 0]
+	return data
+
 
 def pixel_coord_np(width, height):
 	x = np.linspace(0, width - 1, width).astype(np.int)
@@ -320,13 +375,11 @@ def readPFM(file):
 	data = np.flipud(data)
 	return data, scale
 
-def generate_gt_expansion(iml0,iml1,flowl0,disp, dispC, intrinsic, count_path=None, datashape=[256, 704]): 
-	flowl0[:,:,2] = 1
+def generate_gt_expansion(iml0,iml1,flowl0,d1, d2, bl, fl, cx, cy, count_path=None, order=1, prob=1): 
 	np.ascontiguousarray(flowl0,dtype=np.float32)
 	flowl0[np.isnan(flowl0)] = 1e6 
-	d1 = np.abs(disp)
-	d2 = np.abs(disp + dispC)
-	th,tw = datashape
+	#print(flowl0.shape)	
+	th,tw,_ = iml0.shape
 
 	flowl0[:,:,2] = np.logical_and(np.logical_and(flowl0[:,:,2]==1, d1!=0), d2!=0).astype(float)
 	shape = d1.shape
@@ -334,10 +387,6 @@ def generate_gt_expansion(iml0,iml1,flowl0,disp, dispC, intrinsic, count_path=No
 	xcoord = mesh[0].astype(float)
 	ycoord = mesh[1].astype(float)
 
-	bl = 1
-	fl = intrinsic[0,0]
-	cx = intrinsic[0,2]
-	cy = intrinsic[1,2]
 	P0 = triangulation(d1, xcoord, ycoord, bl=1, fl = fl, cx = cx, cy = cy)
 	P1 = triangulation(d2, xcoord + flowl0[:,:,0], ycoord + flowl0[:,:,1], bl=1, fl = fl, cx = cx, cy = cy)
 	dis0 = P0[2]
@@ -349,8 +398,8 @@ def generate_gt_expansion(iml0,iml1,flowl0,disp, dispC, intrinsic, count_path=No
 	gt_normal = np.concatenate((d1[:,:,np.newaxis],d2[:,:,np.newaxis],d2[:,:,np.newaxis]),-1)
 	change_size = np.concatenate((change_size[:,:,np.newaxis],gt_normal,flow3d),2)
 
-	iml1 = np.asarray(iml1)/255.
-	iml0 = np.asarray(iml0)/255.
+	iml1 = (iml1)/255.
+	iml0 = (iml0)/255.
 	iml0 = iml0[:,:,::-1].copy()
 	iml1 = iml1[:,:,::-1].copy()
 
@@ -364,13 +413,13 @@ def generate_gt_expansion(iml0,iml1,flowl0,disp, dispC, intrinsic, count_path=No
 	schedule = [0.5, 1., 50000.]  # initial coeff, final_coeff, half life
 	schedule_coeff = schedule[0] + (schedule[1] - schedule[0]) * (2/(1+np.exp(-1.0986*iter_counts/schedule[2])) - 1)
 
-	if np.random.binomial(1,1):
+	if np.random.binomial(1,prob):
 		co_transform1 = flow_transforms.Compose([
 						flow_transforms.SpatialAug([th,tw],
 										scale=[0.2,0.,0.1],
 										rot=[0.4,0.],
 										trans=[0.4,0.],
-										squeeze=[0.3,0.], schedule_coeff=schedule_coeff, order=1),
+										squeeze=[0.3,0.], schedule_coeff=schedule_coeff, order=order),
 		])
 	else:
 		co_transform1 = flow_transforms.Compose([
@@ -397,26 +446,25 @@ def generate_gt_expansion(iml0,iml1,flowl0,disp, dispC, intrinsic, count_path=No
 
 	# randomly cover a region
 	sx=0;sy=0;cx=0;cy=0
-	if np.random.binomial(1,0.5):
-		sx = int(np.random.uniform(25,100))
-		sy = int(np.random.uniform(25,100))
+	#if np.random.binomial(1,0.5):
+	#	sx = int(np.random.uniform(25,100))
+	#	sy = int(np.random.uniform(25,100))
 		#sx = int(np.random.uniform(50,150))
 		#sy = int(np.random.uniform(50,150))
-		cx = int(np.random.uniform(sx,iml1.shape[0]-sx))
-		cy = int(np.random.uniform(sy,iml1.shape[1]-sy))
-		iml1[cx-sx:cx+sx,cy-sy:cy+sy] = np.mean(np.mean(iml1,0),0)[np.newaxis,np.newaxis]
+	#	cx = int(np.random.uniform(sx,iml1.shape[0]-sx))
+	#	cy = int(np.random.uniform(sy,iml1.shape[1]-sy))
+	#	iml1[cx-sx:cx+sx,cy-sy:cy+sy] = np.mean(np.mean(iml1,0),0)[np.newaxis,np.newaxis]
 
-	mean_0 = [0.4073691611362623, 0.42901937118896116, 0.4465059109131892 ]
-	mean_1 = [0.40371895921813855, 0.42480472910892475, 0.4418785707088379 ]
-	iml0 -= np.asarray(mean_0)[np.newaxis, np.newaxis, :]
-	iml1 -= np.asarray(mean_1)[np.newaxis, np.newaxis, :]
-	iml0_bgr = iml0[...,::-1].copy()
-	iml1_bgr = iml1[...,::-1].copy()
+	#iml0_bgr = iml0[...,::-1].copy()
+	#iml1_bgr = iml1[...,::-1].copy()
 
-	return iml0_bgr, iml1_bgr, flowl0, change_size, intr, imol0, imol1, np.asarray([cx-sx,cx+sx,cy-sy,cy+sy])
+	return iml0, iml1, flowl0, change_size, intr, imol0, imol1, np.asarray([cx-sx,cx+sx,cy-sy,cy+sy])
 
 def triangulation(disp, xcoord, ycoord, bl=1, fl = 450, cx = 479.5, cy = 269.5):
-	depth = bl*fl / disp # 450px->15mm focal length
+	mask = disp != 0
+	depth = bl*fl / (disp+1e-16) # 450px->15mm focal length
+	depth = depth * mask
+	#print(depth.shape, type(depth))
 	X = (xcoord - cx) * depth / fl
 	Y = (ycoord - cy) * depth / fl
 	Z = depth

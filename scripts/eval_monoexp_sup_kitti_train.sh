@@ -3,18 +3,18 @@
 # DATASETS_HOME
 KITTI_HOME="/disk_hdd/kitti_flow"
 #AUDI_HOME="/disk_hdd/a2d2/seq_01"
-CHECKPOINT="/disk_ssd/self-mono-debug/debug/checkpoint_latest.ckpt"
+CHECKPOINT="/disk_ssd/Self_Mono_Experiments/-monoexpansion-/checkpoint_epoch15.ckpt"
 
 # model
 MODEL=Mono_Expansion
 
-Valid_Dataset=KITTI_2015_Train_Full_monoexp
+Valid_Dataset=KITTI_2015_Train_Full_monoexp_eval
 Valid_Augmentation=Augmentation_MonoExp_Eval_Only
 Valid_Loss_Function=Eval_MonoExp_KITTI_Train
 #VALIDATION_AUGMENTATION_IMGSIZE=[400,1200]
 
 # training configuration
-SAVE_PATH="/disk_ssd/self-mono-eval/debug"
+SAVE_PATH="/disk_ssd/self-mono-eval/-monoexpansion-/"
 python ../main.py \
 --batch_size=1 \
 --batch_size_val=1 \

@@ -133,23 +133,37 @@ class Synth_Driving(data.Dataset):
 
 		# read images and flow
 		# im_l1, im_l2, im_r1, im_r2
-		img_list_np = [Image.open(img).convert('RGB') for img in self._image_list[index]]
-		img_list_tmp = [read_image_as_byte(img) for img in self._image_list[index]]
+		#img_list_np = [Image.open(img).convert('RGB') for img in self._image_list[index]]
+		img_list_np = [read_image_as_byte(img) for img in self._image_list[index]]
 		# displ0, dispr0, dispC_l0_future, dispC_r0_future, flowl0_future, flowr0_future
 		future_list_np = [readPFM(img)[0] for img in self._future_list[index]]
 		# displ1, dispr1, dispC_l1_past, dispC_r1_past, flowl1_past, flowr1_past
 		past_list_np = [readPFM(img)[0] for img in self._past_list[index]]
+		h_orig, w_orig, _ = img_list_tmp[0].shape
+		crop_size = [h_orig, w_orig]
 
 		im0 = img_list_np[0]
 		im1 = img_list_np[1]
 		disp0, dispC0, flow0 = future_list_np
 		disp1, dispC1, flow1 = past_list_np 
+		disp0_future = np.abs(disp0)
+		disp1_future = np.abs(disp0 + dispC0)
+		disp1_past = np.abs(disp1)
+		disp0_past = np.abs(disp1 + dispC1)
+		flow0[:,:,2] = 1
+		flow1[:,:,2] = 1
 
+		bl = 1
+		fl = self.intrinsic[0,0]
+		cx = self.intrinsic[0,2]
+		cy = self.intrinsic[1,2]
 		# into future 
-		img0_crop_f, img1_crop_f, flow0_f, imgAux_f, intr_f, imgAug0_f, imgAug1_f, occp0_f = generate_gt_expansion(im0, im1, flow0,disp0, dispC0, self.intrinsic,
-																													'%s/iter_counts.txt'%(self._args.save), self._datashape)
-		img0_crop_b, img1_crop_b, flow0_b, imgAux_b, intr_b, imgAug0_b, imgAug1_b, occp0_b = generate_gt_expansion(im1, im0, flow1,disp1, dispC1, self.intrinsic, 
-																													'%s/iter_counts.txt'%(self._args.save), self._datashape)
+		img0_crop_f, img1_crop_f, flow0_f, imgAux_f, intr_f, imgAug0_f, imgAug1_f, occp0_f = generate_gt_expansion(im0, im1, flow0,disp0_future, disp1_future, bl, fl, cx, cy,
+																													'%s/iter_counts.txt'%(self._args.save), order=1, prob=1)
+		img0_crop_b, img1_crop_b, flow0_b, imgAux_b, intr_b, imgAug0_b, imgAug1_b, occp0_b = generate_gt_expansion(im1, im0, flow1,disp1_past, disp0_past, bl, fl, cx, cy,
+																													'%s/iter_counts.txt'%(self._args.save), order=1, prob=1)
+		
+		#print("image0_crop_f shape:", img0_crop_f.shape)
 		# future set
 		img0_crop_f = numpy2torch(img0_crop_f)
 		img1_crop_f = numpy2torch(img1_crop_f)
@@ -176,7 +190,6 @@ class Synth_Driving(data.Dataset):
 		
 		#img_list_tensor = [self._to_tensor(img) for img in img_list_tmp]
 		# input size
-		h_orig, w_orig, _ = img_list_tmp[0].shape
 		input_im_size = torch.from_numpy(np.array([h_orig, w_orig])).float()
 	   
 		common_dict = {
