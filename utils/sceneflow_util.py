@@ -48,6 +48,8 @@ def pixel2pts(intrinsics, depth):
 
 	depth_mat = depth.view(b, 1, -1)
 	pixel_mat = pixelgrid.view(b, 3, -1)
+	#print("pixelgrid shape:",pixel_mat.shape)
+
 	pts_mat = torch.matmul(torch.inverse(intrinsics.cpu()).cuda(), pixel_mat) * depth_mat
 	pts = pts_mat.view(b, -1, h, w)
 
@@ -83,6 +85,7 @@ def pixel2pts_ms(intrinsic, output_disp, rel_scale):
 	intrinsic_dp_s = intrinsic_scale(intrinsic, rel_scale[:,0], rel_scale[:,1])
 	output_depth = disp2depth_kitti(output_disp, intrinsic_dp_s[:, 0, 0])
 	pts, _ = pixel2pts(intrinsic_dp_s, output_depth)
+	#print("pts shape:",)
 
 	return pts, intrinsic_dp_s
 

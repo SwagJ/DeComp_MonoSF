@@ -162,6 +162,20 @@ def conv(in_planes, out_planes, kernel_size=3, stride=1, dilation=1, isReLU=True
 					  padding=((kernel_size - 1) * dilation) // 2, bias=True)
 		)
 
+class ConvBlock(nn.Module):
+	"""Layer to perform a convolution followed by ELU
+	"""
+	def __init__(self, in_channels, out_channels):
+		super(ConvBlock, self).__init__()
+
+		self.conv = Conv3x3(in_channels, out_channels)
+		self.nonlin = nn.ELU(inplace=True)
+
+	def forward(self, x):
+		out = self.conv(x)
+		out = self.nonlin(out)
+		return out
+
 
 class upconv(nn.Module):
 	def __init__(self, num_in_layers, num_out_layers, kernel_size, scale):
@@ -324,3 +338,113 @@ class ContextNetwork_Flow_Disp(nn.Module):
 		disp1 = self.conv_d1(x_out) * 0.3
 		
 		return sf, disp1
+
+
+class Conv3x3(nn.Module):
+	"""Layer to pad and convolve input
+	"""
+	def __init__(self, in_channels, out_channels, use_refl=True):
+		super(Conv3x3, self).__init__()
+
+		if use_refl:
+			self.pad = nn.ReflectionPad2d(1)
+		else:
+			self.pad = nn.ZeroPad2d(1)
+		self.conv = nn.Conv2d(int(in_channels), int(out_channels), 3)
+
+	def forward(self, x):
+		out = self.pad(x)
+		out = self.conv(out)
+		return out
+
+class Disp_Decoder_Skip_Connection(nn.Module):
+	def __init__(self,ch_in):
+		super(Disp_Decoder_Skip_Connection, self).__init__()
+
+		self.upconvs = nn.ModuleList()
+		self.ch_in = ch_in[::-1]
+		self.ch_dec = [16, 32, 64, 128, 192, 256, 256]
+		#print("ch_in:", self.ch_in)
+		self.sigmoid = nn.Sigmoid()
+		self.disp_decoders = nn.ModuleList()
+		for i in range(6):
+			#print("ii:",i)
+			upconvs_now = nn.ModuleList()
+			#print("conv1_block dim:",self.ch_in[5-i], self.ch_dec[5-i])
+			upconvs_now.append(ConvBlock(self.ch_dec[6-i],self.ch_dec[5-i]))
+			if i != 5:
+				upconvs_now.append(ConvBlock(self.ch_in[i+1] + self.ch_dec[5-i], self.ch_dec[5-i]))
+				#print("conv2_block dim:",self.ch_in[i+1] + self.ch_dec[5-i], self.ch_dec[5-i])
+			else:
+				upconvs_now.append(ConvBlock(self.ch_dec[5-i], self.ch_dec[5-i]))
+				#print("conv2_block dim:",self.ch_dec[5-i], self.ch_dec[5-i])
+
+			self.upconvs.append(upconvs_now)
+			self.disp_decoders.append(Conv3x3(self.ch_dec[5-i],1))
+
+	def forward(self, input_features):
+		disps = []
+
+		x = input_features[0]
+		#print("input feature shape:", input_features[0].shape,input_features[1].shape, input_features[2].shape, input_features[3].shape, input_features[4].shape,input_features[5].shape, input_features[6].shape)
+		for i in range(6):
+			#print("ii:", i)
+			scale = 5 - i
+			x = self.upconvs[i][0](x)
+			x = [tf.interpolate(x, scale_factor=2, mode='bilinear', align_corners=False)]
+			if i != 5:
+				x += [input_features[i+1]]
+			x = torch.cat(x,1)
+			x = self.upconvs[i][1](x)
+
+			disps.append(self.sigmoid(self.disp_decoders[i](x)))
+
+		return disps
+
+
+
+class Flow_Decoder(nn.Module):
+	def __init__(self, ch_in):
+		super(Flow_Decoder, self).__init__()
+
+		self.convs = nn.Sequential(
+			conv(ch_in, 128),
+			conv(128, 128),
+			conv(128, 96),
+			conv(96, 64),
+			conv(64, 32)
+		)
+		self.conv_flow = conv(32, 2, isReLU=False)
+		#self.conv_d1 = conv(32, 1, isReLU=False)
+
+	def forward(self, x):
+		x_out = self.convs(x)
+		flow = self.conv_flow(x_out)
+
+		return x_out, flow
+
+class ContextNetwork_Flow(nn.Module):
+	def __init__(self, ch_in):
+		super(ContextNetwork_Flow, self).__init__()
+
+		self.convs = nn.Sequential(
+			conv(ch_in, 128, 3, 1, 1),
+			conv(128, 128, 3, 1, 2),
+			conv(128, 128, 3, 1, 4),
+			conv(128, 96, 3, 1, 8),
+			conv(96, 64, 3, 1, 16),
+			conv(64, 32, 3, 1, 1)
+		)
+		#self.conv_d1 = nn.Sequential(
+		#	conv(32, 1, isReLU=False), 
+		#	torch.nn.Sigmoid()
+		#)
+		self.conv_sf = conv(32, 2, isReLU=False)
+
+	def forward(self, x):
+
+		x_out = self.convs(x)
+		sf = self.conv_sf(x_out)
+		#disp1 = self.conv_d1(x_out) * 0.3
+		
+		return sf

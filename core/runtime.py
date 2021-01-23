@@ -17,6 +17,7 @@ from utils.flow import flow_to_png_middlebury, write_flow_png, write_depth_png
 import matplotlib.pyplot as plt
 from skimage import io
 import os
+import cv2
 
 # for tensorboardX
 from torch.utils.tensorboard import SummaryWriter
@@ -240,7 +241,7 @@ class EvaluationEpoch:
         self._augmentation = augmentation
         self._tbwriter = tbwriter
         self._save_output = False
-        if self._args.save_flow or self._args.save_disp or self._args.save_disp2:
+        if self._args.save_flow or self._args.save_disp or self._args.save_disp2 or self._args.save_flow_otl or self._args.save_disp_otl or self._args.save_disp2_otl:
             self._save_output = True
 
     def save_outputs(self, example_dict, output_dict):
@@ -249,6 +250,9 @@ class EvaluationEpoch:
         save_root_flow = self._args.save + '/flow/'
         save_root_disp = self._args.save + '/disp_0/'
         save_root_disp2 = self._args.save + '/disp_1/'
+        save_root_flow_otl = self._args.save + '/otl_flow/'
+        save_root_disp_otl = self._args.save + '/otl_disp/'
+        save_root_disp2_otl = self._args.save + '/otl_disp2/'
 
         if self._args.save_flow:
             out_flow = output_dict["out_flow_pp"].data.cpu().numpy()
@@ -317,6 +321,63 @@ class EvaluationEpoch:
                 # Png
                 file_name2 = file_names_disp2[ii] + '_10.png'
                 write_depth_png(file_name2, out_disp2[ii, 0, ...])
+
+        if self._args.save_flow_otl:
+
+            b_size = output_dict["otl_flow"].data.size(0)
+            out_flow_otl = output_dict["otl_flow"].data.cpu().numpy()
+            file_names_flow_otl = []
+
+            for ii in range(0, b_size):
+                file_name_flow_otl = save_root_flow_otl + '/' + str(example_dict["basename"][ii])
+                file_names_flow_otl.append(file_name_flow_otl)
+                directory_flow_otl = os.path.dirname(file_name_flow_otl)
+                if not os.path.exists(directory_flow_otl):
+                    os.makedirs(directory_flow_otl)
+                    print(directory_flow_otl, ' has been created.')
+
+            for ii in range(0, b_size):
+                # Vis
+                flow_otl_ii = out_flow_otl[ii, 0, ...]
+                cv2.imwrite(file_names_flow_otl[ii] + '_flow_otl.png', flow_otl_ii * 255)
+
+        if self._args.save_disp_otl:
+
+            b_size = output_dict["otl_disp"].data.size(0)
+            out_disp_otl = output_dict["otl_disp"].data.cpu().numpy()
+            file_names_disp_otl = []
+
+            for ii in range(0, b_size):
+                file_name_disp_otl = save_root_disp_otl + '/' + str(example_dict["basename"][ii])
+                file_names_disp_otl.append(file_name_disp_otl)
+                directory_disp_otl = os.path.dirname(file_name_disp_otl)
+                if not os.path.exists(directory_disp_otl):
+                    os.makedirs(directory_disp_otl)
+                    print(directory_disp_otl, ' has been created.')
+
+            for ii in range(0, b_size):
+                # Vis
+                out_disp_otl = out_disp_otl[ii, 0, ...]
+                cv2.imwrite(file_names_disp_otl[ii] + '_disp_otl.png', out_disp_otl * 255)
+
+        if self._args.save_disp2_otl:
+
+            b_size = output_dict["otl_disp2"].data.size(0)
+            out_disp2_otl = output_dict["otl_disp2"].data.cpu().numpy()
+            file_names_disp2_otl = []
+
+            for ii in range(0, b_size):
+                file_name_disp2_otl = save_root_disp2_otl + '/' + str(example_dict["basename"][ii])
+                file_names_disp2_otl.append(file_name_disp2_otl)
+                directory_disp2_otl = os.path.dirname(file_name_disp2_otl)
+                if not os.path.exists(directory_disp2_otl):
+                    os.makedirs(directory_disp2_otl)
+                    print(directory_disp2_otl, ' has been created.')
+
+            for ii in range(0, b_size):
+                # Vis
+                out_disp2_otl = out_disp2_otl[ii, 0, ...]
+                cv2.imwrite(file_names_disp2_otl[ii] + '_disp2_otl.png', out_disp2_otl * 255)
 
 
     def _step(self, example_dict, model_and_loss):

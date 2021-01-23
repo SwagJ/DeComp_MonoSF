@@ -14,6 +14,7 @@ MonoSF_Disp_Exp_Plus		=	model_monosceneflow.MonoSF_Disp_Exp_Plus
 MonoSceneFlow_Disp_Res      =	model_monosceneflow.MonoSceneFlow_Disp_Res
 MonoFlow_Disp 				=	model_monosceneflow.MonoFlow_Disp
 Mono_Expansion				=   model_exp_depth_flow.Mono_Expansion
+MonoFlow_Disp_Seperate_NoWarp = model_monosceneflow.MonoFlow_Disp_Seperate_NoWarp
 
 ##########################################################################################
 ## Monocular Scene Flow - The models for the ablation studies
