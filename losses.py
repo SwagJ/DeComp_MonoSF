@@ -3034,13 +3034,13 @@ class Loss_SceneFlow_Sf_Sup(nn.Module):
 
 		gt_sf_l = target_dict['sf_l'].to(disp_r1_dict[0].device)
 		gt_sf_r = target_dict['sf_r'].to(disp_r1_dict[0].device)
-		gt_sf_bl = target_dict['sf_bl'].to(disp_r1_dict[0].device)
-		gt_sf_br = target_dict['sf_br'].to(disp_r1_dict[0].device)
+		#gt_sf_bl = target_dict['sf_bl'].to(disp_r1_dict[0].device)
+		#gt_sf_br = target_dict['sf_br'].to(disp_r1_dict[0].device)
 		gt_sf_l_mask = target_dict['valid_sf_l'].to(disp_r1_dict[0].device)
 		gt_sf_r_mask = target_dict['valid_sf_r'].to(disp_r1_dict[0].device)
 
-		gt_im_l_mask = target_dict['valid_pixels_l'].to(disp_r1_dict[0].device)
-		gt_im_r_mask = target_dict['valid_pixels_r'].to(disp_r1_dict[0].device)
+		#gt_im_l_mask = target_dict['valid_pixels_l'].to(disp_r1_dict[0].device)
+		#gt_im_r_mask = target_dict['valid_pixels_r'].to(disp_r1_dict[0].device)
 
 		for ii, (sf_f, sf_b, disp_l1, disp_l2, disp_r1, disp_r2) in enumerate(zip(output_dict['flow_f_pp'], output_dict['flow_b_pp'], output_dict['disp_l1'], output_dict['disp_l2'], disp_r1_dict, disp_r2_dict)):
 			assert(sf_f.size()[2:4] == disp_l1.size()[2:4])
@@ -3052,7 +3052,7 @@ class Loss_SceneFlow_Sf_Sup(nn.Module):
 			img_r1_aug = interpolate2d_as(target_dict["input_r1_aug"], sf_f)
 			img_r2_aug = interpolate2d_as(target_dict["input_r2_aug"], sf_f)
 
-			im_mask = interpolate2d_as(gt_im_r_mask*gt_im_l_mask, disp_r1).to(disp_l1.device).float()
+			im_mask = interpolate2d_as(gt_sf_l_mask, disp_r1).to(disp_l1.device).float()
 
 			## Disp Loss
 			loss_disp_l1, disp_occ_l1 = self.depth_loss_left_img1(disp_l1, disp_r1, img_l1_aug, img_r1_aug, ii)
@@ -3062,24 +3062,25 @@ class Loss_SceneFlow_Sf_Sup(nn.Module):
 
 			## Sceneflow Loss           
 			sf_f_up = interpolate2d_as(sf_f, gt_sf_l)
-			sf_b_up = interpolate2d_as(sf_b, gt_sf_l)
+			#sf_b_up = interpolate2d_as(sf_b, gt_sf_l)
 			#gt_sf_r_down = interpolate2d_as(gt_sf_r, sf_f_r)
 			disp_occ_l1 = interpolate2d_as(disp_occ_l1.float(), gt_sf_l_mask)
-			disp_occ_l2 = interpolate2d_as(disp_occ_l2.float(), gt_im_l_mask)
+			disp_occ_l2 = interpolate2d_as(disp_occ_l2.float(), gt_sf_l_mask)
 			#sf_r_mask_down = interpolate2d_as(gt_sf_r_mask, sf_f_r)
 			sf_f_mask = gt_sf_l_mask * disp_occ_l1.float()
-			sf_b_mask = gt_im_l_mask * disp_occ_l2.float()
+			#sf_b_mask = gt_im_l_mask * disp_occ_l2.float()
+			#print("input shape:", sf_f_up.shape)
 
 			valid_epe_f = _elementwise_robust_epe_char(sf_f_up, gt_sf_l) * sf_f_mask
 			valid_epe_f[sf_f_mask == 0].detach_()
 			flow_f_loss = valid_epe_f[sf_f_mask != 0].mean()
 
-			valid_epe_b = _elementwise_robust_epe_char(sf_b_up, gt_sf_bl) * sf_b_mask
-			valid_epe_b[sf_b_mask == 0].detach_()
-			flow_b_loss = valid_epe_b[sf_b_mask != 0].mean()
+			#valid_epe_b = _elementwise_robust_epe_char(sf_b_up, gt_sf_bl) * sf_b_mask
+			#valid_epe_b[sf_b_mask == 0].detach_()
+			#flow_b_loss = valid_epe_b[sf_b_mask != 0].mean()
 			#valid_epe_r = _elementwise_robust_epe_char(out_flow, gt_flow) * sf_r_mask_down * disp_occ_l2
 
-			loss_sf_sum = loss_sf_sum + (flow_f_loss + flow_b_loss) * self._weights[ii]            
+			loss_sf_sum = loss_sf_sum + flow_f_loss * self._weights[ii]            
 
 		# finding weight
 		f_loss = loss_sf_sum.detach()

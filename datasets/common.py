@@ -10,6 +10,7 @@ import random
 import math
 from . import exp_aug as flow_transforms
 from PIL import Image
+import torch.nn.functional as tf
 
 width_to_date = dict()
 width_to_date[1242] = '2011_09_26'
@@ -288,12 +289,12 @@ def threed_warp(image_l,depth_l,image_r,depth_r,intrinsic_l,intrinsic_r):
 	cam_coords_r = (inv_intrinsic_l[:3, :3] @ image_coord_r * depth_r.flatten()).T
 
 	# rotation
-	if torch.rand(1) > 0.5:
+	if torch.rand(1) > 0.1:
 		aug_cam_coords_l,aug_cam_coords_r = perform_rotate(cam_coords_l,cam_coords_r)
 	else: 
 		aug_cam_coords_l,aug_cam_coords_r = perform_scaling(cam_coords_l,cam_coords_r)
 	# shearing
-	aug_cam_coords_l,aug_cam_coords_r = perform_shearing(aug_cam_coords_l,aug_cam_coords_r)
+	# aug_cam_coords_l,aug_cam_coords_r = perform_shearing(aug_cam_coords_l,aug_cam_coords_r)
 	#translation
 	aug_cam_coords_l,aug_cam_coords_r = perform_trans(aug_cam_coords_l,aug_cam_coords_r,depth_min)
 	# generate sceneflow
@@ -302,22 +303,36 @@ def threed_warp(image_l,depth_l,image_r,depth_r,intrinsic_l,intrinsic_r):
 	#get warpped image
 	new_image_coords_l = (intrinsic_l @ aug_cam_coords_l.T / (aug_cam_coords_l[:,2]+ 1e-6)).T
 	new_image_coords_r = (intrinsic_r @ aug_cam_coords_r.T / (aug_cam_coords_r[:,2]+ 1e-6)).T
-	#get valid map
-	valid_l = get_valid_map(new_image_coords_l[:,:2],height_l,width_l).reshape(height_l,width_l).astype(np.float32)
-	valid_r = get_valid_map(new_image_coords_r[:,:2],height_r,width_r).reshape(height_r,width_r).astype(np.float32)
+	new_image_coords_tensor_l = torch.from_numpy(new_image_coords_l[:,:2]).view(height_l,width_l,2)
+	new_image_coords_l_x = new_image_coords_tensor_l[:,:,0:1] / (width_l - 1) * 2 - 1
+	new_image_coords_l_y = new_image_coords_tensor_l[:,:,1:2] / (height_l - 1) * 2 - 1
+	normed_image_coords_l = torch.cat((new_image_coords_l_x, new_image_coords_l_y),dim=2)
+	new_image_coords_tensor_r = torch.from_numpy(new_image_coords_r[:,:2]).view(height_r,width_r,2)
+	new_image_coords_r_x = new_image_coords_tensor_r[:,:,0:1] / (width_r - 1) * 2 - 1
+	new_image_coords_r_y = new_image_coords_tensor_r[:,:,1:2] / (height_r - 1) * 2 - 1
+	normed_image_coords_r = torch.cat((new_image_coords_r_x, new_image_coords_r_y),dim=2)
+	# transfer to tensor:
+	image_l = torch.from_numpy(image_l.astype(float).transpose(2,0,1))
+	image_r = torch.from_numpy(image_r.astype(float).transpose(2,0,1))
+	image_l_mask = torch.ones_like(image_l)
+	image_r_mask = torch.ones_like(image_r)
+	# warpping
+	warpped_im_l = tf.grid_sample(image_l.unsqueeze(0),normed_image_coords_l.unsqueeze(0))
+	warpped_im_r = tf.grid_sample(image_r.unsqueeze(0),normed_image_coords_r.unsqueeze(0))
+	warpped_mask_l = (tf.grid_sample(image_l_mask.unsqueeze(0), normed_image_coords_l.unsqueeze(0)) >= 1)
+	warpped_mask_r = (tf.grid_sample(image_r_mask.unsqueeze(0), normed_image_coords_r.unsqueeze(0)) >= 1)
+
+	warpped_im_l = (warpped_im_l.float() * warpped_mask_l.float()).squeeze(0).numpy().transpose(1,2,0)
+	warpped_im_r = (warpped_im_r.float() * warpped_mask_r.float()).squeeze(0).numpy().transpose(1,2,0)
+	warpped_mask_l = warpped_mask_l.squeeze(0).numpy().transpose(1,2,0).all(-1)[:,:,np.newaxis]
+	warpped_mask_r = warpped_mask_r.squeeze(0).numpy().transpose(1,2,0).all(-1)[:,:,np.newaxis]
+
+
 	# get new image coordinate
-	new_img_xl = new_image_coords_l[:,0].reshape(height_l,width_l).astype(np.float32)
-	new_img_yl = new_image_coords_l[:,1].reshape(height_l,width_l).astype(np.float32)
-	new_img_xr = new_image_coords_r[:,0].reshape(height_r,width_r).astype(np.float32)
-	new_img_yr = new_image_coords_r[:,1].reshape(height_r,width_r).astype(np.float32)
 
-	warpped_im_l = cv2.remap(image_l,new_img_xl,new_img_yl,cv2.INTER_LINEAR)
-	valid_pixels_l = (warpped_im_l != 0).all(-1).astype(np.float32)
-	warpped_im_r = cv2.remap(image_r,new_img_xr,new_img_yr,cv2.INTER_LINEAR)
-	valid_pixels_r = (warpped_im_r != 0).all(-1).astype(np.float32)
 
-	sf_bl = -cv2.remap(sf_l,new_img_xl,new_img_yl,cv2.INTER_LINEAR)
-	sf_br = -cv2.remap(sf_r,new_img_xr,new_img_yr,cv2.INTER_LINEAR)
+	#sf_bl = -cv2.remap(sf_l,new_img_xl,new_img_yl,cv2.INTER_LINEAR)
+	#sf_br = -cv2.remap(sf_r,new_img_xr,new_img_yr,cv2.INTER_LINEAR)
 	#cv2.imwrite("l.png", warpped_im_l)
 	#cv2.imwrite("r.png", warpped_im_r)
 	#cv2.imwrite("l_og.png", image_l)
@@ -326,14 +341,10 @@ def threed_warp(image_l,depth_l,image_r,depth_r,intrinsic_l,intrinsic_r):
 	out_dict = {
 		"sf_l":sf_l,
 		"sf_r":sf_r,
-		"sf_bl":sf_bl,
-		"sf_br":sf_br,
 		"warpped_im_l":warpped_im_l,
 		"warpped_im_r":warpped_im_r,
-		"valid_l":np.expand_dims(valid_l, axis=2),
-		"valid_r":np.expand_dims(valid_r, axis=2),
-		"valid_pixels_l":np.expand_dims(valid_pixels_l,axis=2),
-		"valid_pixels_r":np.expand_dims(valid_pixels_r,axis=2)
+		"valid_l": warpped_mask_l,
+		"valid_r": warpped_mask_r
 	}
 	return out_dict
 

@@ -63,7 +63,7 @@ class MonoSceneFlow(nn.Module):
         # on the bottom level are original images
         x1_pyramid = self.feature_pyramid_extractor(x1_raw) + [x1_raw]
         x2_pyramid = self.feature_pyramid_extractor(x2_raw) + [x2_raw]
-        print("feature pyramid shape:",x1_pyramid[0].shape, x1_pyramid[1].shape, x1_pyramid[2].shape, x1_pyramid[3].shape, x1_pyramid[4].shape,x1_pyramid[5].shape, x1_pyramid[6].shape)
+        #print("feature pyramid shape:",x1_pyramid[0].shape, x1_pyramid[1].shape, x1_pyramid[2].shape, x1_pyramid[3].shape, x1_pyramid[4].shape,x1_pyramid[5].shape, x1_pyramid[6].shape)
 
         # outputs
         sceneflows_f = []
@@ -133,7 +133,7 @@ class MonoSceneFlow(nn.Module):
         x1_rev = x1_pyramid[::-1]
         #print("top-level sf shape:", sceneflows_f[-1].shape)
         flows_f = upsample_outputs_as(sceneflows_f[::-1], x1_rev)
-        print("flow_f shape:",flows_f[0].shape, flows_f[1].shape, flows_f[2].shape, flows_f[3].shape, flows_f[4].shape)
+        #print("flow_f shape:",flows_f[0].shape, flows_f[1].shape, flows_f[2].shape, flows_f[3].shape, flows_f[4].shape)
 
         output_dict['flow_f'] = upsample_outputs_as(sceneflows_f[::-1], x1_rev)
         output_dict['flow_b'] = upsample_outputs_as(sceneflows_b[::-1], x1_rev)

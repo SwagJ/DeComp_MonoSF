@@ -902,12 +902,12 @@ class Augmentation_SceneFlow_Sf_Sup(nn.Module):
 
         example_dict["sf_l"] = self.cropping(example_dict["sf_l"], str_x, str_y, end_x, end_y)
         example_dict["sf_r"] = self.cropping(example_dict["sf_r"], str_x, str_y, end_x, end_y)
-        example_dict["sf_bl"] = self.cropping(example_dict["sf_bl"], str_x, str_y, end_x, end_y)
-        example_dict["sf_br"] = self.cropping(example_dict["sf_br"], str_x, str_y, end_x, end_y)
+        #example_dict["sf_bl"] = self.cropping(example_dict["sf_bl"], str_x, str_y, end_x, end_y)
+        #example_dict["sf_br"] = self.cropping(example_dict["sf_br"], str_x, str_y, end_x, end_y)
         example_dict["valid_sf_l"] = self.cropping(example_dict["valid_sf_l"], str_x, str_y, end_x, end_y)
         example_dict["valid_sf_r"] = self.cropping(example_dict["valid_sf_r"], str_x, str_y, end_x, end_y)
-        example_dict["valid_pixels_l"] = self.cropping(example_dict["valid_pixels_l"], str_x, str_y, end_x, end_y)
-        example_dict["valid_pixels_r"] = self.cropping(example_dict["valid_pixels_r"], str_x, str_y, end_x, end_y)
+        #example_dict["valid_pixels_l"] = self.cropping(example_dict["valid_pixels_l"], str_x, str_y, end_x, end_y)
+        #example_dict["valid_pixels_r"] = self.cropping(example_dict["valid_pixels_r"], str_x, str_y, end_x, end_y)
         
         
 

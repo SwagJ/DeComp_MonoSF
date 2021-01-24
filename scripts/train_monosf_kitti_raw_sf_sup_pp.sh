@@ -39,7 +39,7 @@ LR_Milestones=[8, 23, 39, 47, 54]
 ALIAS="-kitti-sf-sup-pp-"
 TIME=$(date +"%Y%m%d-%H%M%S")
 SAVE_PATH="$EXPERIMENTS_HOME/$ALIAS/"
-CHECKPOINT="$EXPERIMENTS_HOME/$ALIAS/checkpoint_latest.ckpt"
+#CHECKPOINT="$EXPERIMENTS_HOME/$ALIAS/checkpoint_latest.ckpt"
 
 
 
