@@ -797,6 +797,7 @@ class Eval_MonoExp_KITTI_Train(nn.Module):
 		##################################################
 
 		batch_size, _, _, width = gt_disp.size()
+		#print(output_dict["dchange_f"].shape)
 
 		#out_disp_l1 = interpolate2d_as(output_dict["disp_l1_pp"][0], gt_disp, mode="bilinear") * width
 		#out_depth_l1 = _disp2depth_kitti_K(out_disp_l1, intrinsics[:, 0, 0])

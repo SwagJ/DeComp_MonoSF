@@ -18,20 +18,20 @@ KITTI_FLOW_HOME="/disk_hdd/kitti_full/kitti_flow"
 SYNTH_DRIVING_HOME="/disk_ssd/driving"
 
 # model
-MODEL=MonoSF_Full
+MODEL=MonoFlow_Disp_Seperate_Warp_OG_Decoder
 
 # save path
 #CHECKPOINT="checkpoints/full_model_kitti/checkpoint_latest.ckpt"
 CHECKPOINT=None
 
 # Loss and Augmentation
-Train_Dataset=KITTI_Raw_Warpping_Sf_KittiSplit_Train_mnsf
-Train_Augmentation=Augmentation_SceneFlow_Sf_Sup
-Train_Loss_Function=Loss_SceneFlow_Sf_Sup
+Train_Dataset=KITTI_Raw_KittiSplit_Train_mnsf
+Train_Augmentation=Augmentation_SceneFlow
+Train_Loss_Function=Loss_FlowDisp_SelfSup
 
-Valid_Dataset=KITTI_Raw_Warpping_Sf_KittiSplit_Valid_mnsf
+Valid_Dataset=KITTI_Raw_KittiSplit_Valid_mnsf
 Valid_Augmentation=Augmentation_Resize_Only
-Valid_Loss_Function=Loss_SceneFlow_Sf_Sup
+Valid_Loss_Function=Loss_FlowDisp_SelfSup
 
 ALIAS="-kitti-raw-"
 TIME=$(date +"%Y%m%d-%H%M%S")

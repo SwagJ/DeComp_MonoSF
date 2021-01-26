@@ -423,6 +423,25 @@ class Flow_Decoder(nn.Module):
 
 		return x_out, flow
 
+class Disp_Decoder(nn.Module):
+	def __init__(self, ch_in):
+		super(Disp_Decoder, self).__init__()
+
+		self.convs = nn.Sequential(
+			conv(ch_in, 128),
+			conv(128, 128),
+			conv(128, 64),
+			conv(64, 32)
+		)
+		self.conv_disp = conv(32, 1, isReLU=False)
+		#self.conv_d1 = conv(32, 1, isReLU=False)
+
+	def forward(self, x):
+		x_out = self.convs(x)
+		disp = self.conv_disp(x_out)
+
+		return x_out, disp
+
 class ContextNetwork_Flow(nn.Module):
 	def __init__(self, ch_in):
 		super(ContextNetwork_Flow, self).__init__()
@@ -448,3 +467,44 @@ class ContextNetwork_Flow(nn.Module):
 		#disp1 = self.conv_d1(x_out) * 0.3
 		
 		return sf
+
+
+class ContextNetwork_Disp(nn.Module):
+	def __init__(self, ch_in):
+		super(ContextNetwork_Disp, self).__init__()
+
+		self.convs = nn.Sequential(
+			conv(ch_in, 128, 3, 1, 1),
+			conv(128, 128, 3, 1, 2),
+			conv(128, 128, 3, 1, 4),
+			conv(128, 96, 3, 1, 8),
+			conv(96, 64, 3, 1, 16),
+			conv(64, 32, 3, 1, 1)
+		)
+		self.conv_d1 = nn.Sequential(
+			conv(32, 1, isReLU=False), 
+			torch.nn.Sigmoid()
+		)
+		#self.conv_sf = conv(32, 1, isReLU=False)
+
+	def forward(self, x):
+
+		x_out = self.convs(x)
+		#sf = self.conv_sf(x_out)
+		disp1 = self.conv_d1(x_out) * 0.3
+		
+		return disp1
+
+
+class Feature_Decoder(nn.Module):
+	def __init__(self,num_chs):
+		super(Feature_Decoder, self).__init__()
+
+		self.flow_decoder = conv(num_chs,num_chs,isReLU=False)
+		self.disp_decoder = conv(num_chs,num_chs,isReLU=False)
+
+	def forward(self,x):
+		disp_feat = self.disp_decoder(x)
+		flow_feat = self.flow_decoder(x)
+
+		return disp_feat, flow_feat

@@ -12,33 +12,29 @@ conda activate self-mono
 
 
 # experiments and datasets meta
-KITTI_RAW_HOME="/scratch_net/phon/majing/datasets/kitti_full/kitti_raw"
+KITTI_RAW_HOME="/scratch_net/phon/majing/datasets/kitti_raw/"
 #KITTI_RAW_HOME="/disk_hdd/kitti_full/"
 EXPERIMENTS_HOME="/scratch_net/phon/majing/src/exps"
 
 # model
-MODEL=MonoSF_Full
+MODEL=MonoFlow_Disp_Seperate_Warp_OG_Decoder
 
 # save path
-
+#CHECKPOINT="checkpoints/full_model_kitti/checkpoint_latest.ckpt"
 CHECKPOINT=None
 
 # Loss and Augmentation
-Train_Dataset=KITTI_Raw_Warpping_Sf_KittiSplit_Train_mnsf
-Train_Augmentation=Augmentation_SceneFlow_Sf_Sup
-Train_Loss_Function=Loss_SceneFlow_Sf_Sup
+Train_Dataset=KITTI_Raw_KittiSplit_Train_mnsf
+Train_Augmentation=Augmentation_SceneFlow
+Train_Loss_Function=Loss_FlowDisp_SelfSup
 
-Valid_Dataset=KITTI_Raw_Warpping_Sf_KittiSplit_Valid_mnsf
+Valid_Dataset=KITTI_Raw_KittiSplit_Valid_mnsf
 Valid_Augmentation=Augmentation_Resize_Only
-Valid_Loss_Function=Loss_SceneFlow_Sf_Sup
+Valid_Loss_Function=Loss_FlowDisp_SelfSup
 
-Init_LR=2e-4
-LR_Type=MultiStepLR
-LR_Milestones=[8, 23, 39, 47, 54]
-
-ALIAS="-kitti-sf-sup-pp-"
-TIME=$(date +"%Y%m%d-%H%M%S")
+ALIAS="-mono-flow-disp-warp-og-decoder-"
 SAVE_PATH="$EXPERIMENTS_HOME/$ALIAS/"
+
 #CHECKPOINT="$EXPERIMENTS_HOME/$ALIAS/checkpoint_latest.ckpt"
 
 
@@ -59,7 +55,7 @@ python ../main.py \
 --optimizer_lr=2e-4 \
 --save=$SAVE_PATH \
 --total_epochs=62 \
---sf_sup=True \
+--save_freq=5 \
 --training_augmentation=$Train_Augmentation \
 --training_augmentation_photometric=True \
 --training_dataset=$Train_Dataset \
@@ -75,6 +71,3 @@ python ../main.py \
 --validation_dataset_preprocessing_crop=False \
 --validation_key=total_loss \
 --validation_loss=$Valid_Loss_Function \
-
-
-
