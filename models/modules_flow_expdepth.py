@@ -8,6 +8,8 @@ import math
 import numpy as np
 import pdb
 
+from .modules_sceneflow import ConvBlock, Conv3x3
+
 class residualBlock(nn.Module):
 	expansion = 1
 
@@ -399,3 +401,47 @@ class Depth_Decoder_SelfMono(nn.Module):
 #		super(Depth_Decoder_ResNet_Style,self).__init__()
 
 #		self.conv0 = 
+
+class Disp_Decoder_Skip_Connection(nn.Module):
+	def __init__(self,ch_in):
+		super(Disp_Decoder_Skip_Connection, self).__init__()
+
+		self.upconvs = nn.ModuleList()
+		self.ch_in = ch_in[::-1]
+		self.ch_dec = [16, 32, 64, 96, 128, 196, 196]
+		#print("ch_in:", self.ch_in)
+		self.sigmoid = nn.Sigmoid()
+		self.disp_decoders = nn.ModuleList()
+		for i in range(6):
+			#print("ii:",i)
+			upconvs_now = nn.ModuleList()
+			#print("conv1_block dim:",self.ch_in[5-i], self.ch_dec[5-i])
+			upconvs_now.append(ConvBlock(self.ch_dec[6-i],self.ch_dec[5-i]))
+			if i != 5:
+				upconvs_now.append(ConvBlock(self.ch_in[i+1] + self.ch_dec[5-i], self.ch_dec[5-i]))
+				#print("conv2_block dim:",self.ch_in[i+1] + self.ch_dec[5-i], self.ch_dec[5-i])
+			else:
+				upconvs_now.append(ConvBlock(self.ch_dec[5-i], self.ch_dec[5-i]))
+				#print("conv2_block dim:",self.ch_dec[5-i], self.ch_dec[5-i])
+
+			self.upconvs.append(upconvs_now)
+			self.disp_decoders.append(Conv3x3(self.ch_dec[5-i],1))
+
+	def forward(self, input_features):
+		disps = []
+
+		x = input_features[0]
+		#print("input feature shape:", input_features[0].shape,input_features[1].shape, input_features[2].shape, input_features[3].shape, input_features[4].shape,input_features[5].shape, input_features[6].shape)
+		for i in range(6):
+			#print("ii:", i)
+			scale = 5 - i
+			x = self.upconvs[i][0](x)
+			x = [F.interpolate(x, scale_factor=2, mode='bilinear', align_corners=False)]
+			if i != 5:
+				x += [input_features[i+1]]
+			x = torch.cat(x,1)
+			x = self.upconvs[i][1](x)
+
+			disps.append(self.sigmoid(self.disp_decoders[i](x))*0.3)
+
+		return disps

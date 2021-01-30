@@ -559,6 +559,7 @@ class Eval_SceneFlow_KITTI_Train(nn.Module):
 		loss_dict["d_abs"] = dict_disp0_occ['abs_rel']
 		loss_dict["d_sq"] = dict_disp0_occ['sq_rel']
 		loss_dict["d1"] = dict_disp0_occ['otl']
+		output_dict["otl_disp"] = d0_outlier_image
 
 		##################################################
 		## Optical Flow Eval
@@ -575,6 +576,7 @@ class Eval_SceneFlow_KITTI_Train(nn.Module):
 		flow_gt_mag = torch.norm(target_dict["target_flow"], p=2, dim=1, keepdim=True) + 1e-8
 		flow_outlier_epe = (valid_epe > 3).float() * ((valid_epe / flow_gt_mag) > 0.05).float() * gt_flow_mask
 		loss_dict["f1"] = (flow_outlier_epe.view(batch_size, -1).sum(1)).mean() / 91875.68
+		output_dict["otl_flow"] = flow_outlier_epe
 
 
 		##################################################
@@ -592,6 +594,7 @@ class Eval_SceneFlow_KITTI_Train(nn.Module):
 
 		d1_outlier_image = dict_disp1_occ['otl_img']
 		loss_dict["d2"] = dict_disp1_occ['otl']
+		output_dict["otl_disp2"] = d1_outlier_image
 
 
 		##################################################
@@ -3633,3 +3636,106 @@ class Loss_Exp_Sup(nn.Module):
 		loss_dict["total_loss"] = total_loss
 
 		return loss_dict
+
+
+
+
+class Loss_PWCDisp_SelfSup(nn.Module):
+	def __init__(self, args):
+		super(Loss_PWCDisp_SelfSup, self).__init__()
+				
+		self._weights = [1.0, 1.0, 1.0, 1.0, 2.0, 4.0]
+		self._ssim_w = 0.85
+		self._disp_smooth_w = 0.1
+		self._sf_3d_pts = 0.2
+		self._sf_3d_sm = 200
+		self._warping_layer = WarpingLayer_Flow()
+
+	def depth_loss_left_img(self, disp_l, disp_r, img_l_aug, img_r_aug, ii):
+
+		img_r_warp = _generate_image_left(img_r_aug, disp_l)
+		left_occ = _adaptive_disocc_detection_disp(disp_r).detach()
+
+		## Photometric loss
+		img_diff = (_elementwise_l1(img_l_aug, img_r_warp) * (1.0 - self._ssim_w) + _SSIM(img_l_aug, img_r_warp) * self._ssim_w).mean(dim=1, keepdim=True)        
+		loss_img = (img_diff[left_occ]).mean()
+		img_diff[~left_occ].detach_()
+
+		## Disparities smoothness
+		loss_smooth = _smoothness_motion_2nd(disp_l, img_l_aug, beta=10.0).mean() / (2 ** ii)
+
+		return loss_img + self._disp_smooth_w * loss_smooth, left_occ
+
+	def detaching_grad_of_outputs(self, output_dict):
+		
+		for ii in range(0, len(output_dict['disp_r0'])):
+			output_dict['disp_r0'][ii].detach_()
+			output_dict['disp_r1'][ii].detach_()
+
+		return None
+
+	def forward(self, output_dict, target_dict):
+
+		loss_dict = {}
+
+		batch_size = target_dict['input_l1'].size(0)
+		loss_sf_sum = 0
+		loss_dp_sum = 0
+		loss_sf_2d = 0
+		loss_sf_3d = 0
+		loss_sf_sm = 0
+		
+		k_l1_aug = target_dict['input_k_l1_aug']
+		k_l2_aug = target_dict['input_k_l2_aug']
+		aug_size = target_dict['aug_size']
+
+		#disp_r1_dict = output_dict['output_dict_r']['disp_l1']
+		#disp_r2_dict = output_dict['output_dict_r']['disp_l2']
+		#print("len disp:", len(output_dict['disp_r0']))
+
+		for ii, (disp_l0, disp_l1, disp_r0, disp_r1) in enumerate(zip(output_dict['disp_l0'], output_dict['disp_l1'], output_dict['disp_r0'], output_dict['disp_r1'])):
+
+			#assert(sf_f.size()[2:4] == sf_b.size()[2:4])
+			#assert(sf_f.size()[2:4] == disp_l1.size()[2:4])
+			#assert(sf_f.size()[2:4] == disp_l2.size()[2:4])
+			
+			## For image reconstruction loss
+			img_l1_aug = interpolate2d_as(target_dict["input_l1_aug"], disp_l1)
+			img_l2_aug = interpolate2d_as(target_dict["input_l2_aug"], disp_l1)
+			img_r1_aug = interpolate2d_as(target_dict["input_r1_aug"], disp_l1)
+			img_r2_aug = interpolate2d_as(target_dict["input_r2_aug"], disp_l1)
+			#print("disp_size:", disp_l0.shape)
+
+			## Disp Loss
+			loss_disp_l0, disp_occ_l0 = self.depth_loss_left_img(disp_l0, disp_r0, img_l1_aug, img_r1_aug, ii)
+			loss_disp_l1, disp_occ_l1 = self.depth_loss_left_img(disp_l1, disp_r1, img_l2_aug, img_r2_aug, ii)
+			loss_dp_sum = loss_dp_sum + (loss_disp_l0 + loss_disp_l1) * self._weights[ii]
+
+
+			## Sceneflow Loss           
+			#loss_flow, loss_im, loss_smooth = self.flow_loss(sf_f, sf_b, img_l1_aug, img_l2_aug)
+
+			#loss_sf_sum = loss_sf_sum + loss_flow * self._weights[ii]            
+			#loss_sf_2d = loss_sf_2d + loss_im
+			#loss_sf_sm = loss_sf_sm + loss_smooth
+
+		# finding weight
+		#f_loss = loss_sf_sum.detach()
+		d_loss = loss_dp_sum.detach()
+		#max_val = torch.max(f_loss, d_loss)
+		#f_weight = max_val / f_loss
+		#d_weight = max_val / d_loss
+
+		total_loss = loss_dp_sum
+
+		loss_dict = {}
+		loss_dict["dp"] = loss_dp_sum
+		#loss_dict["flow"] = loss_sf_sum
+		#loss_dict["im"] = loss_sf_2d
+		loss_dict["total_loss"] = total_loss
+
+		self.detaching_grad_of_outputs(output_dict)
+
+		return loss_dict
+
+

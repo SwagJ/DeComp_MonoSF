@@ -15,7 +15,7 @@ from .modules_sceneflow import FeatureExtractor, MonoSceneFlowDecoder, ContextNe
 
 from utils.interpolation import interpolate2d_as
 from utils.sceneflow_util import flow_horizontal_flip, intrinsic_scale, get_pixelgrid, post_processing
-from .modules_flow_expdepth import Expansion_Decoder
+from .modules_flow_expdepth import Expansion_Decoder, Disp_Decoder_Skip_Connection
 from .pwc import pwc_dc_net
 from .modules_flow_expdepth import get_grid
 
@@ -185,3 +185,61 @@ class Mono_Expansion(nn.Module):
 #        self.depth_decoder = args.depth_decoder()
 
 #    def forward(self,input_dict):
+
+
+
+class PWC_Disp(nn.Module):
+	def __init__(self, args):
+		super(PWC_Disp, self).__init__()
+
+		self.args = args
+		self.pwc_net = pwc_dc_net('./models/pretrained_pwc/pwc_net.pth.tar')
+		self.ch_in = [16, 32, 64, 96, 128, 196]
+
+		self.disp_l = Disp_Decoder_Skip_Connection(self.ch_in)
+		self.disp_r = Disp_Decoder_Skip_Connection(self.ch_in)
+
+	def forward(self,input_dict):
+		output_dict = {}
+		iml0 = input_dict['input_l1_aug']
+		iml1 = input_dict['input_l2_aug']
+		#print("training:", self.training)
+
+		if self.training or (not self.args.evaluation): # if only fine-tuning expansion 
+			reset=True
+			train_flag = self.training
+			self.eval()
+			torch.set_grad_enabled(False)
+		else: reset=False
+
+		corrs_l, flows_l, feats_l, feat_pyramid_l0, feat_pyramid_l1 = self.pwc_net(iml0, iml1)
+		#print("feat_pyramid dim:", feat_pyramid_l1[0].shape, feat_pyramid_l1[1].shape, feat_pyramid_l1[2].shape,feat_pyramid_l1[3].shape, feat_pyramid_l1[4].shape, feat_pyramid_l1[5].shape)
+
+		if reset: 
+			imr0 = input_dict['input_r1_aug']
+			imr1 = input_dict['input_r2_aug']
+			corrs_r, flows_r, feats_r, feat_pyramid_r0, feat_pyramid_r1 = self.pwc_net(imr0,imr1)
+			output_dict['flows_r'] = flows_r
+
+			if train_flag:
+				torch.set_grad_enabled(True)          
+				self.train()
+
+			disp_r0 = self.disp_r(feat_pyramid_r0)
+			disp_r1 = self.disp_r(feat_pyramid_r1)
+			output_dict['disp_r0'] = disp_r0
+			output_dict['disp_r1'] = disp_r1
+
+
+		disp_l0 = self.disp_l(feat_pyramid_l0)
+		disp_l1 = self.disp_l(feat_pyramid_l1)	
+
+		output_dict['disp_l0'] = disp_l0
+		output_dict['disp_l1'] = disp_l1
+
+		output_dict['flows_l'] = flows_l
+
+		#print("grad require:",disp_l0[0].requires_grad, disp_l1[0].requires_grad, disp_r0[0].requires_grad, disp_r1[0].requires_grad)
+
+
+		return output_dict
