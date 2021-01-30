@@ -3595,7 +3595,7 @@ class Loss_Exp_Sup(nn.Module):
 		loss_sf_3d = 0
 		loss_sf_sm = 0
 
-		gt_flow = input_dict['flow_gt'][:,:2,:,:].cuda()
+		gt_flow = input_dict['flow_f'][:,:2,:,:].cuda()
 		gt_flow_mask = (input_dict['flow_f'][:,2,:,:] == 1).float().unsqueeze(1).cuda()
 		in_range_mask = ((torch.abs(gt_flow) >= 0).sum(1) * (torch.abs(gt_flow) < 1000).prod(1)).unsqueeze(1).float().cuda()
 		#print("gt_flow shape and device", gt_flow.shape, gt_flow.device)

@@ -15,6 +15,8 @@ import torch.nn.functional as tf
 import glob
 from torch.utils.data.dataset import ConcatDataset
 from . import exp_aug as flow_transforms
+import cv2
+import math
 
 
 class Synth_Driving(data.Dataset):
@@ -139,8 +141,12 @@ class Synth_Driving(data.Dataset):
 		future_list_np = [readPFM(img)[0] for img in self._future_list[index]]
 		# displ1, dispr1, dispC_l1_past, dispC_r1_past, flowl1_past, flowr1_past
 		past_list_np = [readPFM(img)[0] for img in self._past_list[index]]
-		h_orig, w_orig, _ = img_list_tmp[0].shape
+		h_orig, w_orig, _ = img_list_np[0].shape
 		crop_size = [h_orig, w_orig]
+
+		intPreprocessedWidth = int(math.floor(math.ceil(w_orig / 64.0) * 64.0))
+		intPreprocessedHeight = int(math.floor(math.ceil(h_orig / 64.0) * 64.0))
+
 
 		im0 = img_list_np[0]
 		im1 = img_list_np[1]
@@ -150,17 +156,23 @@ class Synth_Driving(data.Dataset):
 		disp1_future = np.abs(disp0 + dispC0)
 		disp1_past = np.abs(disp1)
 		disp0_past = np.abs(disp1 + dispC1)
+		# disp0_future = cv2.resize(disp0_future,(intPreprocessedHeight,intPreprocessedWidth))
+		# disp1_future = cv2.resize(disp1_future,(intPreprocessedHeight,intPreprocessedWidth))
+		# disp1_past = cv2.resize(disp1_past,(intPreprocessedHeight,intPreprocessedWidth))
+		# disp0_past = cv2.resize(disp0_past,(intPreprocessedHeight,intPreprocessedWidth))
 		flow0[:,:,2] = 1
 		flow1[:,:,2] = 1
+		# flow0 = cv2.resize(flow0,(intPreprocessedHeight,intPreprocessedWidth))
+		# flow1 = cv2.resize(flow1,(intPreprocessedHeight,intPreprocessedWidth))
 
 		bl = 1
 		fl = self.intrinsic[0,0]
 		cx = self.intrinsic[0,2]
 		cy = self.intrinsic[1,2]
 		# into future 
-		img0_crop_f, img1_crop_f, flow0_f, imgAux_f, intr_f, imgAug0_f, imgAug1_f, occp0_f = generate_gt_expansion(im0, im1, flow0,disp0_future, disp1_future, bl, fl, cx, cy,
+		img0_crop_f, img1_crop_f, flow0_f, imgAux_f, occp0_f = generate_gt_expansion(im0, im1, flow0,disp0_future, disp1_future, bl, fl, cx, cy,
 																													'%s/iter_counts.txt'%(self._args.save), order=1, prob=1)
-		img0_crop_b, img1_crop_b, flow0_b, imgAux_b, intr_b, imgAug0_b, imgAug1_b, occp0_b = generate_gt_expansion(im1, im0, flow1,disp1_past, disp0_past, bl, fl, cx, cy,
+		img0_crop_b, img1_crop_b, flow0_b, imgAux_b, occp0_b = generate_gt_expansion(im1, im0, flow1,disp1_past, disp0_past, bl, fl, cx, cy,
 																													'%s/iter_counts.txt'%(self._args.save), order=1, prob=1)
 		
 		#print("image0_crop_f shape:", img0_crop_f.shape)
@@ -169,18 +181,18 @@ class Synth_Driving(data.Dataset):
 		img1_crop_f = numpy2torch(img1_crop_f)
 		flow0_f = numpy2torch(flow0_f)
 		imgAux_f = numpy2torch(imgAux_f)
-		intr_f = torch.from_numpy(np.asarray(intr_f).copy()).float()
-		imgAug0_f = torch.from_numpy(imgAug0_f.copy()).float()
-		imgAug1_f = torch.from_numpy(imgAug1_f.copy()).float()
+		#intr_f = torch.from_numpy(np.asarray(intr_f).copy()).float()
+		#imgAug0_f = torch.from_numpy(imgAug0_f.copy()).float()
+		#imgAug1_f = torch.from_numpy(imgAug1_f.copy()).float()
 		occp0_f = torch.from_numpy(occp0_f.copy()).float()
 		# past set
 		img0_crop_b = numpy2torch(img0_crop_b)
 		img1_crop_b = numpy2torch(img1_crop_b)
 		flow0_b = numpy2torch(flow0_b)
 		imgAux_b = numpy2torch(imgAux_b)
-		intr_b = torch.from_numpy(np.asarray(intr_b).copy()).float()
-		imgAug0_b = torch.from_numpy(imgAug0_b.copy()).float()
-		imgAug1_b = torch.from_numpy(imgAug1_b.copy()).float()
+		#intr_b = torch.from_numpy(np.asarray(intr_b).copy()).float()
+		#imgAug0_b = torch.from_numpy(imgAug0_b.copy()).float()
+		#imgAug1_b = torch.from_numpy(imgAug1_b.copy()).float()
 		occp0_b = torch.from_numpy(occp0_b.copy()).float()
 
 		# example filename
@@ -245,17 +257,17 @@ class Synth_Driving(data.Dataset):
 				"im1_f": img1_crop_f,
 				"flow_f": flow0_f,
 				"imgAux_f": imgAux_f,
-				"intr_f": intr_f, 
-				"im0Aug_f": imgAug0_f,
-				"im1Aug_f": imgAug1_f,
+				#"intr_f": intr_f, 
+				#"im0Aug_f": imgAug0_f,
+				#"im1Aug_f": imgAug1_f,
 				"occp0_f": occp0_f,
 				"im0_b": img0_crop_b,
 				"im1_b": img1_crop_b,
 				"flow_b": flow0_b,
 				"imgAux_b": imgAux_b,
-				"intr_b": intr_b, 
-				"im0Aug_b": imgAug0_b,
-				"im1Aug_b": imgAug1_b,
+				#"intr_b": intr_b, 
+				#"im0Aug_b": imgAug0_b,
+				#"im1Aug_b": imgAug1_b,
 				"occp0_b": occp0_b,
 			}
 		example_dict.update(common_dict)

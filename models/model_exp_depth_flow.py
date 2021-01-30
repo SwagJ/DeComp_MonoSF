@@ -103,7 +103,7 @@ class Mono_Expansion(nn.Module):
 		flow_f = input_dict['flow_f'].cuda()
 		# past variables
 		#print(self._args.evaluation)
-		#print("Input shape:", flow_f.shape)
+		#print("Input shape:", input_dict['im0_f'].shape)
 		#forward pair
 		dchange_f, iexp_f, flows_f = self.net(input_dict['im0_f'].cuda(), input_dict['im1_f'].cuda())
 		b,_,h,w = flows_f[-1].shape

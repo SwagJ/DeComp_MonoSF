@@ -983,9 +983,9 @@ class Augmentation_SceneFlow_Sf_Sup(nn.Module):
 # Augmentation for Expansion
 #
 ###########################################################################
-class Augmentation_Exp(nn.Module):
+class Augmentation_Exp_Kitti(nn.Module):
     def __init__(self, args, photometric=True, imgsize=[256, 832]):
-        super(Augmentation_Exp, self).__init__()
+        super(Augmentation_Exp_Kitti, self).__init__()
 
         # init
         self._args = args
@@ -1021,6 +1021,54 @@ class Augmentation_Exp(nn.Module):
         example_dict["imgAux_f"] = imgAux_f
         example_dict["flow_f"] = flow_f
         example_dict["flow_gt"] = flow_gt
+        #example_dict["intr_f"] = k_l1
+
+        return example_dict
+
+class Augmentation_Exp_Driving(nn.Module):
+    def __init__(self, args, photometric=True, imgsize=[256, 832]):
+        super(Augmentation_Exp_Driving, self).__init__()
+
+        # init
+        self._args = args
+        self._photometric = photometric
+        self._photo_augmentation = photometric
+        self._imgsize = imgsize
+
+
+    def forward(self, example_dict):
+
+        # ## KITTI Random Crop
+
+        _, _, hh, ww = example_dict["im0_f"].size()
+        intPreprocessedWidth = int(math.floor(math.ceil(ww / 64.0) * 64.0))
+        intPreprocessedHeight = int(math.floor(math.ceil(hh / 64.0) * 64.0))
+        imgsize = [intPreprocessedHeight, intPreprocessedWidth]
+        sy = imgsize[0] / hh
+        sx = imgsize[1] / ww
+
+        #print("Resized image is of ",self._imgsize)
+
+        # Image resizing
+        #print("im1_f:",example_dict["im1_f"].shape)
+        #print("imgAux_f:", example_dict["imgAux_f"].shape)
+        im0_f = interpolate2d(example_dict["im0_f"], imgsize)
+        im1_f = interpolate2d(example_dict["im1_f"], imgsize)
+        imgAux_f = interpolate2d(example_dict["imgAux_f"], imgsize)
+        flow_f = interpolate2d(example_dict["flow_f"], imgsize)
+        im0_b = interpolate2d(example_dict["im0_b"], imgsize)
+        im1_b = interpolate2d(example_dict["im1_b"], imgsize)
+        imgAux_b = interpolate2d(example_dict["imgAux_b"], imgsize)
+        flow_b = interpolate2d(example_dict["flow_b"], imgsize)
+        #k_l1 = _intrinsic_scale(example_dict["intr_f"], sx, sy)
+        example_dict["im0_f"] = im0_f
+        example_dict["im1_f"] = im1_f
+        example_dict["imgAux_f"] = imgAux_f
+        example_dict["flow_f"] = flow_f
+        example_dict["im0_b"] = im0_b
+        example_dict["im1_b"] = im1_b
+        example_dict["imgAux_b"] = imgAux_b
+        example_dict["flow_b"] = flow_b
         #example_dict["intr_f"] = k_l1
 
         return example_dict

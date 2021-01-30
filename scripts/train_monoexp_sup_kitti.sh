@@ -25,11 +25,11 @@ CHECKPOINT=None
 
 # Loss and Augmentation
 Train_Dataset=KITTI_2015_MonoExp_Train
-Train_Augmentation=Augmentation_Exp
+Train_Augmentation=Augmentation_Exp_Kitti
 Train_Loss_Function=Loss_Exp_Sup
 
 Valid_Dataset=KITTI_2015_MonoExp_Val
-Valid_Augmentation=Augmentation_Exp
+Valid_Augmentation=Augmentation_Exp_Kitti
 Valid_Loss_Function=Loss_Exp_Sup
 
 ALIAS="-monoexpansion-kitti-"
