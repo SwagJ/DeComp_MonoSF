@@ -262,9 +262,9 @@ def perform_trans(cam_coords_l,cam_coords_r,depth_min):
 	return cam_coords_l,cam_coords_r
 
 def perform_scaling(cam_coords_l,cam_coords_r):
-	scaling_x = random.uniform(0,0.05)
-	scaling_y = random.uniform(0,0.05)
-	scaling_z = random.uniform(0,0.05)
+	scaling_x = random.uniform(0,0.1)
+	scaling_y = random.uniform(0,0.1)
+	scaling_z = random.uniform(0,0.1)
 	cam_coords_l[:,0] = cam_coords_l[:,0] * scaling_x
 	cam_coords_l[:,1] = cam_coords_l[:,1] * scaling_y
 	cam_coords_l[:,2] = cam_coords_l[:,2] * scaling_z
@@ -482,3 +482,81 @@ def triangulation(disp, xcoord, ycoord, bl=1, fl = 450, cx = 479.5, cy = 269.5):
 	P = np.concatenate((X[np.newaxis],Y[np.newaxis],Z[np.newaxis]),0).reshape(3,-1)
 	P = np.concatenate((P,np.ones((1,P.shape[-1]))),0)
 	return P
+
+
+def threed_warp_flow(image_l,depth_l,image_r,depth_r,intrinsic_l,intrinsic_r):
+	height_l = depth_l.shape[0]
+	width_l = depth_l.shape[1]
+	height_r = depth_r.shape[0]
+	width_r = depth_r.shape[1]
+	depth_min = np.min(np.vstack((depth_l,depth_r)))
+
+	inv_intrinsic_l = np.linalg.inv(intrinsic_l)
+	inv_intrinsic_r = np.linalg.inv(intrinsic_r)
+
+	image_coord_l = pixel_coord_np(width_l,height_l)
+	cam_coords_l = (inv_intrinsic_l[:3, :3] @ image_coord_l * depth_l.flatten()).T
+	image_coord_r = pixel_coord_np(width_r,height_r)
+	cam_coords_r = (inv_intrinsic_l[:3, :3] @ image_coord_r * depth_r.flatten()).T
+
+	# rotation
+	if torch.rand(1) > 0.5:
+		aug_cam_coords_l,aug_cam_coords_r = perform_rotate(cam_coords_l,cam_coords_r)
+	else: 
+		aug_cam_coords_l,aug_cam_coords_r = perform_scaling(cam_coords_l,cam_coords_r)
+	# shearing
+	# aug_cam_coords_l,aug_cam_coords_r = perform_shearing(aug_cam_coords_l,aug_cam_coords_r)
+	#translation
+	aug_cam_coords_l,aug_cam_coords_r = perform_trans(aug_cam_coords_l,aug_cam_coords_r,depth_min)
+	#generate flow
+	new_image_coords_l = (intrinsic_l @ aug_cam_coords_l.T / (aug_cam_coords_l[:,2]+ 1e-6)).T
+	new_image_coords_r = (intrinsic_r @ aug_cam_coords_r.T / (aug_cam_coords_r[:,2]+ 1e-6)).T
+	#print(image_coord_l.shape)
+	flow_l = (new_image_coords_l.T - image_coord_l).T[:,:2].reshape(height_l,width_l,2)
+	flow_r = (new_image_coords_r.T - image_coord_r).T[:,:2].reshape(height_r,width_r,2)
+
+	#get warpped image
+	new_image_coords_tensor_l = torch.from_numpy(new_image_coords_l[:,:2]).view(height_l,width_l,2)
+	new_image_coords_l_x = new_image_coords_tensor_l[:,:,0:1] / (width_l - 1) * 2 - 1
+	new_image_coords_l_y = new_image_coords_tensor_l[:,:,1:2] / (height_l - 1) * 2 - 1
+	normed_image_coords_l = torch.cat((new_image_coords_l_x, new_image_coords_l_y),dim=2)
+	new_image_coords_tensor_r = torch.from_numpy(new_image_coords_r[:,:2]).view(height_r,width_r,2)
+	new_image_coords_r_x = new_image_coords_tensor_r[:,:,0:1] / (width_r - 1) * 2 - 1
+	new_image_coords_r_y = new_image_coords_tensor_r[:,:,1:2] / (height_r - 1) * 2 - 1
+	normed_image_coords_r = torch.cat((new_image_coords_r_x, new_image_coords_r_y),dim=2)
+	# transfer to tensor:
+	image_l = torch.from_numpy(image_l.astype(float).transpose(2,0,1))
+	image_r = torch.from_numpy(image_r.astype(float).transpose(2,0,1))
+	image_l_mask = torch.ones_like(image_l)
+	image_r_mask = torch.ones_like(image_r)
+	# warpping
+	warpped_im_l = tf.grid_sample(image_l.unsqueeze(0),normed_image_coords_l.unsqueeze(0))
+	warpped_im_r = tf.grid_sample(image_r.unsqueeze(0),normed_image_coords_r.unsqueeze(0))
+	warpped_mask_l = (tf.grid_sample(image_l_mask.unsqueeze(0), normed_image_coords_l.unsqueeze(0)) >= 1)
+	warpped_mask_r = (tf.grid_sample(image_r_mask.unsqueeze(0), normed_image_coords_r.unsqueeze(0)) >= 1)
+
+	warpped_im_l = (warpped_im_l.float() * warpped_mask_l.float()).squeeze(0).numpy().transpose(1,2,0)
+	warpped_im_r = (warpped_im_r.float() * warpped_mask_r.float()).squeeze(0).numpy().transpose(1,2,0)
+	warpped_mask_l = warpped_mask_l.squeeze(0).numpy().transpose(1,2,0).all(-1)[:,:,np.newaxis]
+	warpped_mask_r = warpped_mask_r.squeeze(0).numpy().transpose(1,2,0).all(-1)[:,:,np.newaxis]
+
+
+	# get new image coordinate
+
+
+	#sf_bl = -cv2.remap(sf_l,new_img_xl,new_img_yl,cv2.INTER_LINEAR)
+	#sf_br = -cv2.remap(sf_r,new_img_xr,new_img_yr,cv2.INTER_LINEAR)
+	#cv2.imwrite("l.png", warpped_im_l)
+	#cv2.imwrite("r.png", warpped_im_r)
+	#cv2.imwrite("l_og.png", image_l)
+	#cv2.imwrite("r_og.png", image_r)
+
+	out_dict = {
+		"sf_l":flow_l,
+		"sf_r":flow_r,
+		"warpped_im_l":warpped_im_l,
+		"warpped_im_r":warpped_im_r,
+		"valid_l": warpped_mask_l,
+		"valid_r": warpped_mask_r
+	}
+	return out_dict

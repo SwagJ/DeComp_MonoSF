@@ -213,7 +213,8 @@ class PWC_Disp(nn.Module):
 		else: reset=False
 
 		corrs_l, flows_l, feats_l, feat_pyramid_l0, feat_pyramid_l1 = self.pwc_net(iml0, iml1)
-		#print("feat_pyramid dim:", feat_pyramid_l1[0].shape, feat_pyramid_l1[1].shape, feat_pyramid_l1[2].shape,feat_pyramid_l1[3].shape, feat_pyramid_l1[4].shape, feat_pyramid_l1[5].shape)
+		#print("feat_pyramid grad:", feat_pyramid_l1[0].requires_grad, feat_pyramid_l1[1].requires_grad, feat_pyramid_l1[2].requires_grad,feat_pyramid_l1[3].requires_grad
+		#					, feat_pyramid_l1[4].requires_grad, feat_pyramid_l1[5].requires_grad)
 
 		if reset: 
 			imr0 = input_dict['input_r1_aug']
@@ -238,6 +239,9 @@ class PWC_Disp(nn.Module):
 		output_dict['disp_l1'] = disp_l1
 
 		output_dict['flows_l'] = flows_l
+		#print("feat_pyramid grad:", feat_pyramid_r1[0].requires_grad, feat_pyramid_r1[1].requires_grad, feat_pyramid_r1[2].requires_grad,flows_l[3].requires_grad
+		#					, feat_pyramid_l1[4].requires_grad, feat_pyramid_l1[5].requires_grad)
+
 
 		#print("grad require:",disp_l0[0].requires_grad, disp_l1[0].requires_grad, disp_r0[0].requires_grad, disp_r1[0].requires_grad)
 
