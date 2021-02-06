@@ -4021,6 +4021,8 @@ class Loss_Exp_Sup(nn.Module):
 		valid_epe = _elementwise_epe(out_flow_f, gt_flow_f) * gt_mask_f
 		aepe = valid_epe.mean()
 
+		#print(output_dict['flows_f'][-1].shape)
+
 		loss_dc_f = output_dict['loss_dc_f']
 		loss_iexp_f = output_dict['loss_iexp_f']
 		if not self._args.finetuning:

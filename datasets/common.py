@@ -386,11 +386,11 @@ def readPFM(file):
 	data = np.flipud(data)
 	return data, scale
 
-def generate_gt_expansion(iml0,iml1,flowl0,d1, d2, bl, fl, cx, cy, count_path=None, order=1, prob=1): 
+def generate_gt_expansion(iml0,iml1,shape,flowl0,d1, d2, bl, fl, cx, cy, count_path=None, order=1, prob=1): 
 	np.ascontiguousarray(flowl0,dtype=np.float32)
 	flowl0[np.isnan(flowl0)] = 1e6 
 	#print(flowl0.shape)	
-	th,tw,_ = iml0.shape
+	th,tw = shape
 
 	flowl0[:,:,2] = np.logical_and(np.logical_and(flowl0[:,:,2]==1, d1!=0), d2!=0).astype(float)
 	shape = d1.shape

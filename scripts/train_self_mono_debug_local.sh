@@ -49,7 +49,7 @@ python ../main.py \
 --model=$MODEL \
 --num_workers=10 \
 --optimizer=Adam \
---optimizer_lr=4e-4 \
+--optimizer_lr=1e-3 \
 --save=$SAVE_PATH \
 --total_epochs=62 \
 --save_freq=5 \

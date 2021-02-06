@@ -167,9 +167,9 @@ class Synth_Driving(data.Dataset):
 		cx = self.intrinsic[0,2]
 		cy = self.intrinsic[1,2]
 		# into future 
-		img0_crop_f, img1_crop_f, flow0_f, imgAux_f, occp0_f = generate_gt_expansion(im0, im1, flow0,disp0_future, disp1_future, bl, fl, cx, cy,
+		img0_crop_f, img1_crop_f, flow0_f, imgAux_f, occp0_f = generate_gt_expansion(im0, im1, self._datashape, flow0,disp0_future, disp1_future, bl, fl, cx, cy,
 																													'%s/iter_counts.txt'%(self._args.save), order=1, prob=1)
-		img0_crop_b, img1_crop_b, flow0_b, imgAux_b, occp0_b = generate_gt_expansion(im1, im0, flow1,disp1_past, disp0_past, bl, fl, cx, cy,
+		img0_crop_b, img1_crop_b, flow0_b, imgAux_b, occp0_b = generate_gt_expansion(im1, im0, self._datashape, flow1,disp1_past, disp0_past, bl, fl, cx, cy,
 																													'%s/iter_counts.txt'%(self._args.save), order=1, prob=1)
 		
 		#print("image0_crop_f shape:", img0_crop_f.shape)
