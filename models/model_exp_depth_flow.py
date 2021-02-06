@@ -25,7 +25,7 @@ class Flow_Expansion(nn.Module):
 		super(Flow_Expansion, self).__init__()
 
 		self.args = args
-		self.pwc_net = pwc_dc_net('./models/pretrained_pwc/pwc_net.pth.tar')
+		self.pwc_net = pwc_dc_net('./models/pretrained_pwc/pwc_net_chairs.pth.tar')
 
 		self.expansion = Expansion_Decoder(args,exp_unc=False)
 
@@ -142,6 +142,7 @@ class Mono_Expansion(nn.Module):
 		loss_iexp_f = 0.1* (iexp_f-gt_exp_f.log()).abs()[maskoe_f.unsqueeze(1)].mean()
 		output_dict['loss_dc_f'] = loss_dc_f
 		output_dict['loss_iexp_f'] = loss_iexp_f
+		output_dict['mask_f'] = mask_f
 
 
 
@@ -171,6 +172,7 @@ class Mono_Expansion(nn.Module):
 			loss_iexp_b = 0.1* (iexp_b-gt_exp_b.log()).abs()[maskoe_b.unsqueeze(1)].mean()
 			output_dict['loss_dc_b'] = loss_dc_b
 			output_dict['loss_iexp_b'] = loss_iexp_b
+			output_dict['mask_b'] = mask_b
 
 		#output_dict['input_dict'] = input_dict
 

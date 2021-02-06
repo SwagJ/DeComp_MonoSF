@@ -25,14 +25,14 @@ CHECKPOINT=None
 
 # Loss and Augmentation
 Train_Dataset=Synth_Driving_Train
-Train_Augmentation=Augmentation_Exp
+Train_Augmentation=Augmentation_Exp_Driving
 Train_Loss_Function=Loss_Exp_Sup
 
 Valid_Dataset=Synth_Driving_Val
-Valid_Augmentation=Augmentation_Exp
+Valid_Augmentation=Augmentation_Exp_Driving
 Valid_Loss_Function=Loss_Exp_Sup
 
-ALIAS="-monoexpansion-"
+ALIAS="-monoexpansion-driving-"
 SAVE_PATH="$EXPERIMENTS_HOME/$ALIAS/"
 
 # training configuration

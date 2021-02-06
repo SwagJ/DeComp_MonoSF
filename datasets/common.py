@@ -444,13 +444,13 @@ def generate_gt_expansion(iml0,iml1,flowl0,d1, d2, bl, fl, cx, cy, count_path=No
 		])
 
 	flowl0 = np.concatenate([flowl0,change_size],-1)
-	#augmented,flowl0,intr = co_transform1([iml0, iml1], flowl0, [fl,cx,cy,bl])
-	#imol0 = augmented[0]
-	#imol1 = augmented[1]
-	#augmented,flowl0,intr = co_transform2(augmented, flowl0, intr)
+	augmented,flowl0,intr = co_transform1([iml0, iml1], flowl0, [fl,cx,cy,bl])
+	imol0 = augmented[0]
+	imol1 = augmented[1]
+	augmented,flowl0,intr = co_transform2(augmented, flowl0, intr)
 
-	#iml0 = augmented[0]
-	#iml1 = augmented[1]
+	iml0 = augmented[0]
+	iml1 = augmented[1]
 	flowl0 = flowl0.astype(np.float32)
 	change_size = flowl0[:,:,3:]
 	flowl0 = flowl0[:,:,:3]
@@ -460,8 +460,8 @@ def generate_gt_expansion(iml0,iml1,flowl0,d1, d2, bl, fl, cx, cy, count_path=No
 	if np.random.binomial(1,0.5):
 		sx = int(np.random.uniform(25,100))
 		sy = int(np.random.uniform(25,100))
-		sx = int(np.random.uniform(50,150))
-		sy = int(np.random.uniform(50,150))
+		#sx = int(np.random.uniform(50,150))
+		#sy = int(np.random.uniform(50,150))
 		cx = int(np.random.uniform(sx,iml1.shape[0]-sx))
 		cy = int(np.random.uniform(sy,iml1.shape[1]-sy))
 		iml1[cx-sx:cx+sx,cy-sy:cy+sy] = np.mean(np.mean(iml1,0),0)[np.newaxis,np.newaxis]

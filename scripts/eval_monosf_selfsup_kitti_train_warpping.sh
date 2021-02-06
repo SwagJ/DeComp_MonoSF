@@ -2,17 +2,17 @@
 
 # DATASETS_HOME
 KITTI_HOME="/disk_hdd/kitti_flow"
-CHECKPOINT="/disk_ssd/Self_Mono_Experiments/-mono-flow-disp-warp-og-decoder-/checkpoint_latest.ckpt"
+CHECKPOINT="/disk_ssd/Self_Mono_Experiments/-self-mono-og-/checkpoint_best.ckpt"
 
 # model
-MODEL=MonoFlow_Disp_Seperate_Warp_OG_Decoder
+MODEL=MonoSF_Full
 
-Valid_Dataset=KITTI_2015_Train_Full_mnsf
+Valid_Dataset=KITTI_Raw_Warpping_Test_Valid
 Valid_Augmentation=Augmentation_Resize_Only
-Valid_Loss_Function=Eval_FlowDisp_KITTI_Train
+Valid_Loss_Function=Eval_SceneFlow_KITTI_Train_Warpping
 
 # training configuration
-SAVE_PATH="/disk_ssd/self-mono-eval/-mono-flow-disp-warp-og-decoder-"
+SAVE_PATH="/disk_ssd/self-mono-eval/-self-mono-og-warpping-"
 python ../main.py \
 --batch_size=1 \
 --batch_size_val=1 \
@@ -27,12 +27,12 @@ python ../main.py \
 --validation_dataset_preprocessing_crop=False \
 --validation_dataset_root=$KITTI_HOME \
 --validation_loss=$Valid_Loss_Function \
---validation_key="f1" \
---save_disp=True \
---save_disp2=True \
---save_flow=True \
---save_flow_otl=True \
---save_disp_otl=True
+--validation_key="f_epe" \
+#--save_disp=True \
+#--save_disp2=True \
+#--save_flow=True \
+#--save_flow_otl=True \
+#--save_disp_otl=True
 
 
 

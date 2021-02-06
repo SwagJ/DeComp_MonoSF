@@ -144,9 +144,6 @@ class Synth_Driving(data.Dataset):
 		h_orig, w_orig, _ = img_list_np[0].shape
 		crop_size = [h_orig, w_orig]
 
-		intPreprocessedWidth = int(math.floor(math.ceil(w_orig / 64.0) * 64.0))
-		intPreprocessedHeight = int(math.floor(math.ceil(h_orig / 64.0) * 64.0))
-
 
 		im0 = img_list_np[0]
 		im1 = img_list_np[1]
