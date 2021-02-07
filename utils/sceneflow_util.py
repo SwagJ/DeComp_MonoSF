@@ -55,6 +55,20 @@ def pixel2pts(intrinsics, depth):
 
 	return pts, pixelgrid
 
+def pixel2pts_disp(intrinsics, depth, pixelgrid):
+	b, _, h, w = depth.size()
+
+	#pixelgrid = get_pixelgrid(b, h, w)
+
+	depth_mat = depth.view(b, 1, -1)
+	pixel_mat = pixelgrid.view(b, 3, -1)
+	#print("pixelgrid shape:",pixel_mat.shape)
+
+	pts_mat = torch.matmul(torch.inverse(intrinsics.cpu()).cuda(), pixel_mat) * depth_mat
+	pts = pts_mat.view(b, -1, h, w)
+
+	return pts
+
 
 def pts2pixel(pts, intrinsics):
 	b, _, h, w = pts.size()
