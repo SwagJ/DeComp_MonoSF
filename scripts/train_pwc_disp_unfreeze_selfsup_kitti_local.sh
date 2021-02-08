@@ -7,32 +7,27 @@
 #SBATCH --mail-type=ALL
 #SBATCH --constraint='turing|titan_xp'
 
-source /scratch_net/phon/majing/anaconda3/etc/profile.d/conda.sh
-conda activate self-mono
-
 
 # experiments and datasets meta
-KITTI_RAW_HOME="/scratch_net/phon/majing/datasets/kitti_raw/"
-#KITTI_RAW_HOME="/disk_hdd/kitti_full/"
-EXPERIMENTS_HOME="/scratch_net/phon/majing/src/exps"
+KITTI_RAW_HOME="/disk_hdd/kitti_raw/"
+EXPERIMENTS_HOME="/disk_ssd/Self_Mono_Experiments"
 
 # model
-MODEL=MonoSF_Full
+MODEL=PWC_Disp_Unfreeze
 
 # save path
-
 CHECKPOINT=None
 
 # Loss and Augmentation
 Train_Dataset=KITTI_Raw_KittiSplit_Train_mnsf
-Train_Augmentation=Augmentation_SceneFlow
-Train_Loss_Function=Loss_SceneFlow_SelfSup
+Train_Augmentation=Augmentation_PWCDisp
+Train_Loss_Function=Loss_PWCDisp_SelfSup
 
 Valid_Dataset=KITTI_Raw_KittiSplit_Valid_mnsf
 Valid_Augmentation=Augmentation_Resize_Only
-Valid_Loss_Function=Loss_SceneFlow_SelfSup
+Valid_Loss_Function=Loss_PWCDisp_SelfSup
 
-ALIAS="-self-mono-dp3d-"
+ALIAS="-pwc-disp-skip-connect-unfreeze"
 SAVE_PATH="$EXPERIMENTS_HOME/$ALIAS/"
 
 #CHECKPOINT="$EXPERIMENTS_HOME/$ALIAS/checkpoint_latest.ckpt"
@@ -43,7 +38,7 @@ SAVE_PATH="$EXPERIMENTS_HOME/$ALIAS/"
 
 # training configuration
 python ../main.py \
---batch_size=4 \
+--batch_size=2 \
 --batch_size_val=1 \
 --checkpoint=$CHECKPOINT \
 --lr_scheduler=MultiStepLR \
@@ -52,7 +47,7 @@ python ../main.py \
 --model=$MODEL \
 --num_workers=10 \
 --optimizer=Adam \
---optimizer_lr=2e-4 \
+--optimizer_lr=4e-4 \
 --save=$SAVE_PATH \
 --total_epochs=62 \
 --save_freq=5 \
