@@ -4452,8 +4452,11 @@ class Loss_PWCDisp_Unfreeze_SelfSup(nn.Module):
 		#disp_r1_dict = output_dict['output_dict_r']['disp_l1']
 		#disp_r2_dict = output_dict['output_dict_r']['disp_l2']
 		#print("len disp:", len(output_dict['disp_r0']))
+		#print("len flow:", len(output_dict['flows_l']))
+		#print("disp shape:", output_dict['disp_l0'][0].shape, output_dict['disp_l0'][1].shape, output_dict['disp_l0'][2].shape, output_dict['disp_l0'][3].shape, output_dict['disp_l0'][4].shape, output_dict['disp_l0'][5].shape)
+		#print("flow shape:", output_dict['flows_l'][0].shape, output_dict['flows_l'][1].shape, output_dict['flows_l'][2].shape, output_dict['flows_l'][3].shape, output_dict['flows_l'][4].shape)
 
-		for ii, (disp_l0, disp_l1, disp_r0, disp_r1, flow_l) in enumerate(zip(output_dict['disp_l0'], output_dict['disp_l1'], output_dict['disp_r0'], output_dict['disp_r1'], output_dict['flows_l'])):
+		for ii, (disp_l0, disp_l1, disp_r0, disp_r1, flow_l) in enumerate(zip(output_dict['disp_l0'][1:], output_dict['disp_l1'][1:], output_dict['disp_r0'][1:], output_dict['disp_r1'][1:], output_dict['flows_l'])):
 
 			#assert(sf_f.size()[2:4] == sf_b.size()[2:4])
 			#assert(sf_f.size()[2:4] == disp_l1.size()[2:4])
@@ -4465,6 +4468,10 @@ class Loss_PWCDisp_Unfreeze_SelfSup(nn.Module):
 			img_r1_aug = interpolate2d_as(target_dict["input_r1_aug"], disp_l1)
 			img_r2_aug = interpolate2d_as(target_dict["input_r2_aug"], disp_l1)
 			#print("disp_size:", disp_l0.shape)
+			img_l1_flow = interpolate2d_as(target_dict["input_l1_aug"], flow_l)
+			img_l2_flow = interpolate2d_as(target_dict["input_l2_aug"], flow_l)
+			#img_r1_flow = interpolate2d_as(target_dict["input_r1_aug"], flow_l)
+			#img_r2_flow = interpolate2d_as(target_dict["input_r2_aug"], flow_l)
 
 			## Disp Loss
 			loss_disp_l0, disp_occ_l0 = self.depth_loss_left_img(disp_l0, disp_r0, img_l1_aug, img_r1_aug, ii)
@@ -4472,10 +4479,10 @@ class Loss_PWCDisp_Unfreeze_SelfSup(nn.Module):
 			loss_dp_sum = loss_dp_sum + (loss_disp_l0 + loss_disp_l1) * self._weights[ii]
 
 			# flow_loss
-			img_l2_warp = self._warping_layer(img_l2_aug, flow_l)
+			img_l2_warp = self._warping_layer(img_l2_flow, flow_l)
 			occ = _adaptive_disocc_detection(flow_l).detach()
 
-			img_diff1 = (_elementwise_l1(img_l1_aug, img_l2_warp) * (1.0 - self._ssim_w) + _SSIM(img_l1_aug, img_l2_warp) * self._ssim_w).mean(dim=1, keepdim=True)
+			img_diff1 = (_elementwise_l1(img_l1_flow, img_l2_warp) * (1.0 - self._ssim_w) + _SSIM(img_l1_flow, img_l2_warp) * self._ssim_w).mean(dim=1, keepdim=True)
 			loss_im1 = img_diff1[occ].mean()
 			img_diff1[~occ].detach_()
 

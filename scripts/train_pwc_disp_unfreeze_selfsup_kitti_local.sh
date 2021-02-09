@@ -21,11 +21,11 @@ CHECKPOINT=None
 # Loss and Augmentation
 Train_Dataset=KITTI_Raw_KittiSplit_Train_mnsf
 Train_Augmentation=Augmentation_PWCDisp
-Train_Loss_Function=Loss_PWCDisp_SelfSup
+Train_Loss_Function=Loss_PWCDisp_Unfreeze_SelfSup
 
 Valid_Dataset=KITTI_Raw_KittiSplit_Valid_mnsf
 Valid_Augmentation=Augmentation_Resize_Only
-Valid_Loss_Function=Loss_PWCDisp_SelfSup
+Valid_Loss_Function=Loss_PWCDisp_Unfreeze_SelfSup
 
 ALIAS="-pwc-disp-skip-connect-unfreeze"
 SAVE_PATH="$EXPERIMENTS_HOME/$ALIAS/"
