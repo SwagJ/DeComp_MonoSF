@@ -42,7 +42,7 @@ SAVE_PATH="$EXPERIMENTS_HOME/$ALIAS/"
 
 # training configuration
 python ../main.py \
---batch_size=2 \
+--batch_size=4 \
 --batch_size_val=1 \
 --checkpoint=$CHECKPOINT \
 --lr_scheduler=MultiStepLR \
