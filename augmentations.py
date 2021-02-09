@@ -1184,7 +1184,7 @@ class Augmentation_PWCDisp(Augmentation_ScaleCrop):
         sy = imgsize[0] / h_orig
         sx = imgsize[1] / w_orig
 
-        self._resize = resize
+        #self._resize = resize
 
         #print("passing param:", self._resize)
 

@@ -12,7 +12,7 @@ conda activate self-mono
 
 
 # experiments and datasets meta
-KITTI_RAW_HOME="/scratch_net/phon/majing/datasets/kitti_full/"
+KITTI_RAW_HOME="/scratch_net/phon/majing/datasets/kitti_raw/"
 #KITTI_RAW_HOME="/disk_hdd/kitti_full/"
 EXPERIMENTS_HOME="/scratch_net/phon/majing/src/exps"
 
