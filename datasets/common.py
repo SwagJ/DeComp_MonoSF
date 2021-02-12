@@ -472,9 +472,9 @@ def generate_gt_expansion(iml0,iml1,shape,flowl0,d1, d2, bl, fl, cx, cy, count_p
 	return iml0, iml1, flowl0, change_size, np.asarray([cx-sx,cx+sx,cy-sy,cy+sy])
 
 def triangulation(disp, xcoord, ycoord, bl=1, fl = 450, cx = 479.5, cy = 269.5):
-	mask = disp != 0
-	depth = bl*fl / (disp+1e-16) # 450px->15mm focal length
-	depth = depth * mask
+	#mask = disp != 0
+	depth = bl*fl / (disp) # 450px->15mm focal length
+	#depth = depth * mask
 	#print(depth.shape, type(depth))
 	X = (xcoord - cx) * depth / fl
 	Y = (ycoord - cy) * depth / fl

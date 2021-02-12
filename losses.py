@@ -789,6 +789,7 @@ class Eval_SceneFlow_KITTI_Train(nn.Module):
 		batch_size, _, _, width = gt_disp.size()
 
 		out_disp_l1 = interpolate2d_as(output_dict["disp_l1_pp"][0], gt_disp, mode="bilinear") * width
+		#out_disp_l1 = target_dict['disp_pre'].cuda()
 		out_depth_l1 = _disp2depth_kitti_K(out_disp_l1, intrinsics[:, 0, 0])
 		out_depth_l1 = torch.clamp(out_depth_l1, 1e-3, 80)
 		gt_depth_l1 = _disp2depth_kitti_K(gt_disp, intrinsics[:, 0, 0])
@@ -807,6 +808,7 @@ class Eval_SceneFlow_KITTI_Train(nn.Module):
 		##################################################
 		## Optical Flow Eval
 		##################################################
+		#print(output_dict['flow_f_pp'][0])
 		
 		out_sceneflow = interpolate2d_as(output_dict['flow_f_pp'][0], gt_flow, mode="bilinear")
 		out_flow = projectSceneFlow2Flow(target_dict['input_k_l1'], out_sceneflow, output_dict["out_disp_l_pp"])
@@ -1286,6 +1288,16 @@ class Eval_MonoExp_KITTI_Train(nn.Module):
 	def __init__(self, args):
 		super(Eval_MonoExp_KITTI_Train, self).__init__()
 
+	def upsample_flow_as(self, flow, output_as):
+		size_inputs = flow.size()[2:4]
+		size_targets = output_as.size()[2:4]
+		resized_flow = tf.interpolate(flow, size=size_targets, mode="bilinear", align_corners=True)
+		# correct scaling of flow
+		u, v = resized_flow.chunk(2, dim=1)
+		u *= float(size_targets[1] / size_inputs[1])
+		v *= float(size_targets[0] / size_inputs[0])
+		return torch.cat([u, v], dim=1)
+
 
 	def forward(self, output_dict, target_dict):
 
@@ -1302,7 +1314,8 @@ class Eval_MonoExp_KITTI_Train(nn.Module):
 
 		gt_sf_mask = gt_flow_mask * gt_disp_mask * gt_disp2_mask
 
-		intrinsics = target_dict['input_k_l1']                
+		intrinsics = target_dict['input_k_l1'].cuda() 
+		out_disp_l1 = target_dict['disp0_pre'].cuda()               
 
 		##################################################
 		## Depth 1
@@ -1312,25 +1325,31 @@ class Eval_MonoExp_KITTI_Train(nn.Module):
 		#print(output_dict["dchange_f"].shape)
 
 		#out_disp_l1 = interpolate2d_as(output_dict["disp_l1_pp"][0], gt_disp, mode="bilinear") * width
-		#out_depth_l1 = _disp2depth_kitti_K(out_disp_l1, intrinsics[:, 0, 0])
-		#out_depth_l1 = torch.clamp(out_depth_l1, 1e-3, 80)
+		out_depth_l1 = _disp2depth_kitti_K(out_disp_l1, intrinsics[:, 0, 0])
+		out_depth_l1 = torch.clamp(out_depth_l1, 1e-3, 80)
 		gt_depth_l1 = _disp2depth_kitti_K(gt_disp, intrinsics[:, 0, 0])
 
-		#dict_disp0_occ = eval_module_disp_depth(gt_disp, gt_disp_mask.bool(), out_disp_l1, gt_depth_l1, out_depth_l1)
+		dict_disp0_occ = eval_module_disp_depth(gt_disp, gt_disp_mask.bool(), out_disp_l1, gt_depth_l1, out_depth_l1)
 		
 		output_dict["out_disp_l_pp"] = gt_disp
 		output_dict["out_depth_l_pp"] = gt_depth_l1
 
-		#d0_outlier_image = dict_disp0_occ['otl_img']
-		#loss_dict["d_abs"] = dict_disp0_occ['abs_rel']
-		#loss_dict["d_sq"] = dict_disp0_occ['sq_rel']
-		#loss_dict["d1"] = dict_disp0_occ['otl']
+		d0_outlier_image = dict_disp0_occ['otl_img']
+		loss_dict["d_abs"] = dict_disp0_occ['abs_rel']
+		loss_dict["d_sq"] = dict_disp0_occ['sq_rel']
+		loss_dict["d1"] = dict_disp0_occ['otl']
 
 		##################################################
 		## Optical Flow Eval
 		##################################################
+		#print(gt_flow.shape)
+		#print(target_dict['aug_size'])
+		#print(gt_flow.size()[3] / target_dict['aug_size'][:,1])
 		
 		out_flow = interpolate2d_as(output_dict['flows_f'][-1]*20, gt_flow, mode="bilinear")
+		out_flow[:,0:1,:,:] *= gt_flow.size()[3] / target_dict['aug_size'][:,1]
+		out_flow[:,1:2,:,:] *= gt_flow.size()[2] / target_dict['aug_size'][:,0]
+		#interpolate2d_as(output_dict["disp_l1_pp"][0], gt_disp, mode="bilinear")
 		#out_flow = projectSceneFlow2Flow(target_dict['input_k_l1'], out_sceneflow, output_dict["out_disp_l_pp"])
 
 		## Flow Eval
@@ -1351,7 +1370,7 @@ class Eval_MonoExp_KITTI_Train(nn.Module):
 		dchange_f = output_dict["dchange_f"]
 		dchange_f = interpolate2d_as(dchange_f,gt_disp2_occ)
 
-		out_disp_l1_next = gt_disp / torch.exp(dchange_f)
+		out_disp_l1_next = out_disp_l1 / torch.exp(dchange_f)
 		out_depth_l1_next = _disp2depth_kitti_K(out_disp_l1_next, intrinsics[:, 0, 0])
 		gt_depth_l1_next = _disp2depth_kitti_K(gt_disp2_occ, intrinsics[:, 0, 0])
 
@@ -4250,6 +4269,11 @@ class Loss_Exp_Sup(nn.Module):
 		loss_sf_3d = 0
 		loss_sf_sm = 0
 
+		loss_dc_f = 0
+		loss_dc_b = 0
+		loss_iexp_f = 0
+		loss_iexp_b = 0
+
 		gt_flow_f = input_dict['flow_f'][:,:2,:,:].cuda()
 		gt_mask_f = output_dict['mask_f'].float()
 
@@ -4269,6 +4293,7 @@ class Loss_Exp_Sup(nn.Module):
 		loss_dc_f = output_dict['loss_dc_f']
 		loss_iexp_f = output_dict['loss_iexp_f']
 		if not self._args.finetuning:
+			#print("training using loss backward set")
 			gt_flow_b = input_dict['flow_b'][:,:2,:,:].cuda()
 			out_flow_b = interpolate2d_as(output_dict['flows_b'][-1] * 20, gt_flow_b, mode="bilinear")
 			gt_mask_b = output_dict['mask_b'].float()

@@ -2,17 +2,17 @@
 
 # DATASETS_HOME
 KITTI_HOME="/disk_hdd/kitti_flow"
-CHECKPOINT="/disk_ssd/Self_Mono_Experiments/-pwc-disp-skip-connect-retrain/checkpoint_best.ckpt"
+CHECKPOINT="/disk_ssd/Self_Mono_Experiments/-pwc-disp-skip-connect-unfreeze/checkpoint_best.ckpt"
 
 # model
-MODEL=PWC_Disp
+MODEL=PWC_Disp_Unfreeze
 
 Valid_Dataset=KITTI_2015_Train_Full_mnsf
 Valid_Augmentation=Augmentation_PWCDisp_Eval_Only
 Valid_Loss_Function=Eval_PWCDisp_KITTI_Train
 
 # training configuration
-SAVE_PATH="/disk_ssd/self-mono-eval/-pwc-disp-skip-connect-retrain"
+SAVE_PATH="/disk_ssd/self-mono-eval/-pwc-disp-skip-connect-unfreeze"
 python ../main.py \
 --batch_size=1 \
 --batch_size_val=1 \

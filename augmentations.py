@@ -674,6 +674,7 @@ class Augmentation_MonoExp_Eval_Only(nn.Module):
         sx = imgsize[1] / ww
 
         #print("Resized image is of ",self._imgsize)
+        #imgsize = self._imgsize
 
         # Image resizing
         #print("im1_f:",example_dict["im1_f"].shape)
@@ -728,8 +729,8 @@ class Augmentation_MonoExp_Eval_Only(nn.Module):
             example_dict["input_k_r2_flip_aug"] = k_r2_flip
 
         aug_size = torch.zeros_like(example_dict["input_size"])
-        aug_size[:, 0] = self._imgsize[0]
-        aug_size[:, 1] = self._imgsize[1]
+        aug_size[:, 0] = imgsize[0]
+        aug_size[:, 1] = imgsize[1]
         example_dict["aug_size"] = aug_size
 
         return example_dict
@@ -1026,7 +1027,7 @@ class Augmentation_Exp_Kitti(nn.Module):
         return example_dict
 
 class Augmentation_Exp_Driving(nn.Module):
-    def __init__(self, args, photometric=True, imgsize=[256, 832]):
+    def __init__(self, args, photometric=True, imgsize=[256, 704]):
         super(Augmentation_Exp_Driving, self).__init__()
 
         # init
@@ -1046,6 +1047,8 @@ class Augmentation_Exp_Driving(nn.Module):
         imgsize = [intPreprocessedHeight, intPreprocessedWidth]
         sy = imgsize[0] / hh
         sx = imgsize[1] / ww
+
+        #imgsize = self._imgsize
 
         #print("Resized image is of ",self._imgsize)
 

@@ -137,8 +137,15 @@ class Mono_Expansion(nn.Module):
 		#print("iexp shape:", iexp_f.shape)
 		#print("maskdc_f shape:", maskdc_f.shape)
 		#print("maskoe_f shape:", maskoe_f.shape)
+		# print("gt_dchange_f nan:", torch.isnan(gt_dchange_f.log()).any())
+		# print("dchange_f nan:", torch.isnan(dchange_f).any())
+		# print("maskdc_f nan:", torch.isnan(maskdc_f.float()).any())
+		#print("loss 1 nan:", torch.isnan((dchange_f - gt_dchange_f.log()).abs()[maskdc_f]).any())
+		#assert (not torch.isnan(gt_dchange_f.log()).any()), "gt_dchange_f is NaN"
+		#assert (not torch.isnan(dchange_f).any()), "dchange_f is NaN"
 
-		loss_dc_f =  0.1* (dchange_f-gt_dchange_f.log()).abs()[maskdc_f].mean()
+		loss_dc_f =  0.1* ((dchange_f-gt_dchange_f.log()).abs() * maskdc_f.float()).mean()
+		#print("loss_dc_f nan:", torch.isnan(loss_dc_f.float()).any())
 		loss_iexp_f = 0.1* (iexp_f-gt_exp_f.log()).abs()[maskoe_f.unsqueeze(1)].mean()
 		output_dict['loss_dc_f'] = loss_dc_f
 		output_dict['loss_iexp_f'] = loss_iexp_f
@@ -168,7 +175,12 @@ class Mono_Expansion(nn.Module):
 			#print("maskdc_f shape:", maskdc_b.shape)
 			#print("maskoe_f shape:", maskoe_b.shape)
 
-			loss_dc_b =  0.1* (dchange_b-gt_dchange_b.log()).abs()[maskdc_b].mean()
+			#print("gt_dchange_b nan:", torch.isnan(gt_dchange_b.log()).any())
+			# print("dchange_b nan:", torch.isnan(dchange_b).any())
+			# print("maskdc_b nan:", torch.isnan(maskdc_b.float()).any())
+
+			loss_dc_b =  0.1* ((dchange_b-gt_dchange_b.log()).abs() * maskdc_b.float()).mean()
+			#assert (not torch.isnan(gt_dchange_b.log()).any()), "gt_dchange_b is NaN"
 			loss_iexp_b = 0.1* (iexp_b-gt_exp_b.log()).abs()[maskoe_b.unsqueeze(1)].mean()
 			output_dict['loss_dc_b'] = loss_dc_b
 			output_dict['loss_iexp_b'] = loss_iexp_b

@@ -166,6 +166,9 @@ class Synth_Driving(data.Dataset):
 		fl = self.intrinsic[0,0]
 		cx = self.intrinsic[0,2]
 		cy = self.intrinsic[1,2]
+
+
+		#self._datashape = crop_size
 		# into future 
 		img0_crop_f, img1_crop_f, flow0_f, imgAux_f, occp0_f = generate_gt_expansion(im0, im1, self._datashape, flow0,disp0_future, disp1_future, bl, fl, cx, cy,
 																													'%s/iter_counts.txt'%(self._args.save), order=1, prob=1)
