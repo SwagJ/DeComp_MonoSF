@@ -19,6 +19,7 @@ PWC_Disp_Unfreeze			=	model_exp_depth_flow.PWC_Disp_Unfreeze
 MonoFlow_Disp_Seperate_NoWarp = model_monosceneflow.MonoFlow_Disp_Seperate_NoWarp
 MonoFlow_Disp_Seperate_Warp_OG_Decoder = model_monosceneflow.MonoFlow_Disp_Seperate_Warp_OG_Decoder
 MonoFlow_Disp_Seperate_Warp_OG_Decoder_No_Res = model_monosceneflow.MonoFlow_Disp_Seperate_Warp_OG_Decoder_No_Res
+MonoSceneFlow_PWC 			=	model_monosceneflow.MonoSceneFlow_PWC
 
 ##########################################################################################
 ## Monocular Scene Flow - The models for the ablation studies
