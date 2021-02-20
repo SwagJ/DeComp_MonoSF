@@ -274,6 +274,7 @@ class EvaluationEpoch:
                 # Png output
                 file_name = file_names_flow[ii] + '_10.png'
                 write_flow_png(file_name, out_flow[ii, ...].swapaxes(0, 1).swapaxes(1, 2))
+                #print(out_flow[ii, ...].swapaxes(0, 1).swapaxes(1, 2).shape)
 
         if self._args.save_disp:
 
