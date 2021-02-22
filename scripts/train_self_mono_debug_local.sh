@@ -59,7 +59,7 @@ python ../main.py \
 --training_dataset_root=$KITTI_RAW_HOME \
 --training_dataset_flip_augmentations=True \
 --training_dataset_preprocessing_crop=True \
---training_dataset_num_examples=10 \
+--training_dataset_num_examples=2000 \
 --training_key=total_loss \
 --training_loss=$Train_Loss_Function \
 --validation_augmentation=$Valid_Augmentation \
@@ -67,5 +67,5 @@ python ../main.py \
 --validation_dataset_root=$KITTI_RAW_HOME \
 --validation_dataset_preprocessing_crop=False \
 --validation_key=total_loss \
---validation_dataset_num_examples=10 \
+--validation_dataset_num_examples=1000 \
 --validation_loss=$Valid_Loss_Function \
