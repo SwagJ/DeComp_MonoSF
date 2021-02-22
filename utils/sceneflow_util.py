@@ -77,6 +77,22 @@ def pts2pixel(pts, intrinsics):
 
 	return pixels_mat.view(b, 2, h, w)
 
+def flow2sf(flow, disp, exp, intrinsic, rel_scale):
+	b, _, h, w = disp.size()
+	disp_next = disp*(1 - torch.exp(exp))
+	intrinsic_dp_s = intrinsic_scale(intrinsic, rel_scale[:,0], rel_scale[:,1])
+	depth = disp2depth_kitti(disp, intrinsic_dp_s[:,0,0])
+	depth_next = disp2depth_kitti(disp_next, intrinsic_dp_s[:,0,0])
+
+	grid = get_pixelgrid(b,h,w)
+	#print(grid.shape)
+	grid_next = torch.cat((grid[:,:2,:,:] + flow,torch.ones_like(disp)),dim=1)
+
+	pts = pixel2pts_disp(intrinsic_dp_s, depth, grid)
+	pts_next = pixel2pts_disp(intrinsic_dp_s, depth_next, grid_next)
+
+	return pts_next - pts
+
 
 def intrinsic_scale(intrinsic, scale_y, scale_x):
 	b, h, w = intrinsic.size()

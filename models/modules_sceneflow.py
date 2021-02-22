@@ -598,18 +598,18 @@ class ContextNetwork_Exp(nn.Module):
 		super(ContextNetwork_Exp, self).__init__()
 
 		self.convs = nn.Sequential(
-			convbn(ch_in, 128, 3, 1, 1),
-			convbn(128, 128, 3, 1, 2),
-			convbn(128, 128, 3, 1, 4),
-			convbn(128, 96, 3, 1, 8),
-			convbn(96, 64, 3, 1, 16),
-			convbn(64, 32, 3, 1, 1)
+			conv(ch_in, 128, 3, 1, 1),
+			conv(128, 128, 3, 1, 2),
+			conv(128, 128, 3, 1, 4),
+			conv(128, 96, 3, 1, 8),
+			conv(96, 64, 3, 1, 16),
+			conv(64, 32, 3, 1, 1)
 		)
 		#self.conv_d1 = nn.Sequential(
 		#   conv(32, 1, isReLU=False), 
 		#   torch.nn.Sigmoid()
 		#)
-		self.conv_sf = convbn(32, 1, isReLU=False)
+		self.conv_sf = conv(32, 1, isReLU=False)
 
 	def forward(self, x):
 
@@ -740,17 +740,17 @@ class Exp_Decoder_ppV1_Dense(nn.Module):
 		super(Exp_Decoder_ppV1_Dense, self).__init__()
 		self.is_bottom = is_bottom
 		if is_bottom:
-			self.pooling = pyramidPooling(ch_in, levels=3)
-			self.convs = convbn(ch_in, 32)
+			self.pooling = pyramidPooling(ch_in, levels=3, with_bn=False)
+			self.convs = conv(ch_in, 32)
 		else:
 			self.convs = nn.Sequential(
-				convbn(ch_in, 128),
-				convbn(128, 128),
-				convbn(128, 96),
-				convbn(96, 64),
-				convbn(64, 32)
+				conv(ch_in, 128),
+				conv(128, 128),
+				conv(128, 96),
+				conv(96, 64),
+				conv(64, 32)
 			)
-		self.conv_exp = convbn(32, 1, isReLU=False)
+		self.conv_exp = conv(32, 1, isReLU=False)
 
 	def forward(self, x):
 		if self.is_bottom:

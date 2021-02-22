@@ -8,7 +8,7 @@ import numpy as np
 from models.forwardwarp_package.forward_warp import forward_warp
 from utils.interpolation import interpolate2d_as
 from utils.sceneflow_util import pixel2pts_ms, pts2pixel_ms, reconstructImg, reconstructPts, projectSceneFlow2Flow
-from utils.sceneflow_util import flow_horizontal_flip, intrinsic_scale, get_pixelgrid, post_processing, pixel2pts_disp, disp2depth_kitti
+from utils.sceneflow_util import flow_horizontal_flip, intrinsic_scale, get_pixelgrid, post_processing, pixel2pts_disp, disp2depth_kitti, flow2sf
 from utils.monodepth_eval import compute_errors, compute_d1_all
 from models.modules_sceneflow import WarpingLayer_Flow
 
@@ -4579,13 +4579,13 @@ class Loss_MonoFlowExp_SelfSup_ppV1(nn.Module):
 		disp_l1 = disp_l1 * w_dp
 		disp_l2 = disp_l2 * w_dp
 
-		sf_f = torch.cat([flow_f, disp_l1*(1 - torch.exp(exp_f))],dim=1)
-		sf_b = torch.cat([flow_b, disp_l2*(1 - torch.exp(exp_b))],dim=1)
-
 		## scale
 		local_scale = torch.zeros_like(aug_size)
 		local_scale[:, 0] = h_dp
-		local_scale[:, 1] = w_dp         
+		local_scale[:, 1] = w_dp        
+
+		sf_f = flow2sf(flow_f, disp_l1, exp_f, k_l1_aug, local_scale / aug_size)
+		sf_b = flow2sf(flow_b, disp_l2, exp_b, k_l2_aug, local_scale / aug_size) 
 
 		pts1, k1_scale = pixel2pts_ms(k_l1_aug, disp_l1, local_scale / aug_size)
 		pts2, k2_scale = pixel2pts_ms(k_l2_aug, disp_l2, local_scale / aug_size)
