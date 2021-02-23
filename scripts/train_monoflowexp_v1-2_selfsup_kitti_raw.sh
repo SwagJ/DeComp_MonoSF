@@ -17,7 +17,7 @@ KITTI_RAW_HOME="/scratch_net/phon/majing/datasets/kitti_raw/"
 EXPERIMENTS_HOME="/scratch_net/phon/majing/src/exps"
 
 # model
-MODEL=MonoFlowExp_ppV1
+MODEL=MonoFlowExp_ppV1_2
 
 # save path
 
@@ -32,7 +32,7 @@ Valid_Dataset=KITTI_Raw_KittiSplit_Valid_mnsf
 Valid_Augmentation=Augmentation_Resize_Only
 Valid_Loss_Function=Loss_MonoFlowExp_SelfSup_ppV1
 
-ALIAS="-monoflowexp-v1-"
+ALIAS="-monoflowexp-v1_2-"
 SAVE_PATH="$EXPERIMENTS_HOME/$ALIAS/"
 
 #CHECKPOINT="$EXPERIMENTS_HOME/$ALIAS/checkpoint_latest.ckpt"

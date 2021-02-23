@@ -18,7 +18,7 @@ KITTI_FLOW_HOME="/disk_hdd/kitti_full/kitti_flow"
 SYNTH_DRIVING_HOME="/disk_ssd/driving"
 
 # model
-MODEL=MonoFlowExp_ppV1
+MODEL=MonoFlowExp_ppV1_2
 
 # save path
 #CHECKPOINT="checkpoints/full_model_kitti/checkpoint_latest.ckpt"
@@ -45,11 +45,11 @@ python ../main.py \
 --checkpoint=$CHECKPOINT \
 --lr_scheduler=MultiStepLR \
 --lr_scheduler_gamma=0.5 \
---lr_scheduler_milestones="[23, 39, 47, 54]" \
+--lr_scheduler_milestones="[10, 23, 39, 47, 54]" \
 --model=$MODEL \
 --num_workers=10 \
 --optimizer=Adam \
---optimizer_lr=2e-4 \
+--optimizer_lr=4e-4 \
 --save=$SAVE_PATH \
 --total_epochs=62 \
 --save_freq=5 \
@@ -59,7 +59,7 @@ python ../main.py \
 --training_dataset_root=$KITTI_RAW_HOME \
 --training_dataset_flip_augmentations=True \
 --training_dataset_preprocessing_crop=True \
---training_dataset_num_examples=2000 \
+--training_dataset_num_examples=-1 \
 --training_key=total_loss \
 --training_loss=$Train_Loss_Function \
 --validation_augmentation=$Valid_Augmentation \
@@ -67,5 +67,5 @@ python ../main.py \
 --validation_dataset_root=$KITTI_RAW_HOME \
 --validation_dataset_preprocessing_crop=False \
 --validation_key=total_loss \
---validation_dataset_num_examples=1000 \
+--validation_dataset_num_examples=-1 \
 --validation_loss=$Valid_Loss_Function \

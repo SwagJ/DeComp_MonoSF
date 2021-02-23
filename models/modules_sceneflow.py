@@ -7,7 +7,7 @@ import logging
 import numpy as np
 
 from utils.interpolation import interpolate2d_as
-from utils.sceneflow_util import pixel2pts_ms, pts2pixel_ms
+from utils.sceneflow_util import pixel2pts_ms, pts2pixel_ms, flow2sf
 
 def get_grid(x):
 	grid_H = torch.linspace(-1.0, 1.0, x.size(3)).view(1, 1, 1, x.size(3)).expand(x.size(0), 1, x.size(2), x.size(3))
@@ -63,6 +63,33 @@ class WarpingLayer_SF(nn.Module):
 
 		return x_warp * mask
 
+class WarpingLayer_Flow_Exp(nn.Module):
+	def __init__(self):
+		super(WarpingLayer_Flow_Exp, self).__init__()
+ 
+	def forward(self, x, flow, exp, disp, k1, input_size):
+
+		_, _, h_x, w_x = x.size()
+		disp = interpolate2d_as(disp, x) * w_x
+
+		local_scale = torch.zeros_like(input_size)
+		local_scale[:, 0] = h_x
+		local_scale[:, 1] = w_x
+
+		sceneflow = flow2sf(flow, disp, exp, k1, local_scale / input_size)
+
+		pts1, k1_scale = pixel2pts_ms(k1, disp, local_scale / input_size)
+		_, _, coord1 = pts2pixel_ms(k1_scale, pts1, sceneflow, [h_x, w_x])
+
+		grid = coord1.transpose(1, 2).transpose(2, 3)
+		x_warp = tf.grid_sample(x, grid)
+
+		mask = torch.ones_like(x, requires_grad=False)
+		mask = tf.grid_sample(mask, grid)
+		mask = (mask >= 1.0).float()
+
+		return x_warp * mask
+
 class WarpingLayer_SF_PWC(nn.Module):
 	def __init__(self):
 		super(WarpingLayer_SF_PWC, self).__init__()
@@ -80,35 +107,6 @@ class WarpingLayer_SF_PWC(nn.Module):
 
 		pts1, k1_scale = pixel2pts_ms(k1, disp, local_scale / input_size)
 		_, _, coord1 = pts2pixel_ms(k1_scale, pts1, sceneflow * coef, [h_x, w_x])
-
-		grid = coord1.transpose(1, 2).transpose(2, 3)
-		x_warp = tf.grid_sample(x, grid)
-
-		mask = torch.ones_like(x, requires_grad=False)
-		mask = tf.grid_sample(mask, grid)
-		mask = (mask >= 1.0).float()
-
-		return x_warp * mask
-
-class WarpingLayer_Flow_Exp(nn.Module):
-	def __init__(self):
-		super(WarpingLayer_Flow_Exp, self).__init__()
- 
-	def forward(self, x, flow, disp, k1, input_size, exp):
-
-		_, _, h_x, w_x = x.size()
-		disp = interpolate2d_as(disp, x) * w_x
-		exp = interpolate2d_as(exp, x)
-
-		local_scale = torch.zeros_like(input_size)
-		local_scale[:, 0] = h_x
-		local_scale[:, 1] = w_x
-
-		sceneflow = torch.cat([flow,disp*(exp-1)],dim=1)
-		#print(flow.shape)
-
-		pts1, k1_scale = pixel2pts_ms(k1, disp, local_scale / input_size)
-		_, _, coord1 = pts2pixel_ms(k1_scale, pts1, sceneflow, [h_x, w_x])
 
 		grid = coord1.transpose(1, 2).transpose(2, 3)
 		x_warp = tf.grid_sample(x, grid)
