@@ -2211,9 +2211,9 @@ class MonoFlowExp_ppV1(nn.Module):
 #              pyramid pooling, upper levels are skip connector
 #
 #########################################################
-class MonoFlowExp_ppV2(nn.Module):
+class MonoFlowExp_ppV1_2(nn.Module):
     def __init__(self, args):
-        super(MonoFlowExp_ppV2, self).__init__()
+        super(MonoFlowExp_ppV1_2, self).__init__()
 
         self._args = args
         self.num_chs = [3, 32, 64, 96, 128, 192, 256]

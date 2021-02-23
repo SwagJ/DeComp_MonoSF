@@ -21,7 +21,7 @@ MonoFlow_Disp_Seperate_Warp_OG_Decoder = model_monosceneflow.MonoFlow_Disp_Seper
 MonoFlow_Disp_Seperate_Warp_OG_Decoder_No_Res = model_monosceneflow.MonoFlow_Disp_Seperate_Warp_OG_Decoder_No_Res
 MonoSceneFlow_PWC 			=	model_monosceneflow.MonoSceneFlow_PWC
 MonoFlowExp_ppV1			=	model_monosceneflow.MonoFlowExp_ppV1
-MonoFlowExp_ppV2			=	model_monosceneflow.MonoFlowExp_ppV2
+MonoFlowExp_ppV1_2			=	model_monosceneflow.MonoFlowExp_ppV1_2
 
 ##########################################################################################
 ## Monocular Scene Flow - The models for the ablation studies
