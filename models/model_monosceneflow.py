@@ -2181,6 +2181,8 @@ class MonoFlowExp_ppV1(nn.Module):
             flow_b_pp = []
             disp_l1_pp = []
             disp_l2_pp = []
+            exp_f_pp = []
+            exp_b_pp = []
 
             for ii in range(0, len(output_dict_flip['flow_f'])):
 
@@ -2476,6 +2478,8 @@ class MonoFlowExp_ppV1_2(nn.Module):
             flow_b_pp = []
             disp_l1_pp = []
             disp_l2_pp = []
+            exp_f_pp = []
+            exp_b_pp = []
 
             for ii in range(0, len(output_dict_flip['flow_f'])):
 
