@@ -10,7 +10,7 @@ from utils.interpolation import interpolate2d_as
 from utils.sceneflow_util import pixel2pts_ms, pts2pixel_ms, reconstructImg, reconstructPts, projectSceneFlow2Flow
 from utils.sceneflow_util import flow_horizontal_flip, intrinsic_scale, get_pixelgrid, post_processing, pixel2pts_disp, disp2depth_kitti, flow2sf
 from utils.monodepth_eval import compute_errors, compute_d1_all
-from models.modules_sceneflow import WarpingLayer_Flow
+from models.modules_sceneflow import WarpingLayer_Flow, get_grid_exp
 
 
 ###############################################
@@ -4846,6 +4846,7 @@ class Loss_MonoFlowExp_SelfSup_ppV1(nn.Module):
 		self._disp_smooth_w = 0.1
 		self._sf_3d_pts = 0.2
 		self._sf_3d_sm = 200
+		self._flow_sm = 10
 		self._warping_layer = WarpingLayer_Flow()
 
 	def depth_loss_left_img(self, disp_l, disp_r, img_l_aug, img_r_aug, ii):
@@ -4892,16 +4893,23 @@ class Loss_MonoFlowExp_SelfSup_ppV1(nn.Module):
 		occ_map_b = _adaptive_disocc_detection(flow_f).detach() * disp_occ_l2
 		occ_map_f = _adaptive_disocc_detection(flow_b).detach() * disp_occ_l1
 
+		#print(occ_map_f.shape)
+
+		mask_f = self.affine(flow_f).unsqueeze(1) * occ_map_f
+		mask_b = self.affine(flow_b).unsqueeze(1) * occ_map_b
+		#print(mask_f.shape)
+		#print(self.affine(flow_f).shape)
+
 		## Image reconstruction loss
 		img_l2_warp = self._warping_layer(img_l2_aug, flow_f)
 		img_l1_warp = self._warping_layer(img_l1_aug, flow_b)
 
 		img_diff1 = (_elementwise_l1(img_l1_aug, img_l2_warp) * (1.0 - self._ssim_w) + _SSIM(img_l1_aug, img_l2_warp) * self._ssim_w).mean(dim=1, keepdim=True)
 		img_diff2 = (_elementwise_l1(img_l2_aug, img_l1_warp) * (1.0 - self._ssim_w) + _SSIM(img_l2_aug, img_l1_warp) * self._ssim_w).mean(dim=1, keepdim=True)
-		loss_im1 = img_diff1[occ_map_f].mean()
-		loss_im2 = img_diff2[occ_map_b].mean()
-		img_diff1[~occ_map_f].detach_()
-		img_diff2[~occ_map_b].detach_()
+		loss_im1 = img_diff1[mask_f].mean()
+		loss_im2 = img_diff2[mask_b].mean()
+		img_diff1[~mask_f].detach_()
+		img_diff2[~mask_b].detach_()
 		loss_im = loss_im1 + loss_im2
 
 		#print("loss_im dim", loss_im.shape)
@@ -4926,10 +4934,10 @@ class Loss_MonoFlowExp_SelfSup_ppV1(nn.Module):
 		loss_exp_s = ((_smoothness_motion_2nd(exp_f, img_l1_aug, beta=10.0) / (pts_norm1 + 1e-8)).mean() + (_smoothness_motion_2nd(exp_b, img_l2_aug, beta=10.0) / (pts_norm2 + 1e-8)).mean()) / (2 ** ii)
 		#print("smoothness dim", loss_flow_s.shape, loss_exp_s.shape)
 		## 3D motion smoothness loss
-		loss_3d_s = loss_flow_s + loss_exp_s
+		loss_3d_s = self._flow_sm * loss_flow_s + self._disp_smooth_w * loss_exp_s
 
 		## Loss Summnation
-		sceneflow_loss = loss_im + self._sf_3d_pts * loss_pts + self._sf_3d_sm * loss_3d_s
+		sceneflow_loss = loss_im + self._sf_3d_pts * loss_pts + loss_3d_s
 		
 		return sceneflow_loss, loss_im, loss_pts, loss_3d_s
 
@@ -4942,6 +4950,32 @@ class Loss_MonoFlowExp_SelfSup_ppV1(nn.Module):
 			output_dict['disp_l2'][ii].detach_()
 
 		return None
+
+	def affine(self, flow, pw=1):
+		b,_,lh,lw=flow.shape
+		pref = get_grid_exp(b,lh,lw)[:,0].permute(0,3,1,2).repeat(b,1,1,1).clone()
+		ptar = pref + flow
+		pw = 1
+		pref = tf.unfold(pref, (pw*2+1,pw*2+1), padding=(pw)).view(b,2,(pw*2+1)**2,lh,lw)-pref[:,:,np.newaxis]
+		ptar = tf.unfold(ptar, (pw*2+1,pw*2+1), padding=(pw)).view(b,2,(pw*2+1)**2,lh,lw)-ptar[:,:,np.newaxis] # b, 2,9,h,w
+		pref = pref.permute(0,3,4,1,2).reshape(b*lh*lw,2,(pw*2+1)**2)
+		ptar = ptar.permute(0,3,4,1,2).reshape(b*lh*lw,2,(pw*2+1)**2)
+
+		prefprefT = pref.matmul(pref.permute(0,2,1))
+		ppdet = prefprefT[:,0,0]*prefprefT[:,1,1]-prefprefT[:,1,0]*prefprefT[:,0,1]
+		ppinv = torch.cat((prefprefT[:,1,1:],-prefprefT[:,0,1:], -prefprefT[:,1:,0], prefprefT[:,0:1,0]),1).view(-1,2,2)/ppdet.clamp(1e-10,np.inf)[:,np.newaxis,np.newaxis]
+
+		Affine = ptar.matmul(pref.permute(0,2,1)).matmul(ppinv)
+		Error = (Affine.matmul(pref)-ptar).norm(2,1).mean(1).view(b,1,lh,lw)
+
+		Avol = (Affine[:,0,0]*Affine[:,1,1]-Affine[:,1,0]*Affine[:,0,1]).view(b,1,lh,lw).abs().clamp(1e-10,np.inf)
+		exp = Avol.sqrt()
+		mask = (exp>0.5) & (exp<2) & (Error<0.1)
+		mask = mask[:,0]
+
+		exp = exp.clamp(0.5,2)
+		exp[Error>0.1]=1
+		return mask
 
 	def forward(self, output_dict, target_dict):
 

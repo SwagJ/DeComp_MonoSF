@@ -16,6 +16,13 @@ def get_grid(x):
 	grids_cuda = grid.float().requires_grad_(False).cuda()
 	return grids_cuda
 
+def get_grid_exp(B,H,W):
+	meshgrid_base = np.meshgrid(range(0,W), range(0,H))[::-1]
+	basey = np.reshape(meshgrid_base[0],[1,1,1,H,W])
+	basex = np.reshape(meshgrid_base[1],[1,1,1,H,W])
+	grid = torch.tensor(np.concatenate((basex.reshape((-1,H,W,1)),basey.reshape((-1,H,W,1))),-1)).cuda().float()
+	return grid.view(1,1,H,W,2)
+
 
 class WarpingLayer_Flow(nn.Module):
 	def __init__(self):
@@ -757,3 +764,30 @@ class Exp_Decoder_ppV1_Dense(nn.Module):
 		exp = self.conv_exp(x_out)
 
 		return x_out, exp
+
+
+def affine(flow, pw=1):
+		b,_,lh,lw=flow.shape
+		pref = get_grid_exp(b,lh,lw)[:,0].permute(0,3,1,2).repeat(b,1,1,1).clone()
+		ptar = pref + flow
+		pw = 1
+		pref = tf.unfold(pref, (pw*2+1,pw*2+1), padding=(pw)).view(b,2,(pw*2+1)**2,lh,lw)-pref[:,:,np.newaxis]
+		ptar = tf.unfold(ptar, (pw*2+1,pw*2+1), padding=(pw)).view(b,2,(pw*2+1)**2,lh,lw)-ptar[:,:,np.newaxis] # b, 2,9,h,w
+		pref = pref.permute(0,3,4,1,2).reshape(b*lh*lw,2,(pw*2+1)**2)
+		ptar = ptar.permute(0,3,4,1,2).reshape(b*lh*lw,2,(pw*2+1)**2)
+
+		prefprefT = pref.matmul(pref.permute(0,2,1))
+		ppdet = prefprefT[:,0,0]*prefprefT[:,1,1]-prefprefT[:,1,0]*prefprefT[:,0,1]
+		ppinv = torch.cat((prefprefT[:,1,1:],-prefprefT[:,0,1:], -prefprefT[:,1:,0], prefprefT[:,0:1,0]),1).view(-1,2,2)/ppdet.clamp(1e-10,np.inf)[:,np.newaxis,np.newaxis]
+
+		Affine = ptar.matmul(pref.permute(0,2,1)).matmul(ppinv)
+		Error = (Affine.matmul(pref)-ptar).norm(2,1).mean(1).view(b,1,lh,lw)
+
+		Avol = (Affine[:,0,0]*Affine[:,1,1]-Affine[:,1,0]*Affine[:,0,1]).view(b,1,lh,lw).abs().clamp(1e-10,np.inf)
+		exp = Avol.sqrt()
+		mask = (exp>0.5) & (exp<2) & (Error<0.1)
+		mask = mask[:,0]
+
+		exp = exp.clamp(0.5,2)
+		exp[Error>0.1]=1
+		return exp, Error, mask
