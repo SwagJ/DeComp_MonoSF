@@ -34,8 +34,9 @@ Valid_Loss_Function=Loss_MonoExp_SelfSup
 
 ALIAS="-monoexp-bb-"
 SAVE_PATH="$EXPERIMENTS_HOME/$ALIAS/"
+#CHECKPOINT="$EXPERIMENTS_HOME/$ALIAS/checkpoint_latest.ckpt"
 
-CHECKPOINT="$EXPERIMENTS_HOME/-mono-flow-disp-warp-og-decoder-no-res-/checkpoint_best.ckpt"
+PRETRAIN="$EXPERIMENTS_HOME/-mono-flow-disp-warp-og-decoder-no-res-/checkpoint_best.ckpt"
 
 
 
