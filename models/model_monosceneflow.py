@@ -1525,7 +1525,7 @@ class MonoFlow_Disp_Seperate_Warp_OG_Decoder_No_Res(nn.Module):
 
         initialize_msra(self.modules())
 
-    def run_pwc(self, input_dict, x1_raw, x2_raw, k1, k2):
+    def run_pwc(self, input_dict, x1_raw, x2_raw, k1, k2, backbone_mode=False):
             
         output_dict = {}
 
@@ -1596,8 +1596,8 @@ class MonoFlow_Disp_Seperate_Warp_OG_Decoder_No_Res(nn.Module):
                 #disp_l1 = disp_l1 + disp_l1_res
                 #disp_l2 = disp_l2 + disp_l2_res
 
-            #x1_feats.append(x1_out)
-            #x2_feats.append(x2_out)
+            x1_feats.append(x1)
+            x2_feats.append(x2)
 
             # upsampling or post-processing
             if l != self.output_level:
@@ -1626,10 +1626,18 @@ class MonoFlow_Disp_Seperate_Warp_OG_Decoder_No_Res(nn.Module):
         x1_rev = x1_pyramid[::-1]
         x2_rev = x1_pyramid[::-1]
 
-        output_dict['flow_f'] = upsample_outputs_as(sceneflows_f[::-1], x1_rev)
-        output_dict['flow_b'] = upsample_outputs_as(sceneflows_b[::-1], x1_rev)
-        output_dict['disp_l1'] = upsample_outputs_as(disps_1[::-1], x1_rev)
-        output_dict['disp_l2'] = upsample_outputs_as(disps_2[::-1], x1_rev)
+        if backbone_mode == False:
+            output_dict['flow_f'] = upsample_outputs_as(sceneflows_f[::-1], x1_rev)
+            output_dict['flow_b'] = upsample_outputs_as(sceneflows_b[::-1], x1_rev)
+            output_dict['disp_l1'] = upsample_outputs_as(disps_1[::-1], x1_rev)
+            output_dict['disp_l2'] = upsample_outputs_as(disps_2[::-1], x1_rev)
+        else:
+            output_dict['flow_f'] = sceneflows_f[::-1]
+            output_dict['flow_b'] = sceneflows_b[::-1]
+            output_dict['disp_l1'] = disps_1[::-1]
+            output_dict['disp_l2'] = disps_2[::-1]
+            output_dict['x1_feats'] = x1_feats[::-1]
+            output_dict['x2_feats'] = x2_feats[::-1]
         #output_dict['x1_feats'] = upsample_outputs_as(x1_feats[::-1],x1_rev)
         #output_dict['x2_feats'] = upsample_outputs_as(x2_feats[::-1],x1_rev)
         #disp_l1 = self.disp_estimator1(x1_pyramid)
@@ -1649,7 +1657,7 @@ class MonoFlow_Disp_Seperate_Warp_OG_Decoder_No_Res(nn.Module):
         ## Left
         #print("input image size:",input_dict['input_l1_aug'].shape)
         #print("input image size:",input_dict['input_l2_aug'].shape)
-        output_dict = self.run_pwc(input_dict, input_dict['input_l1_aug'], input_dict['input_l2_aug'], input_dict['input_k_l1_aug'], input_dict['input_k_l2_aug'])
+        output_dict = self.run_pwc(input_dict, input_dict['input_l1_aug'], input_dict['input_l2_aug'], input_dict['input_k_l1_aug'], input_dict['input_k_l2_aug'], self._args.backbone_mode)
 
         #print("Training:", self.training)
         #print("Evaluation:", self._args.evaluation)
@@ -1658,13 +1666,13 @@ class MonoFlow_Disp_Seperate_Warp_OG_Decoder_No_Res(nn.Module):
         ## Right
         ## ss: train val 
         ## ft: train 
-        if self.training or (not self._args.finetuning and not self._args.evaluation):
+        if (self.training or self._args.exp_training) or (not self._args.finetuning and not self._args.evaluation):
             input_r1_flip = torch.flip(input_dict['input_r1_aug'], [3])
             input_r2_flip = torch.flip(input_dict['input_r2_aug'], [3])
             k_r1_flip = input_dict["input_k_r1_flip_aug"]
             k_r2_flip = input_dict["input_k_r2_flip_aug"]
 
-            output_dict_r = self.run_pwc(input_dict, input_r1_flip, input_r2_flip, k_r1_flip, k_r2_flip)
+            output_dict_r = self.run_pwc(input_dict, input_r1_flip, input_r2_flip, k_r1_flip, k_r2_flip,self._args.backbone_mode)
 
             for ii in range(0, len(output_dict_r['flow_f'])):
                 output_dict_r['flow_f'][ii] = flow_horizontal_flip(output_dict_r['flow_f'][ii])
@@ -1681,14 +1689,14 @@ class MonoFlow_Disp_Seperate_Warp_OG_Decoder_No_Res(nn.Module):
         ## Post Processing 
         ## ss:           eval
         ## ft: train val eval
-        if self._args.evaluation or self._args.finetuning or self._args.sf_sup:
+        if self._args.evaluation or self._args.finetuning or self._args.exp_training:
 
             input_l1_flip = torch.flip(input_dict['input_l1_aug'], [3])
             input_l2_flip = torch.flip(input_dict['input_l2_aug'], [3])
             k_l1_flip = input_dict["input_k_l1_flip_aug"]
             k_l2_flip = input_dict["input_k_l2_flip_aug"]
 
-            output_dict_flip = self.run_pwc(input_dict, input_l1_flip, input_l2_flip, k_l1_flip, k_l2_flip)
+            output_dict_flip = self.run_pwc(input_dict, input_l1_flip, input_l2_flip, k_l1_flip, k_l2_flip, self._args.backbone_mode)
 
             flow_f_pp = []
             flow_b_pp = []

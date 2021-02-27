@@ -188,6 +188,7 @@ def _parse_arguments():
     add("--batch_size", type=int, default=1)
     add("--batch_size_val", type=int, default=1)
     add("--checkpoint", type=tools.str2str_or_none, default=None)
+    add("--backbone_weight", type=tools.str2str_or_none, default=None)
     add("--cuda", type=tools.str2bool, default=True)
     add("--evaluation", type=tools.str2bool, default=False)
     add("--num_workers", type=int, default=4)
@@ -204,6 +205,8 @@ def _parse_arguments():
     add("--finetuning", type=tools.str2bool, default=False)
     add("--depthsup_comb", type=tools.str2bool, default=False)
     add("--sf_sup", type=tools.str2bool, default=False)
+    add("--backbone_mode", type=tools.str2bool, default=False)
+    add("--exp_training", type=tools.str2bool, default=False)
     add("--save_freq", type=int, default=5)
 
     # -------------------------------------------------------------------------

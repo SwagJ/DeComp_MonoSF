@@ -9,6 +9,16 @@ import numpy as np
 import pdb
 
 from .modules_sceneflow import ConvBlock, Conv3x3
+from .model_monosceneflow import MonoFlow_Disp_Seperate_Warp_OG_Decoder_No_Res
+
+class MonoFlowDispKernel(nn.Module):
+	def __init__(self, args):
+		super(MonoFlowDispKernel, self).__init__()
+		self._args = args
+		self._model = MonoFlow_Disp_Seperate_Warp_OG_Decoder_No_Res(args)
+
+	def forward(self, input_dict):
+		return self._model(input_dict)
 
 class residualBlock(nn.Module):
 	expansion = 1
@@ -256,7 +266,7 @@ class Expansion_Decoder(nn.Module):
 		self.f3d2 = bfmodule(128-64,1)
 
 		# depth change net
-		self.dcnetv1 = conv(32, 32, kernel_size=3, stride=1, padding=1,dilation=1) # 
+		self.dcnetv1 = conv(64, 32, kernel_size=3, stride=1, padding=1,dilation=1) # 
 		self.dcnetv2 = conv(1,   32, kernel_size=3, stride=1, padding=1,dilation=1) # 
 		self.dcnetv3 = conv(1,   32, kernel_size=3, stride=1, padding=1,dilation=1) # 
 		self.dcnetv4 = conv(1,   32, kernel_size=3, stride=1, padding=1,dilation=1) # 
@@ -357,7 +367,7 @@ class Expansion_Decoder(nn.Module):
 		flow2 = F.interpolate(flow2.detach(), [im0.size()[2],im0.size()[3]], mode='bilinear', align_corners=True)
 		dchange2 = F.interpolate(dchange2, [im0.size()[2],im0.size()[3]], mode='bilinear', align_corners=True)
 
-		return dchange2,iexp2
+		return dchange2,iexp2, flow2
 
 		# if self.training:
 		# 	flowl0 = disc_aux[0].permute(0,3,1,2).clone()

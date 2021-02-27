@@ -8,7 +8,7 @@ import numpy as np
 from models.forwardwarp_package.forward_warp import forward_warp
 from utils.interpolation import interpolate2d_as
 from utils.sceneflow_util import pixel2pts_ms, pts2pixel_ms, reconstructImg, reconstructPts, projectSceneFlow2Flow
-from utils.sceneflow_util import flow_horizontal_flip, intrinsic_scale, get_pixelgrid, post_processing, pixel2pts_disp, disp2depth_kitti, flow2sf
+from utils.sceneflow_util import flow_horizontal_flip, intrinsic_scale, get_pixelgrid, post_processing, pixel2pts_disp, disp2depth_kitti, flow2sf, flow2sf_exp
 from utils.monodepth_eval import compute_errors, compute_d1_all
 from models.modules_sceneflow import WarpingLayer_Flow, get_grid_exp
 
@@ -5044,5 +5044,175 @@ class Loss_MonoFlowExp_SelfSup_ppV1(nn.Module):
 		loss_dict["total_loss"] = total_loss
 
 		self.detaching_grad_of_outputs(output_dict['output_dict_r'])
+
+		return loss_dict
+
+
+##########################################################################
+#
+# Self-Sup Loss for MonoFlowExp_ppV1: predict as flow, disp, and expansion
+# 									  for expansion, there is no link to flow
+#									  expansion is simply multiplier on disp
+#
+##########################################################################
+class Loss_MonoExp_SelfSup(nn.Module):
+	def __init__(self, args):
+		super(Loss_MonoExp_SelfSup, self).__init__()
+				
+		self._weights = [4.0, 2.0, 1.0, 1.0, 1.0]
+		self._ssim_w = 0.85
+		self._disp_smooth_w = 0.1
+		self._sf_3d_pts = 0.5
+		self._sf_3d_sm = 200
+		self._flow_sm = 10
+		self._warping_layer = WarpingLayer_Flow()
+
+	def depth_loss_left_img(self, disp_l, disp_r, img_l_aug, img_r_aug, ii):
+
+		img_r_warp = _generate_image_left(img_r_aug, disp_l)
+		left_occ = _adaptive_disocc_detection_disp(disp_r).detach()
+
+		## Photometric loss
+		img_diff = (_elementwise_l1(img_l_aug, img_r_warp) * (1.0 - self._ssim_w) + _SSIM(img_l_aug, img_r_warp) * self._ssim_w).mean(dim=1, keepdim=True)        
+		loss_img = (img_diff[left_occ]).mean()
+		img_diff[~left_occ].detach_()
+
+		## Disparities smoothness
+		loss_smooth = _smoothness_motion_2nd(disp_l, img_l_aug, beta=10.0).mean() / (2 ** ii)
+
+		return loss_img + self._disp_smooth_w * loss_smooth, left_occ
+
+
+	def sceneflow_loss(self, exp_f, exp_b, flow_f, flow_b, disp_l1, disp_l2, disp_occ_l1, disp_occ_l2, k_l1_aug, k_l2_aug, img_l1_aug, img_l2_aug, aug_size, ii):
+
+		_, _, h_dp, w_dp = flow_f.size()
+		disp_l1 = disp_l1 * w_dp
+		disp_l2 = disp_l2 * w_dp
+
+		## scale
+		local_scale = torch.zeros_like(aug_size)
+		local_scale[:, 0] = h_dp
+		local_scale[:, 1] = w_dp        
+
+		sf_f = flow2sf_exp(flow_f, disp_l1, exp_f, k_l1_aug, local_scale / aug_size)
+		sf_b = flow2sf_exp(flow_b, disp_l2, exp_b, k_l2_aug, local_scale / aug_size) 
+
+		pts1, k1_scale = pixel2pts_ms(k_l1_aug, disp_l1, local_scale / aug_size)
+		pts2, k2_scale = pixel2pts_ms(k_l2_aug, disp_l2, local_scale / aug_size)
+
+		pred_flow_f, pts1_tf, coord1 = pts2pixel_ms(k1_scale, pts1, sf_f, [h_dp, w_dp])
+		pred_flow_b, pts2_tf, coord2 = pts2pixel_ms(k2_scale, pts2, sf_b, [h_dp, w_dp]) 
+
+		pts2_warp = reconstructPts(coord1, pts2)
+		pts1_warp = reconstructPts(coord2, pts1) 
+
+		#flow_f = projectSceneFlow2Flow(k1_scale, sf_f, disp_l1)
+		#flow_b = projectSceneFlow2Flow(k2_scale, sf_b, disp_l2)
+		occ_map_b = _adaptive_disocc_detection(flow_f).detach() * disp_occ_l2
+		occ_map_f = _adaptive_disocc_detection(flow_b).detach() * disp_occ_l1
+
+		#print(occ_map_f.shape)
+
+		#print(mask_f.shape)
+		#print(self.affine(flow_f).shape)
+
+		## Image reconstruction loss
+		loss_flow_f = _elementwise_epe(flow_f,pred_flow_f)
+		loss_flow_b = _elementwise_epe(flow_b,pred_flow_b)
+
+		loss_im1 = loss_flow_f[occ_map_f].mean()
+		loss_im2 = loss_flow_b[occ_map_b].mean()
+		loss_flow_f[~occ_map_f].detach_()
+		loss_flow_b[~occ_map_b].detach_()
+		loss_im = loss_im1 + loss_im2
+
+		#print("loss_im dim", loss_im.shape)
+		
+		## Point reconstruction Loss
+		pts_norm1 = torch.norm(pts1, p=2, dim=1, keepdim=True)
+		pts_norm2 = torch.norm(pts2, p=2, dim=1, keepdim=True)
+
+		pts_diff1 = _elementwise_epe(pts1_tf, pts2_warp).mean(dim=1, keepdim=True) / (pts_norm1 + 1e-8)
+		pts_diff2 = _elementwise_epe(pts2_tf, pts1_warp).mean(dim=1, keepdim=True) / (pts_norm2 + 1e-8)
+		loss_pts1 = pts_diff1[occ_map_f].mean()
+		loss_pts2 = pts_diff2[occ_map_b].mean()
+		pts_diff1[~occ_map_f].detach_()
+		pts_diff2[~occ_map_b].detach_()
+		loss_pts = loss_pts1 + loss_pts2
+
+		#print("loss_pts dim", loss_pts.shape)
+
+		# flow smoothness loss
+		loss_flow_s = (_smoothness_motion_2nd(flow_f / 20, img_l1_aug, beta=10).mean() + _smoothness_motion_2nd(flow_b / 20, img_l2_aug, beta=10).mean()) / (2 ** ii)
+		# expansion smoothness loss 
+		loss_exp_s = ((_smoothness_motion_2nd(exp_f, img_l1_aug, beta=10.0) / (pts_norm1 + 1e-8)).mean() + (_smoothness_motion_2nd(exp_b, img_l2_aug, beta=10.0) / (pts_norm2 + 1e-8)).mean()) / (2 ** ii)
+		#print("smoothness dim", loss_flow_s.shape, loss_exp_s.shape)
+		## 3D motion smoothness loss
+		loss_3d_s = self._disp_smooth_w * loss_exp_s
+
+		## Loss Summnation
+		sceneflow_loss = loss_im + self._sf_3d_pts * loss_pts + loss_3d_s
+		
+		return sceneflow_loss, loss_im, loss_pts, loss_3d_s
+
+	def forward(self, output_dict, target_dict):
+
+		loss_dict = {}
+
+		batch_size = target_dict['input_l1'].size(0)
+		loss_sf_sum = 0
+		loss_dp_sum = 0
+		loss_sf_2d = 0
+		loss_sf_3d = 0
+		loss_sf_sm = 0
+		
+		k_l1_aug = target_dict['input_k_l1_aug']
+		k_l2_aug = target_dict['input_k_l2_aug']
+		aug_size = target_dict['aug_size']
+
+		disp_r1_dict = output_dict['output_dict_r']['disp_l1']
+		disp_r2_dict = output_dict['output_dict_r']['disp_l2']
+
+		sf_f = output_dict['scaled_flow_f']
+		sf_b = output_dict['scaled_flow_b']
+		exp_f = output_dict['dchange_f']
+		exp_b = output_dict['dchange_b']
+		mask_f = output_dict['mask_f'].unsqueeze(1)
+		mask_b = output_dict['mask_b'].unsqueeze(1)
+			
+		## For image reconstruction loss
+		disp_l1 = interpolate2d_as(output_dict['disp_l1_pp'][0], sf_f)
+		disp_l2 = interpolate2d_as(output_dict['disp_l2_pp'][0], sf_b)
+		disp_r1 = interpolate2d_as(disp_r1_dict[0], sf_f)
+		disp_r2 = interpolate2d_as(disp_r2_dict[0], sf_b)
+
+		assert(sf_f.size()[2:4] == sf_b.size()[2:4])
+		assert(sf_f.size()[2:4] == disp_l1.size()[2:4])
+		assert(sf_f.size()[2:4] == disp_l2.size()[2:4])
+
+		img_l1_aug = target_dict['input_l1_aug']
+		img_l2_aug = target_dict['input_l2_aug']
+		img_r1_aug = target_dict['input_r1_aug']
+		img_r2_aug = target_dict['input_r2_aug']
+
+		## Disp Loss
+		loss_disp_l1, disp_occ_l1 = self.depth_loss_left_img(disp_l1, disp_r1, img_l1_aug, img_r1_aug, 0)
+		loss_disp_l2, disp_occ_l2 = self.depth_loss_left_img(disp_l2, disp_r2, img_l2_aug, img_r2_aug, 0)
+		#print(disp_occ_l2.dtype)
+
+		## Sceneflow Loss           
+		loss_sceneflow, loss_im, loss_pts, loss_3d_s = self.sceneflow_loss(exp_f, exp_b, sf_f, sf_b, 
+																			disp_l1, disp_l2,
+																			disp_occ_l1 * mask_f, disp_occ_l2 * mask_b,
+																			k_l1_aug, k_l2_aug,
+																			img_l1_aug, img_l2_aug, 
+																			aug_size, 0)
+
+		loss_dict = {}
+		loss_dict["dp"] = loss_disp_l1 + loss_disp_l2
+		loss_dict["s_2"] = loss_im
+		loss_dict["s_3"] = loss_pts
+		loss_dict["s_3s"] = loss_3d_s
+		loss_dict["total_loss"] = loss_sceneflow
 
 		return loss_dict
