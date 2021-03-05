@@ -18,20 +18,20 @@ KITTI_FLOW_HOME="/disk_hdd/kitti_full/kitti_flow"
 SYNTH_DRIVING_HOME="/disk_ssd/driving"
 
 # model
-MODEL=MonoDispExp
+MODEL=Joint_MonoDispExp
 
 # save path
 #CHECKPOINT="checkpoints/full_model_kitti/checkpoint_latest.ckpt"
-CHECKPOINT=None
+CHECKPOINT="/disk_ssd/Self_Mono_Experiments/-monoexp-bb-/checkpoint_best.ckpt"
 
 # Loss and Augmentation
 Train_Dataset=KITTI_Raw_KittiSplit_Train_mnsf
 Train_Augmentation=Augmentation_SceneFlow
-Train_Loss_Function=Loss_MonoExp_SelfSup
+Train_Loss_Function=Loss_Joint_MonoExp_SelfSup
 
 Valid_Dataset=KITTI_Raw_KittiSplit_Valid_mnsf
 Valid_Augmentation=Augmentation_Resize_Only
-Valid_Loss_Function=Loss_MonoExp_SelfSup
+Valid_Loss_Function=Loss_Joint_MonoExp_SelfSup
 
 ALIAS="-kitti-raw-"
 TIME=$(date +"%Y%m%d-%H%M%S")
@@ -47,14 +47,13 @@ python ../main.py \
 --exp_training=True \
 --backbone_mode=True \
 --checkpoint=$CHECKPOINT \
---backbone_weight=$PRETRAIN \
 --lr_scheduler=MultiStepLR \
 --lr_scheduler_gamma=0.5 \
 --lr_scheduler_milestones="[23, 39, 47, 54]" \
 --model=$MODEL \
 --num_workers=10 \
 --optimizer=Adam \
---optimizer_lr=2e-4 \
+--optimizer_lr=5e-5 \
 --save=$SAVE_PATH \
 --total_epochs=62 \
 --save_freq=5 \

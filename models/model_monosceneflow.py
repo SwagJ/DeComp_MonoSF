@@ -1638,6 +1638,7 @@ class MonoFlow_Disp_Seperate_Warp_OG_Decoder_No_Res(nn.Module):
             output_dict['disp_l2'] = disps_2[::-1]
             output_dict['x1_feats'] = x1_feats[::-1]
             output_dict['x2_feats'] = x2_feats[::-1]
+            output_dict['x1_rev'] = x1_rev
         #output_dict['x1_feats'] = upsample_outputs_as(x1_feats[::-1],x1_rev)
         #output_dict['x2_feats'] = upsample_outputs_as(x2_feats[::-1],x1_rev)
         #disp_l1 = self.disp_estimator1(x1_pyramid)

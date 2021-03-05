@@ -17,7 +17,7 @@ KITTI_RAW_HOME="/scratch_net/phon/majing/datasets/kitti_raw/"
 EXPERIMENTS_HOME="/scratch_net/phon/majing/src/exps"
 
 # model
-MODEL=MonoDispExp
+MODEL=Joint_MonoDispExp
 
 # save path
 
@@ -26,17 +26,17 @@ CHECKPOINT=None
 # Loss and Augmentation
 Train_Dataset=KITTI_Raw_KittiSplit_Train_mnsf
 Train_Augmentation=Augmentation_SceneFlow
-Train_Loss_Function=Loss_MonoExp_SelfSup
+Train_Loss_Function=Loss_Joint_MonoExp_SelfSup
 
 Valid_Dataset=KITTI_Raw_KittiSplit_Valid_mnsf
 Valid_Augmentation=Augmentation_Resize_Only
-Valid_Loss_Function=Loss_MonoExp_SelfSup
+Valid_Loss_Function=Loss_Joint_MonoExp_SelfSup
 
-ALIAS="-monoexp-bb-"
+ALIAS="-monoexp-bb-ft-"
 SAVE_PATH="$EXPERIMENTS_HOME/$ALIAS/"
 #CHECKPOINT="$EXPERIMENTS_HOME/$ALIAS/checkpoint_latest.ckpt"
 
-PRETRAIN="$EXPERIMENTS_HOME/-mono-flow-disp-warp-og-decoder-no-res-/checkpoint_best.ckpt"
+PRETRAIN="$EXPERIMENTS_HOME/-monoexp-bb-/checkpoint_best.ckpt"
 
 
 
@@ -44,19 +44,18 @@ PRETRAIN="$EXPERIMENTS_HOME/-mono-flow-disp-warp-og-decoder-no-res-/checkpoint_b
 
 # training configuration
 python ../main.py \
---batch_size=8 \
+--batch_size=4 \
 --batch_size_val=1 \
---checkpoint=$CHECKPOINT \
---lr_scheduler=MultiStepLR \
---backbone_weight=$PRETRAIN \
---lr_scheduler_gamma=0.5 \
 --exp_training=True \
 --backbone_mode=True \
+--checkpoint=$PRETRAIN \
+--lr_scheduler=MultiStepLR \
+--lr_scheduler_gamma=0.5 \
 --lr_scheduler_milestones="[23, 39, 47, 54]" \
 --model=$MODEL \
 --num_workers=10 \
 --optimizer=Adam \
---optimizer_lr=2e-4 \
+--optimizer_lr=5e-5 \
 --save=$SAVE_PATH \
 --total_epochs=62 \
 --save_freq=5 \
@@ -74,4 +73,5 @@ python ../main.py \
 --validation_dataset_root=$KITTI_RAW_HOME \
 --validation_dataset_preprocessing_crop=False \
 --validation_key=total_loss \
+--validation_dataset_num_examples=-1 \
 --validation_loss=$Valid_Loss_Function \
