@@ -403,6 +403,27 @@ class MonoFlow_DispC_Decoder_v1_1(nn.Module):
 
 		return x_out, flo, dispC
 
+class MonoFlow_DispC_Decoder_v1_2(nn.Module):
+	def __init__(self, ch_in):
+		super(MonoFlow_DispC_Decoder_v1_2, self).__init__()
+
+		self.convs = nn.Sequential(
+			conv(ch_in, 128),
+			conv(128, 128),
+			conv(128, 96),
+			conv(96, 64),
+			conv(64, 32)
+		)
+		self.conv_sf = conv(32, 2, isReLU=False)
+		self.conv_dc = conv(32, 1, isReLU=False)
+
+	def forward(self, x):
+		x_out = self.convs(x)
+		flo = self.conv_sf(x_out)
+		dispC = self.conv_dc(x_out)
+
+		return x_out, flo, dispC
+
 class MonoSF_Disp_Exp_Decoder(nn.Module):
 	def __init__(self, ch_in):
 		super(MonoSF_Disp_Exp_Decoder, self).__init__()
@@ -510,6 +531,29 @@ class ContextNetwork_Flow_DispC_v1_1(nn.Module):
 		x_out = self.convs(x)
 		flo = self.conv_sf(x_out)
 		dispC = self.conv_dc(x_out) * 0.3
+		
+		return flo, dispC
+
+class ContextNetwork_Flow_DispC_v1_2(nn.Module):
+	def __init__(self, ch_in, is_exp=False):
+		super(ContextNetwork_Flow_DispC_v1_2, self).__init__()
+
+		self.convs = nn.Sequential(
+			conv(ch_in, 128, 3, 1, 1),
+			conv(128, 128, 3, 1, 2),
+			conv(128, 128, 3, 1, 4),
+			conv(128, 96, 3, 1, 8),
+			conv(96, 64, 3, 1, 16),
+			conv(64, 32, 3, 1, 1)
+		)
+		self.conv_dc = conv(32, 1, isReLU=False)
+		self.conv_sf = conv(32, 2, isReLU=False)
+
+	def forward(self, x):
+
+		x_out = self.convs(x)
+		flo = self.conv_sf(x_out)
+		dispC = self.conv_dc(x_out)
 		
 		return flo, dispC
 
