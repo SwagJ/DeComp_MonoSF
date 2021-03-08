@@ -44,7 +44,7 @@ PRETRAIN="$EXPERIMENTS_HOME/-mono-flow-disp-warp-og-decoder-no-res-/checkpoint_b
 
 # training configuration
 python ../main.py \
---batch_size=8 \
+--batch_size=4 \
 --batch_size_val=1 \
 --checkpoint=$CHECKPOINT \
 --lr_scheduler=MultiStepLR \

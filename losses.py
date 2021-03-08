@@ -5253,15 +5253,15 @@ class Loss_MonoExp_SelfSup(nn.Module):
 		# flow smoothness loss
 		loss_flow_s = (_smoothness_motion_2nd(flow_f / 20, img_l1_aug, beta=10).mean() + _smoothness_motion_2nd(flow_b / 20, img_l2_aug, beta=10).mean()) / (2 ** ii)
 		# expansion smoothness loss 
-		loss_exp_s = ((_smoothness_motion_2nd(exp_f, img_l1_aug, beta=10.0) / (pts_norm1 + 1e-8)).mean() + (_smoothness_motion_2nd(exp_b, img_l2_aug, beta=10.0) / (pts_norm2 + 1e-8)).mean()) / (2 ** ii)
+		#loss_exp_s = ((_smoothness_motion_2nd(exp_f, img_l1_aug, beta=10.0) / (pts_norm1 + 1e-8)).mean() + (_smoothness_motion_2nd(exp_b, img_l2_aug, beta=10.0) / (pts_norm2 + 1e-8)).mean()) / (2 ** ii)
 		#print("smoothness dim", loss_flow_s.shape, loss_exp_s.shape)
 		## 3D motion smoothness loss
-		loss_3d_s = self._disp_smooth_w * loss_exp_s
+		#loss_3d_s = self._disp_smooth_w * loss_exp_s
 
 		## Loss Summnation
-		sceneflow_loss = loss_im + self._sf_3d_pts * loss_pts + loss_3d_s
+		sceneflow_loss = loss_im + self._sf_3d_pts * loss_pts
 		
-		return sceneflow_loss, loss_im, loss_pts, loss_3d_s
+		return sceneflow_loss, loss_im, loss_pts
 
 	def forward(self, output_dict, target_dict):
 
@@ -5309,7 +5309,7 @@ class Loss_MonoExp_SelfSup(nn.Module):
 		#print(disp_occ_l2.dtype)
 
 		## Sceneflow Loss           
-		loss_sceneflow, loss_im, loss_pts, loss_3d_s = self.sceneflow_loss(exp_f, exp_b, sf_f, sf_b, 
+		loss_sceneflow, loss_im, loss_pts = self.sceneflow_loss(exp_f, exp_b, sf_f, sf_b, 
 																			disp_l1, disp_l2,
 																			disp_occ_l1 * mask_f, disp_occ_l2 * mask_b,
 																			k_l1_aug, k_l2_aug,
@@ -5320,7 +5320,6 @@ class Loss_MonoExp_SelfSup(nn.Module):
 		loss_dict["dp"] = loss_disp_l1 + loss_disp_l2
 		loss_dict["s_2"] = loss_im
 		loss_dict["s_3"] = loss_pts
-		loss_dict["s_3s"] = loss_3d_s
 		loss_dict["total_loss"] = loss_sceneflow
 
 		return loss_dict
@@ -5334,7 +5333,7 @@ class Loss_Joint_MonoExp_SelfSup(nn.Module):
 		self._weights = [4.0, 2.0, 1.0, 1.0, 1.0]
 		self._ssim_w = 0.85
 		self._disp_smooth_w = 0.1
-		self._sf_3d_pts = 0.5
+		self._sf_3d_pts = 0.2
 		self._sf_3d_sm = 200
 		self._flow_sm = 10
 		self._warping_layer = WarpingLayer_Flow()

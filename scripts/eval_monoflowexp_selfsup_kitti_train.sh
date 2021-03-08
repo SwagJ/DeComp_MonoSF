@@ -3,7 +3,7 @@
 # DATASETS_HOME
 KITTI_HOME="/disk_hdd/kitti_flow"
 #AUDI_HOME="/disk_hdd/a2d2/seq_01"
-CHECKPOINT="/disk_ssd/Self_Mono_Experiments/-monoexp-bb-/checkpoint_best.ckpt"
+CHECKPOINT="/disk_ssd/Self_Mono_Experiments/-monoexp-bb-ft-/checkpoint_epoch30.ckpt"
 PRETRAIN="/disk_ssd/Self_Mono_Experiments/-mono-flow-disp-warp-og-decoder-no-res-/checkpoint_best.ckpt"
 
 # model
@@ -15,7 +15,7 @@ Valid_Loss_Function=Eval_MonoFlowExp_KITTI_Train
 #VALIDATION_AUGMENTATION_IMGSIZE=[400,1200]
 
 # training configuration
-SAVE_PATH="/disk_ssd/self-mono-eval/-monoexp-bb-/"
+SAVE_PATH="/disk_ssd/self-mono-eval/-monoexp-bb-ft-/"
 python ../main.py \
 --batch_size=1 \
 --batch_size_val=1 \
@@ -31,9 +31,9 @@ python ../main.py \
 --validation_dataset_root=$KITTI_HOME \
 --validation_loss=$Valid_Loss_Function \
 --validation_key=sf \
---save_disp=True \
---save_disp2=True \
---save_flow=True \
---save_flow_otl=True \
---save_disp_otl=True \
---save_disp2_otl=True
+#--save_disp=True \
+#--save_disp2=True \
+#--save_flow=True \
+#--save_flow_otl=True \
+#--save_disp_otl=True \
+#--save_disp2_otl=True
