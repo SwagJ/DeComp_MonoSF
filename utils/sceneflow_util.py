@@ -113,13 +113,13 @@ def flow2sf_dispC(flow, disp, dispC, intrinsic, rel_scale):
 	b, _, h, w = disp.size()
 	intrinsic_dp_s = intrinsic_scale(intrinsic, rel_scale[:,0], rel_scale[:,1])
 	depth = disp2depth_kitti(disp, intrinsic_dp_s[:,0,0])
-	depthC = disp2depth_kitti(dispC, intrinsic_dp_s[:,0,0])
 	flow_x = flow[:,0:1,:,:] - dispC
+	depthC = disp2depth_kitti(dispC*w, intrinsic_dp_s[:,0,0])
 	#print(intrinsic_dp_s[:,0,0].shape)
 	#print(flow_x.shape)
 	sf_x = flow_x / intrinsic_dp_s[:,0,0].view(b,1,1,1) * depth
 	sf_y = flow[:,1:2,:,:] / intrinsic_dp_s[:,1,1].view(b,1,1,1) * depth 
-	sf = torch.cat((sf_x, sf_y, dispC),dim=1)
+	sf = torch.cat((sf_x, sf_y, depthC),dim=1)
 	return sf
 
 

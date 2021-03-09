@@ -1142,6 +1142,112 @@ class Eval_MonoFlowDispExp_KITTI_Train(nn.Module):
 
 		return loss_dict
 
+class Eval_MonoFlowDispC_KITTI_Train(nn.Module):
+	def __init__(self, args):
+		super(Eval_MonoFlowDispC_KITTI_Train, self).__init__()
+
+
+	def upsample_flow_as(self, flow, output_as):
+		size_inputs = flow.size()[2:4]
+		size_targets = output_as.size()[2:4]
+		resized_flow = tf.interpolate(flow, size=size_targets, mode="bilinear", align_corners=True)
+		# correct scaling of flow
+		u, v = resized_flow.chunk(2, dim=1)
+		u *= float(size_targets[1] / size_inputs[1])
+		v *= float(size_targets[0] / size_inputs[0])
+		return torch.cat([u, v], dim=1)
+
+
+	def forward(self, output_dict, target_dict):
+
+		loss_dict = {}
+
+		gt_flow = target_dict['target_flow']
+		gt_flow_mask = (target_dict['target_flow_mask']==1).float()
+
+		gt_disp = target_dict['target_disp']
+		gt_disp_mask = (target_dict['target_disp_mask']==1).float()
+
+		gt_disp2_occ = target_dict['target_disp2_occ']
+		gt_disp2_mask = (target_dict['target_disp2_mask_occ']==1).float()
+
+		gt_sf_mask = gt_flow_mask * gt_disp_mask * gt_disp2_mask
+
+		intrinsics = target_dict['input_k_l1']                
+
+		##################################################
+		## Depth 1
+		##################################################
+
+		batch_size, _, _, width = gt_disp.size()
+
+		out_disp_l1 = interpolate2d_as(output_dict["disp_l1_pp"][0], gt_disp, mode="bilinear") * width
+		#out_disp_l1 = target_dict['disp_pre'].cuda()
+		out_depth_l1 = _disp2depth_kitti_K(out_disp_l1, intrinsics[:, 0, 0])
+		out_depth_l1 = torch.clamp(out_depth_l1, 1e-3, 80)
+		gt_depth_l1 = _disp2depth_kitti_K(gt_disp, intrinsics[:, 0, 0])
+
+		dict_disp0_occ = eval_module_disp_depth(gt_disp, gt_disp_mask.bool(), out_disp_l1, gt_depth_l1, out_depth_l1)
+		
+		output_dict["out_disp_l_pp"] = out_disp_l1
+		output_dict["out_depth_l_pp"] = out_depth_l1
+
+		d0_outlier_image = dict_disp0_occ['otl_img']
+		loss_dict["d_abs"] = dict_disp0_occ['abs_rel']
+		loss_dict["d_sq"] = dict_disp0_occ['sq_rel']
+		loss_dict["d1"] = dict_disp0_occ['otl']
+		output_dict["otl_disp"] = d0_outlier_image
+
+		##################################################
+		## Optical Flow Eval
+		##################################################
+		#print(output_dict['flow_f_pp'][0])
+		
+		out_flow = self.upsample_flow_as(output_dict['flow_f_pp'][0], gt_flow)
+		#out_flow = projectSceneFlow2Flow(target_dict['input_k_l1'], out_sceneflow, output_dict["out_disp_l_pp"])
+
+		## Flow Eval
+		print(torch.max(gt_flow),torch.min(gt_flow))
+		valid_epe = _elementwise_epe(out_flow, gt_flow) * gt_flow_mask
+		loss_dict["f_epe"] = (valid_epe.view(batch_size, -1).sum(1)).mean() / 91875.68
+		output_dict["out_flow_pp"] = out_flow
+
+		flow_gt_mag = torch.norm(target_dict["target_flow"], p=2, dim=1, keepdim=True) + 1e-8
+		flow_outlier_epe = (valid_epe > 3).float() * ((valid_epe / flow_gt_mag) > 0.05).float() * gt_flow_mask
+		loss_dict["f1"] = (flow_outlier_epe.view(batch_size, -1).sum(1)).mean() / 91875.68
+		output_dict["otl_flow"] = flow_outlier_epe
+
+
+		##################################################
+		## Depth 2
+		##################################################
+
+		disp_l1_next = output_dict["disp_l1_pp"][0] + output_dict["dispC_f_pp"][0]
+		disp_l1_next = interpolate2d_as(disp_l1_next, gt_disp, mode="bilinear") * width
+
+		out_depth_l1_next = _disp2depth_kitti_K(disp_l1_next, intrinsics[:, 0, 0])
+		#out_disp_l1_next = _depth2disp_kitti_K(out_depth_l1_next, intrinsics[:, 0, 0])
+		gt_depth_l1_next = _disp2depth_kitti_K(gt_disp2_occ, intrinsics[:, 0, 0])
+
+		dict_disp1_occ = eval_module_disp_depth(gt_disp2_occ, gt_disp2_mask.bool(), disp_l1_next, gt_depth_l1_next, out_depth_l1_next)
+		
+		output_dict["out_disp_l_pp_next"] = disp_l1_next
+		output_dict["out_depth_l_pp_next"] = out_depth_l1_next
+
+		d1_outlier_image = dict_disp1_occ['otl_img']
+		loss_dict["d2"] = dict_disp1_occ['otl']
+		output_dict["otl_disp2"] = d1_outlier_image
+
+
+		##################################################
+		## Scene Flow Eval
+		##################################################
+
+		outlier_sf = (flow_outlier_epe.bool() + d0_outlier_image.bool() + d1_outlier_image.bool()).float() * gt_sf_mask
+		loss_dict["sf"] = (outlier_sf.view(batch_size, -1).sum(1)).mean() / 91873.4
+
+		return loss_dict
+
 class Eval_SceneFlow_KITTI_Train_Warpping(nn.Module):
 	def __init__(self, args):
 		super(Eval_SceneFlow_KITTI_Train_Warpping, self).__init__()

@@ -18,7 +18,7 @@ KITTI_FLOW_HOME="/disk_hdd/kitti_full/kitti_flow"
 SYNTH_DRIVING_HOME="/disk_ssd/driving"
 
 # model
-MODEL=MonoDispExp
+MODEL=MonoFlow_DispC_v1_1
 
 # save path
 #CHECKPOINT="checkpoints/full_model_kitti/checkpoint_latest.ckpt"
@@ -27,11 +27,11 @@ CHECKPOINT=None
 # Loss and Augmentation
 Train_Dataset=KITTI_Raw_KittiSplit_Train_mnsf
 Train_Augmentation=Augmentation_SceneFlow
-Train_Loss_Function=Loss_MonoExp_SelfSup
+Train_Loss_Function=Loss_MonoFlowDispC_SelfSup_No_Flow_Reg
 
 Valid_Dataset=KITTI_Raw_KittiSplit_Valid_mnsf
 Valid_Augmentation=Augmentation_Resize_Only
-Valid_Loss_Function=Loss_MonoExp_SelfSup
+Valid_Loss_Function=Loss_MonoFlowDispC_SelfSup_No_Flow_Reg
 
 ALIAS="-kitti-raw-"
 TIME=$(date +"%Y%m%d-%H%M%S")
@@ -42,14 +42,11 @@ PRETRAIN="/disk_ssd/Self_Mono_Experiments/-mono-flow-disp-warp-og-decoder-no-res
 
 # training configuration
 python ../main.py \
---batch_size=4 \
+--batch_size=2 \
 --batch_size_val=1 \
 --checkpoint=$CHECKPOINT \
 --lr_scheduler=MultiStepLR \
---backbone_weight=$PRETRAIN \
 --lr_scheduler_gamma=0.5 \
---exp_training=True \
---backbone_mode=True \
 --lr_scheduler_milestones="[23, 39, 47, 54]" \
 --model=$MODEL \
 --num_workers=10 \
