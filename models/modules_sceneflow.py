@@ -361,6 +361,29 @@ class MonoSceneFlowDecoder(nn.Module):
 
 		return x_out, sf, disp1
 
+class MonoSF_DispC_Decoder(nn.Module):
+	def __init__(self, ch_in):
+		super(MonoSF_DispC_Decoder, self).__init__()
+
+		self.convs = nn.Sequential(
+			conv(ch_in, 128),
+			conv(128, 128),
+			conv(128, 96),
+			conv(96, 64),
+			conv(64, 32)
+		)
+		self.conv_flow = conv(32, 2, isReLU=False)
+		self.conv_dispC = conv(32, 1, isReLU=False)
+		self.conv_d1 = conv(32, 1, isReLU=False)
+
+	def forward(self, x):
+		x_out = self.convs(x)
+		sf = self.conv_flow(x_out)
+		disp1 = self.conv_d1(x_out)
+		dispC = self.conv_dispC(x_out) * 0.1
+
+		return x_out, sf, disp1, dispC
+
 class MonoFlow_Disp_Decoder(nn.Module):
 	def __init__(self, ch_in):
 		super(MonoFlow_Disp_Decoder, self).__init__()
@@ -484,6 +507,33 @@ class ContextNetwork(nn.Module):
 			return sf, disp1, exp1
 		else:
 			return sf, disp1
+
+class ContextNetwork_DispC(nn.Module):
+	def __init__(self, ch_in):
+		super(ContextNetwork_DispC, self).__init__()
+		self.convs = nn.Sequential(
+			conv(ch_in, 128, 3, 1, 1),
+			conv(128, 128, 3, 1, 2),
+			conv(128, 128, 3, 1, 4),
+			conv(128, 96, 3, 1, 8),
+			conv(96, 64, 3, 1, 16),
+			conv(64, 32, 3, 1, 1)
+		)
+		self.conv_d1 = nn.Sequential(
+			conv(32, 1, isReLU=False), 
+			torch.nn.Sigmoid()
+		)
+		self.conv_sf = conv(32, 2, isReLU=False)
+		self.conv_dispC = conv(32, 1, isReLU=False)
+
+	def forward(self, x):
+
+		x_out = self.convs(x)
+		sf = self.conv_sf(x_out)
+		disp1 = self.conv_d1(x_out) * 0.3
+		dispC = self.conv_dispC(x_out) * 0.1
+		
+		return sf, disp1, dispC
 
 class ContextNetwork_Flow_Disp(nn.Module):
 	def __init__(self, ch_in):

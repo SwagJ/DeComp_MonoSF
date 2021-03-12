@@ -28,6 +28,7 @@ MonoFlowExp_ppV1_3			=	model_monosceneflow.MonoFlowExp_ppV1_3
 MonoFlow_DispC_v1_1			=	model_monosceneflow.MonoFlow_DispC_v1_1
 MonoFlow_DispC_v1_2			=	model_monosceneflow.MonoFlow_DispC_v1_2
 MonoFlow_DispC_v2_1			=	model_monosceneflow.MonoFlow_DispC_v2_1
+MonoSF_DispC				=	model_monosceneflow.MonoSF_DispC
 
 ##########################################################################################
 ## Monocular Scene Flow - The models for the ablation studies
