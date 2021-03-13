@@ -1255,7 +1255,7 @@ class Eval_MonoFlowDispC_KITTI_Train(nn.Module):
 		#out_flow = projectSceneFlow2Flow(target_dict['input_k_l1'], out_sceneflow, output_dict["out_disp_l_pp"])
 
 		## Flow Eval
-		print(torch.max(gt_flow),torch.min(gt_flow))
+		#print(torch.max(gt_flow),torch.min(gt_flow))
 		valid_epe = _elementwise_epe(out_flow, gt_flow) * gt_flow_mask
 		loss_dict["f_epe"] = (valid_epe.view(batch_size, -1).sum(1)).mean() / 91875.68
 		output_dict["out_flow_pp"] = out_flow
@@ -5903,17 +5903,17 @@ class Loss_MonoFlowDispC_SelfSup_No_Flow_Reg(nn.Module):
 		# flow smoothness loss
 		loss_flow_s = (_smoothness_motion_2nd(flow_f / 20, img_l1_aug, beta=10).mean() + _smoothness_motion_2nd(flow_b / 20, img_l2_aug, beta=10).mean()) / (2 ** ii)
 		# expansion smoothness loss 
-		loss_dispC_s = (_smoothness_motion_2nd(dispC_f / 20, img_l1_aug, beta=10).mean() + _smoothness_motion_2nd(dispC_b / 20, img_l2_aug, beta=10).mean()) / (2 ** ii)
+		loss_dispC_s = (_smoothness_motion_2nd(dispC_f, img_l1_aug, beta=10).mean() + _smoothness_motion_2nd(dispC_b, img_l2_aug, beta=10).mean()) / (2 ** ii)
 		#print("smoothness dim", loss_flow_s.shape, loss_exp_s.shape)
 		## 3D motion smoothness loss
-		loss_3d_s = 10 * loss_dispC_s
+		loss_3d_s = 0.1 * loss_dispC_s
 
-		loss_2d_s = _smoothness_motion_2nd(flow_f / 20.0, img_l1_aug, beta=10.0).mean() + _smoothness_motion_2nd(flow_b / 20.0, img_l2_aug, beta=10.0).mean()
+		#loss_2d_s = _smoothness_motion_2nd(flow_f / 20.0, img_l1_aug, beta=10.0).mean() + _smoothness_motion_2nd(flow_b / 20.0, img_l2_aug, beta=10.0).mean()
 
 		## Loss Summnation
-		sceneflow_loss = loss_im + self._sf_3d_pts * loss_pts + loss_3d_s + 10 * loss_2d_s
+		sceneflow_loss = loss_im + self._sf_3d_pts * loss_pts + loss_3d_s + 10 * loss_flow_s
 		
-		return sceneflow_loss, loss_im, loss_pts, loss_3d_s, loss_2d_s
+		return sceneflow_loss, loss_im, loss_pts, loss_3d_s, loss_flow_s
 
 	def detaching_grad_of_outputs(self, output_dict):
 		
