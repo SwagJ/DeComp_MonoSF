@@ -732,7 +732,7 @@ class Disp_DispC_Decoder(nn.Module):
 
 class Disp_DispC_Decoder_v2_2(nn.Module):
 	def __init__(self, ch_in):
-		super(Disp_DispC_Decoder_v2_1, self).__init__()
+		super(Disp_DispC_Decoder_v2_2, self).__init__()
 
 		self.convs = nn.Sequential(
 			conv(ch_in, 128),
@@ -858,7 +858,7 @@ class ContextNetwork_Disp_DispC(nn.Module):
 
 class ContextNetwork_Disp_DispC_v2_2(nn.Module):
 	def __init__(self, ch_in):
-		super(ContextNetwork_Disp_DispC_v2_1, self).__init__()
+		super(ContextNetwork_Disp_DispC_v2_2, self).__init__()
 
 		self.convs = nn.Sequential(
 			conv(ch_in, 128, 3, 1, 1),

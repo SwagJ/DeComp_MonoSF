@@ -18,7 +18,7 @@ KITTI_FLOW_HOME="/disk_hdd/kitti_full/kitti_flow"
 SYNTH_DRIVING_HOME="/disk_ssd/driving"
 
 # model
-MODEL=MonoFlow_DispC_v2_1
+MODEL=MonoFlow_DispC_v2_2
 
 # save path
 #CHECKPOINT="checkpoints/full_model_kitti/checkpoint_latest.ckpt"

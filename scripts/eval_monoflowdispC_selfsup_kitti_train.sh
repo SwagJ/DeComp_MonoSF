@@ -5,7 +5,7 @@ KITTI_HOME="/disk_hdd/kitti_flow"
 CHECKPOINT="/disk_ssd/Self_Mono_Experiments/-monosf-dispC-/checkpoint_best.ckpt"
 
 # model
-MODEL=MonoSF_DispC
+MODEL=MonoFlow_DispC_v2_1
 
 Valid_Dataset=KITTI_2015_Train_Full_mnsf
 Valid_Augmentation=Augmentation_Resize_Only
