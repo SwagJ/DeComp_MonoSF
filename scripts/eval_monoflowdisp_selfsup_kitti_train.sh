@@ -2,7 +2,7 @@
 
 # DATASETS_HOME
 KITTI_HOME="/disk_hdd/kitti_flow"
-CHECKPOINT="/disk_ssd/Self_Mono_Experiments/-mono-flow-disp-warp-og-decoder-no-res-/checkpoint_epoch30.ckpt"
+CHECKPOINT="/disk_ssd/Self_Mono_Experiments/-mono-flow-disp-warp-og-decoder-census-/checkpoint_best.ckpt"
 
 # model
 MODEL=MonoFlow_Disp_Seperate_Warp_OG_Decoder_No_Res
@@ -12,7 +12,7 @@ Valid_Augmentation=Augmentation_Resize_Only
 Valid_Loss_Function=Eval_FlowDisp_KITTI_Train
 
 # training configuration
-SAVE_PATH="/disk_ssd/self-mono-eval/-mono-flow-disp-warp-og-decoder-no-res-"
+SAVE_PATH="/disk_ssd/self-mono-eval/-mono-flow-disp-warp-og-decoder-census-"
 python ../main.py \
 --batch_size=1 \
 --batch_size_val=1 \
