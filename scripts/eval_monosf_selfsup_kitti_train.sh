@@ -2,7 +2,7 @@
 
 # DATASETS_HOME
 KITTI_HOME="/disk_hdd/kitti_flow"
-CHECKPOINT="/disk_ssd/Self_Mono_Experiments/-self-mono-og-/checkpoint_epoch30.ckpt"
+CHECKPOINT="/disk_ssd/Self_Mono_Experiments/-self-mono-og-/checkpoint_epoch40.ckpt"
 
 # model
 MODEL=MonoSF_Full
