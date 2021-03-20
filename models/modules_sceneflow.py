@@ -8,6 +8,7 @@ import numpy as np
 
 from utils.interpolation import interpolate2d_as
 from utils.sceneflow_util import pixel2pts_ms, pts2pixel_ms, flow2sf, flow2sf_dispC_v2
+import collections
 
 def get_grid(x):
 	grid_H = torch.linspace(-1.0, 1.0, x.size(3)).view(1, 1, 1, x.size(3)).expand(x.size(0), 1, x.size(2), x.size(3))
@@ -22,6 +23,23 @@ def get_grid_exp(B,H,W):
 	basex = np.reshape(meshgrid_base[1],[1,1,1,H,W])
 	grid = torch.tensor(np.concatenate((basex.reshape((-1,H,W,1)),basey.reshape((-1,H,W,1))),-1)).cuda().float()
 	return grid.view(1,1,H,W,2)
+
+def normalize_feature(feature_list):
+	statistics = collections.defaultdict(list)
+	for feature in feature_list:
+		var, mean = torch.var_mean(feature, dim=[1,2,3], keepdim=True)
+		statistics['mean'].append(mean)
+		statistics['var'].append(var)
+
+	statistics['mean'] = [torch.mean(torch.stack(statistics['mean']))] * 2
+	statistics['var'] = [torch.mean(torch.stack(statistics['var']))] * 2
+	statistics['std'] = [torch.sqrt(var + 1e-16) for var in statistics['var']]
+
+	feature_list = [feature - mean for feature, mean in zip(feature_list, statistics['mean'])]
+	feature_list = [feature / std for feature, std in zip(feature_list, statistics['std'])]
+
+	return feature_list[0], feature_list[1]
+
 
 
 class WarpingLayer_Flow(nn.Module):
