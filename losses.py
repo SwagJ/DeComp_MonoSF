@@ -6743,11 +6743,13 @@ class Loss_MonoFlowDispC_SelfSup_No_Flow_Reg_v3(nn.Module):
 		k_l2_aug = target_dict['input_k_l2_aug']
 		aug_size = target_dict['aug_size']
 
+		#print(target_dict['input_l1'].shape)
 		disp_r1_dict = output_dict['output_dict_r']['disp_l1']
 		disp_r2_dict = output_dict['output_dict_r']['disp_l2']
 
 		with open('%s/iter_counts.txt'%(self._args.save), 'r') as f:
 			cur_iter = int(f.read())
+		f.close()
 
 		#print(cur_iter)
 		interval = 5 * 25800 / (batch_size)
@@ -6809,5 +6811,181 @@ class Loss_MonoFlowDispC_SelfSup_No_Flow_Reg_v3(nn.Module):
 		loss_dict["total_loss"] = total_loss
 
 		self.detaching_grad_of_outputs(output_dict['output_dict_r'])
+
+		return loss_dict
+
+class Loss_FlowDisp_SelfSup_TS(nn.Module):
+	def __init__(self, args):
+		super(Loss_FlowDisp_SelfSup_TS, self).__init__()
+				
+		self._weights = [4.0, 2.0, 1.0, 1.0, 1.0]
+		self._ssim_w = 0.85
+		self._disp_smooth_w = 0.1
+		self._sf_3d_pts = 0.2
+		self._sf_3d_sm = 200
+		self._warping_layer = WarpingLayer_Flow()
+
+	def depth_loss_left_img(self, disp_l, disp_r, img_l_aug, img_r_aug, occ_teacher, disp_teacher, ii):
+
+		img_r_warp = _generate_image_left(img_r_aug, disp_l)
+		left_occ = _adaptive_disocc_detection_disp(disp_r).detach()
+
+		## Photometric loss
+		img_diff = (_elementwise_l1(img_l_aug, img_r_warp) * (1.0 - self._ssim_w) + _SSIM(img_l_aug, img_r_warp) * self._ssim_w).mean(dim=1, keepdim=True)        
+		loss_img = (img_diff[left_occ]).mean()
+		img_diff[~left_occ].detach_()
+		#print(left_occ.shape)
+		#print(occ_teacher.shape)
+
+		## student supervision
+		mask = torch.clamp((1 - left_occ.float()) - (1 - occ_teacher.float()), 0 , 1)
+		disp_ts = _elementwise_robust_epe_char(disp_l, disp_teacher)
+		disp_ts_loss = torch.sum(disp_ts * mask) / (torch.sum(mask) + 1e-6)
+		#disp_ts[~mask.bool()].detach_()
+
+		## Disparities smoothness
+		loss_smooth = _smoothness_motion_2nd(disp_l, img_l_aug, beta=10.0).mean() / (2 ** ii)
+
+		return loss_img + self._disp_smooth_w * loss_smooth, disp_ts_loss, left_occ
+
+
+	def flow_loss(self, sf_f, sf_b, img_l1, img_l2, teacher_flow_f, teacher_flow_b, occ_teacher_f, occ_teacher_b):
+
+		img_l2_warp = self._warping_layer(img_l2, sf_f)
+		img_l1_warp = self._warping_layer(img_l1, sf_b)
+		occ_map_f = _adaptive_disocc_detection(sf_b).detach()
+		occ_map_b = _adaptive_disocc_detection(sf_f).detach()
+
+		img_diff1 = (_elementwise_l1(img_l1, img_l2_warp) * (1.0 - self._ssim_w) + _SSIM(img_l1, img_l2_warp) * self._ssim_w).mean(dim=1, keepdim=True)
+		img_diff2 = (_elementwise_l1(img_l2, img_l1_warp) * (1.0 - self._ssim_w) + _SSIM(img_l2, img_l1_warp) * self._ssim_w).mean(dim=1, keepdim=True)
+		loss_im1 = img_diff1[occ_map_f].mean()
+		loss_im2 = img_diff2[occ_map_b].mean()
+		img_diff1[~occ_map_f].detach_()
+		img_diff2[~occ_map_b].detach_()
+
+		mask_f = torch.clamp((1 - occ_map_f.float()) - (1 - occ_teacher_f.float()), 0 , 1)
+		flow_f_ts = _elementwise_robust_epe_char(sf_f, teacher_flow_f)
+		flow_f_ts_loss = torch.sum(flow_f_ts * mask_f) / (torch.sum(mask_f) + 1e-6)
+		#flow_f_ts[~mask_f.bool()].detach_()
+		
+		mask_b = torch.clamp((1 - occ_map_b.float()) - (1 - occ_teacher_b.float()), 0 , 1)
+		flow_b_ts = _elementwise_robust_epe_char(sf_b, teacher_flow_b)
+		flow_b_ts_loss = torch.sum(flow_b_ts * mask_b) / (torch.sum(mask_b) + 1e-6)
+		#flow_b_ts[~mask_b.bool()].detach_()
+
+		loss_im = loss_im1 + loss_im2 
+		loss_ts_flow = flow_f_ts_loss + flow_b_ts_loss
+
+		loss_smooth = _smoothness_motion_2nd(sf_f / 20.0, img_l1, beta=10.0).mean() + _smoothness_motion_2nd(sf_b / 20.0, img_l2, beta=10.0).mean()
+			
+		total_loss = (loss_im + 10.0 * loss_smooth) + loss_ts_flow
+			
+		return total_loss, loss_im, loss_smooth, loss_ts_flow
+
+	def detaching_grad_of_outputs(self, output_dict):
+		
+		for ii in range(0, len(output_dict['flow_f'])):
+			output_dict['flow_f'][ii].detach_()
+			output_dict['flow_b'][ii].detach_()
+			output_dict['disp_l1'][ii].detach_()
+			output_dict['disp_l2'][ii].detach_()
+
+		return None
+
+	def forward(self, output_dict, target_dict):
+
+		loss_dict = {}
+
+		batch_size = target_dict['input_l1'].size(0)
+		loss_sf_sum = 0
+		loss_dp_sum = 0
+		loss_sf_2d = 0
+		loss_sf_3d = 0
+		loss_sf_sm = 0
+		
+		k_l1_aug = target_dict['input_k_l1_aug']
+		k_l2_aug = target_dict['input_k_l2_aug']
+		aug_size = target_dict['aug_size']
+
+		teacher_dict = output_dict['teacher_dict']
+		student_dict = output_dict['student_dict']
+		crop_info = output_dict['crop_info']
+		str_x = crop_info[0]
+		str_y = crop_info[1]
+		end_x = crop_info[2]
+		end_y = crop_info[3]
+
+		ii = 0
+		
+		sf_f_student = student_dict['flow_f'][ii]
+		sf_b_student = student_dict['flow_b'][ii]
+		disp_l1_student = student_dict['disp_l1'][ii]
+		disp_l2_student = student_dict['disp_l2'][ii]
+		disp_r1_student = student_dict['output_dict_r']['disp_l1'][ii]
+		disp_r2_student = student_dict['output_dict_r']['disp_l2'][ii]
+
+		sf_f_teacher = teacher_dict['flow_f_pp'][ii]
+		sf_b_teacher = teacher_dict['flow_b_pp'][ii]
+		disp_l1_teacher = teacher_dict['disp_l1_pp'][ii]
+		disp_l2_teacher = teacher_dict['disp_l2_pp'][ii]
+		disp_r1_teacher = teacher_dict['output_dict_r']['disp_l1'][ii]
+		disp_r2_teacher = teacher_dict['output_dict_r']['disp_l2'][ii]
+			
+		## For image reconstruction loss
+		img_l1_aug = interpolate2d_as(target_dict["input_l1_aug"], sf_f_student)
+		img_l2_aug = interpolate2d_as(target_dict["input_l2_aug"], sf_b_student)
+		img_r1_aug = interpolate2d_as(target_dict["input_r1_aug"], sf_f_student)
+		img_r2_aug = interpolate2d_as(target_dict["input_r2_aug"], sf_b_student)
+
+		#print(disp_l1_teacher.requires_grad)
+
+		# teacher occ maskes:
+		disp_occ_l1_teacher = _adaptive_disocc_detection_disp(disp_r1_teacher).detach()
+		disp_occ_l1_teacher = disp_occ_l1_teacher[:, :, str_y:end_y, str_x:end_x]
+		disp_l1_teacher = disp_l1_teacher[:, :, str_y:end_y, str_x:end_x]
+		disp_occ_l2_teacher = _adaptive_disocc_detection_disp(disp_r2_teacher).detach()
+		disp_occ_l2_teacher = disp_occ_l2_teacher[:, :, str_y:end_y, str_x:end_x]
+		disp_l2_teacher = disp_l2_teacher[:, :, str_y:end_y, str_x:end_x]
+		flow_occ_f_teacher = _adaptive_disocc_detection(sf_f_teacher).detach()
+		flow_occ_f_teacher = flow_occ_f_teacher[:, :, str_y:end_y, str_x:end_x]
+		sf_f_teacher = sf_f_teacher[:, :, str_y:end_y, str_x:end_x]
+		flow_occ_b_teacher = _adaptive_disocc_detection(sf_b_teacher).detach()
+		flow_occ_b_teacher = flow_occ_b_teacher[:, :, str_y:end_y, str_x:end_x]
+		sf_b_teacher = sf_b_teacher[:, :, str_y:end_y, str_x:end_x]
+
+		## Disp Loss
+		loss_disp_l1, disp_ts_l1, disp_occ_l1 = self.depth_loss_left_img(disp_l1_student, disp_r1_student, img_l1_aug, img_r1_aug, disp_occ_l1_teacher, disp_l1_teacher, 0)
+		loss_disp_l2, disp_ts_l2, disp_occ_l2 = self.depth_loss_left_img(disp_l2_student, disp_r2_student, img_l2_aug, img_r2_aug, disp_occ_l2_teacher, disp_l2_teacher, 0)
+		disp_ts = disp_ts_l1 + disp_ts_l2
+		loss_dp_sum = loss_dp_sum + (loss_disp_l1 + loss_disp_l2) * self._weights[ii] + disp_ts
+
+
+		## Sceneflow Loss           
+		loss_flow, loss_im, loss_smooth, flow_ts = self.flow_loss(sf_f_student, sf_b_student, img_l1_aug, img_l2_aug, sf_f_teacher, sf_b_teacher, flow_occ_f_teacher, flow_occ_b_teacher)
+
+
+
+		loss_sf_sum = loss_sf_sum + loss_flow * self._weights[ii]           
+		loss_sf_2d = loss_sf_2d + loss_im
+		loss_sf_sm = loss_sf_sm + loss_smooth
+
+		# finding weight
+		f_loss = loss_sf_sum.detach()
+		d_loss = loss_dp_sum.detach()
+		max_val = torch.max(f_loss, d_loss)
+		f_weight = max_val / f_loss
+		d_weight = max_val / d_loss
+
+		total_loss = loss_sf_sum * f_weight + loss_dp_sum * d_weight
+
+		loss_dict = {}
+		loss_dict["dp"] = loss_dp_sum
+		loss_dict["flow"] = loss_sf_sum
+		loss_dict["im"] = loss_sf_2d
+		loss_dict["dp_ts"] = disp_ts
+		loss_dict["f_ts"] = flow_ts
+		loss_dict["total_loss"] = total_loss
+
+		self.detaching_grad_of_outputs(student_dict['output_dict_r'])
 
 		return loss_dict
