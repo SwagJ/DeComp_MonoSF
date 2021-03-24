@@ -195,7 +195,7 @@ class TrainingEpoch:
                 #print("dataset length:",len(progress))
                 with open('%s/iter_counts.txt'%(self._args.save), 'w') as f:
                     f.write('%d'%n_iter)
-                #print(n_iter)
+                f.close()
 
 
                 # perform step

@@ -27,6 +27,7 @@ class ModelAndLoss(nn.Module):
         self._training_loss = training_loss
         self._evaluation_loss = evaluation_loss
 
+
     @property
     def training_loss(self):
         return self._training_loss

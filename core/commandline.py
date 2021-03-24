@@ -208,6 +208,7 @@ def _parse_arguments():
     add("--backbone_mode", type=tools.str2bool, default=False)
     add("--exp_training", type=tools.str2bool, default=False)
     add("--save_freq", type=int, default=5)
+    add("--start", type=int, default=0)
 
     # -------------------------------------------------------------------------
     # Arguments inferred from losses
