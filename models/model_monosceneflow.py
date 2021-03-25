@@ -5026,8 +5026,8 @@ class MonoFlow_Disp_Student(nn.Module):
         ## ft: train val eval
         if self._args.evaluation or self._args.finetuning or self._args.exp_training:
 
-            input_l1_flip = torch.flip(input_dict['input_l1_aug'], [3])
-            input_l2_flip = torch.flip(input_dict['input_l2_aug'], [3])
+            input_l1_flip = torch.flip(input_dict['input_l1_aug_student'], [3])
+            input_l2_flip = torch.flip(input_dict['input_l2_aug_student'], [3])
             k_l1_flip = input_dict["input_k_l1_flip_aug"]
             k_l2_flip = input_dict["input_k_l2_flip_aug"]
 
@@ -5059,16 +5059,18 @@ class MonoFlowDisp_Teacher_Student(nn.Module):
         self._args = args
         self._teacher = MonoFlow_Disp_Teacher(args)
         self._student = MonoFlow_Disp_Student(args)
-        state_dict = torch.load(self._args.backbone_weight)
-        renamed_state_dict = collections.OrderedDict()
-        for k,v in state_dict['state_dict'].items():
-            name = k[7:]
-            renamed_state_dict[name] = v
+        if self._args.evaluation == False:
+            state_dict = torch.load(self._args.backbone_weight)
+            renamed_state_dict = collections.OrderedDict()
+            for k,v in state_dict['state_dict'].items():
+                name = k[7:]
+                renamed_state_dict[name] = v
 
-        self._teacher.load_state_dict(renamed_state_dict)
-        self._student.load_state_dict(renamed_state_dict) 
+            self._teacher.load_state_dict(renamed_state_dict)
+            self._student.load_state_dict(renamed_state_dict) 
 
     def forward(self, input_dict):
+        output_dict = {}
         # cropping for student
         w_orig = 832
         h_orig = 256
@@ -5086,17 +5088,17 @@ class MonoFlowDisp_Teacher_Student(nn.Module):
         input_dict['input_l2_aug_student'] = input_dict['input_l2_aug'][:, :, str_y:end_y, str_x:end_x]
         input_dict['input_r1_aug_student'] = input_dict['input_r1_aug'][:, :, str_y:end_y, str_x:end_x]
         input_dict['input_r2_aug_student'] = input_dict['input_r2_aug'][:, :, str_y:end_y, str_x:end_x]
+        output_dict['crop_info'] = crop_info
 
-        output_dict = {}
-        self.eval()
-        torch.set_grad_enabled(False)
+        if self.training == True:
+            self.eval()
+            torch.set_grad_enabled(False)
 
-        output_dict['teacher_dict'] = self._teacher(input_dict)
+            output_dict['teacher_dict'] = self._teacher(input_dict)
         
-        torch.set_grad_enabled(True)          
-        self.train()
+            torch.set_grad_enabled(True)          
+            self.train()
 
         output_dict['student_dict'] = self._student(input_dict)
-        output_dict['crop_info'] = crop_info
 
         return output_dict

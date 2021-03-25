@@ -17,27 +17,25 @@ KITTI_RAW_HOME="/scratch_net/phon/majing/datasets/kitti_raw/"
 EXPERIMENTS_HOME="/scratch_net/phon/majing/src/exps"
 
 # model
-MODEL=MonoFlowDisp_Teacher_Student
+MODEL=MonoFlow_DispC_v2_1
 
 # save path
-#CHECKPOINT="checkpoints/full_model_kitti/checkpoint_latest.ckpt"
+
 CHECKPOINT=None
 
 # Loss and Augmentation
 Train_Dataset=KITTI_Raw_KittiSplit_Train_mnsf
 Train_Augmentation=Augmentation_SceneFlow
-Train_Loss_Function=Loss_FlowDisp_SelfSup_TS
+Train_Loss_Function=Loss_MonoFlowDispC_SelfSup_No_Flow_Reg_v3
 
 Valid_Dataset=KITTI_Raw_KittiSplit_Valid_mnsf
 Valid_Augmentation=Augmentation_Resize_Only
-Valid_Loss_Function=Loss_FlowDisp_SelfSup_TS
+Valid_Loss_Function=Loss_MonoFlowDispC_SelfSup_No_Flow_Reg_v3
 
-ALIAS="-mono-flow-disp-ts-"
+ALIAS="-monoflowdispC-v2-1-loss-v3"
 SAVE_PATH="$EXPERIMENTS_HOME/$ALIAS/"
 
 #CHECKPOINT="$EXPERIMENTS_HOME/$ALIAS/checkpoint_latest.ckpt"
-PRETRAIN="$EXPERIMENTS_HOME/-mono-flow-disp-warp-og-decoder-no-res-/checkpoint_best.ckpt"
-
 
 
 
@@ -49,15 +47,15 @@ python ../main.py \
 --batch_size_val=1 \
 --checkpoint=$CHECKPOINT \
 --lr_scheduler=MultiStepLR \
---backbone_weight=$PRETRAIN \
 --lr_scheduler_gamma=0.5 \
---lr_scheduler_milestones="[7, 14, 28, 35, 42]" \
+--lr_scheduler_milestones="[23, 39, 47, 54]" \
 --model=$MODEL \
+--start=129000 \
 --num_workers=10 \
 --optimizer=Adam \
---optimizer_lr=2e-5 \
+--optimizer_lr=2e-4 \
 --save=$SAVE_PATH \
---total_epochs=40 \
+--total_epochs=62 \
 --save_freq=5 \
 --training_augmentation=$Train_Augmentation \
 --training_augmentation_photometric=True \
