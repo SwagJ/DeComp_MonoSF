@@ -26,13 +26,13 @@ CHECKPOINT=None
 # Loss and Augmentation
 Train_Dataset=KITTI_Raw_KittiSplit_Train_mnsf
 Train_Augmentation=Augmentation_SceneFlow
-Train_Loss_Function=Loss_FlowDisp_SelfSup_Census
+Train_Loss_Function=Loss_FlowDisp_SelfSup_CensusFlow_SSIM_Disp_Top
 
 Valid_Dataset=KITTI_Raw_KittiSplit_Valid_mnsf
 Valid_Augmentation=Augmentation_Resize_Only
-Valid_Loss_Function=Loss_FlowDisp_SelfSup_Census
+Valid_Loss_Function=Loss_FlowDisp_SelfSup_CensusFlow_SSIM_Disp_Top
 
-ALIAS="-mono-flow-disp-warp-og-decoder-feat-norm-census-"
+ALIAS="-mono-flow-disp-warp-feat-norm-top-"
 SAVE_PATH="$EXPERIMENTS_HOME/$ALIAS/"
 
 #CHECKPOINT="$EXPERIMENTS_HOME/$ALIAS/checkpoint_latest.ckpt"
