@@ -25,11 +25,11 @@ CHECKPOINT=None
 
 # Loss and Augmentation
 Train_Dataset=KITTI_Raw_KittiSplit_Train_mnsf
-Train_Augmentation=Augmentation_SceneFlow
+Train_Augmentation=Augmentation_SceneFlow_TS
 Train_Loss_Function=Loss_FlowDisp_SelfSup_TS_OG_size
 
 Valid_Dataset=KITTI_Raw_KittiSplit_Valid_mnsf
-Valid_Augmentation=Augmentation_Resize_Only
+Valid_Augmentation=Augmentation_SceneFlow_TS
 Valid_Loss_Function=Loss_FlowDisp_SelfSup_TS_OG_size
 
 ALIAS="-mono-flow-disp-ts-v2-"
