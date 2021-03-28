@@ -4,21 +4,20 @@
 #SBATCH	--output=/scratch_net/phon/majing/src/log/%j.out
 #SBATCH --gres=gpu:1
 #SBATCH --mem=50G
+#SBATCH --mail-type=ALL
+#SBATCH --constraint='turing|titan_xp'
 
-#source /scratch_net/phon/majing/anaconda/bin/conda shell.bash hook
-#conda activate self-mono
+source /scratch_net/phon/majing/anaconda3/etc/profile.d/conda.sh
+conda activate self-mono
 
 
 # experiments and datasets meta
-#KITTI_RAW_HOME="/scratch_net/phon/majing/datasets/kitti_full/"
-KITTI_RAW_HOME="/disk_hdd/kitti_raw/"
-EXPERIMENTS_HOME="/disk_ssd/self-mono-debug"
-KITTI_COMB_HOME="/disk_hdd/kitti_full"
-KITTI_FLOW_HOME="/disk_hdd/kitti_full/kitti_flow"
-SYNTH_DRIVING_HOME="/disk_ssd/driving"
+KITTI_RAW_HOME="/scratch_net/phon/majing/datasets/kitti_raw/"
+#KITTI_RAW_HOME="/disk_hdd/kitti_full/"
+EXPERIMENTS_HOME="/scratch_net/phon/majing/src/exps"
 
 # model
-MODEL=MonoFlowDisp_Teacher_Student 
+MODEL=MonoFlowDisp_Teacher_Student
 
 # save path
 #CHECKPOINT="checkpoints/full_model_kitti/checkpoint_latest.ckpt"
@@ -26,35 +25,39 @@ CHECKPOINT=None
 
 # Loss and Augmentation
 Train_Dataset=KITTI_Raw_KittiSplit_Train_mnsf
-Train_Augmentation=Augmentation_SceneFlow_TS
+Train_Augmentation=Augmentation_SceneFlow
 Train_Loss_Function=Loss_FlowDisp_SelfSup_TS_OG_size
 
 Valid_Dataset=KITTI_Raw_KittiSplit_Valid_mnsf
-Valid_Augmentation=Augmentation_SceneFlow_TS
+Valid_Augmentation=Augmentation_Resize_Only
 Valid_Loss_Function=Loss_FlowDisp_SelfSup_TS_OG_size
 
-ALIAS="-kitti-raw-"
-TIME=$(date +"%Y%m%d-%H%M%S")
-SAVE_PATH="$EXPERIMENTS_HOME/debug"
+ALIAS="-mono-flow-disp-ts-v2-"
+SAVE_PATH="$EXPERIMENTS_HOME/$ALIAS/"
 
-PRETRAIN="/disk_ssd/Self_Mono_Experiments/-mono-flow-disp-warp-og-decoder-no-res-/checkpoint_best.ckpt"
+#CHECKPOINT="$EXPERIMENTS_HOME/$ALIAS/checkpoint_latest.ckpt"
+PRETRAIN="$EXPERIMENTS_HOME/-mono-flow-disp-warp-og-decoder-no-res-/checkpoint_best.ckpt"
+
+
+
+
 
 
 # training configuration
 python ../main.py \
---batch_size=2 \
+--batch_size=4 \
 --batch_size_val=1 \
 --checkpoint=$CHECKPOINT \
 --lr_scheduler=MultiStepLR \
---lr_scheduler_gamma=0.5 \
---lr_scheduler_milestones="[10, 32, 33, 34, 35, 36, 37, 38, 39, 40]" \
 --backbone_weight=$PRETRAIN \
+--lr_scheduler_gamma=0.5 \
+--lr_scheduler_milestones="[7, 14, 28, 35, 42]" \
 --model=$MODEL \
 --num_workers=10 \
 --optimizer=Adam \
---optimizer_lr=2e-4 \
+--optimizer_lr=1e-4 \
 --save=$SAVE_PATH \
---total_epochs=62 \
+--total_epochs=40 \
 --save_freq=5 \
 --training_augmentation=$Train_Augmentation \
 --training_augmentation_photometric=True \
@@ -62,7 +65,7 @@ python ../main.py \
 --training_dataset_root=$KITTI_RAW_HOME \
 --training_dataset_flip_augmentations=True \
 --training_dataset_preprocessing_crop=True \
---training_dataset_num_examples=10 \
+--training_dataset_num_examples=-1 \
 --training_key=total_loss \
 --training_loss=$Train_Loss_Function \
 --validation_augmentation=$Valid_Augmentation \

@@ -5072,25 +5072,7 @@ class MonoFlowDisp_Teacher_Student(nn.Module):
     def forward(self, input_dict):
         output_dict = {}
         # cropping for student
-        w_orig = 832
-        h_orig = 256
-        crop_width = 768
-        crop_height = 192
-        x = np.random.uniform(0, w_orig - crop_width + 1)
-        y = np.random.uniform(0, h_orig - crop_height + 1)
-        crop_info = [int(x), int(y), int(x + crop_width), int(y + crop_height)]
-        str_x = crop_info[0]
-        str_y = crop_info[1]
-        end_x = crop_info[2]
-        end_y = crop_info[3]
-
-        input_dict['input_l1_aug_student'] = input_dict['input_l1_aug'][:, :, str_y:end_y, str_x:end_x]
-        input_dict['input_l2_aug_student'] = input_dict['input_l2_aug'][:, :, str_y:end_y, str_x:end_x]
-        input_dict['input_r1_aug_student'] = input_dict['input_r1_aug'][:, :, str_y:end_y, str_x:end_x]
-        input_dict['input_r2_aug_student'] = input_dict['input_r2_aug'][:, :, str_y:end_y, str_x:end_x]
-        output_dict['crop_info'] = crop_info
-
-        if self.training == True:
+        if (not self._args.evaluation) == True:
             self.eval()
             torch.set_grad_enabled(False)
 

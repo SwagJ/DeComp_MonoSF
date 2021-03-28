@@ -7468,6 +7468,16 @@ class Loss_FlowDisp_SelfSup_TS_OG_size(nn.Module):
 			
 		return total_loss, loss_im, loss_smooth, loss_ts_flow
 
+	def upsample_flow_as(self, flow, output_as):
+		size_inputs = flow.size()[2:4]
+		size_targets = output_as.size()[2:4]
+		resized_flow = tf.interpolate(flow, size=size_targets, mode="bilinear", align_corners=True)
+		# correct scaling of flow
+		u, v = resized_flow.chunk(2, dim=1)
+		u *= float(size_targets[1] / size_inputs[1])
+		v *= float(size_targets[0] / size_inputs[0])
+		return torch.cat([u, v], dim=1)
+
 	def detaching_grad_of_outputs(self, output_dict):
 		
 		for ii in range(0, len(output_dict['flow_f'])):
@@ -7511,6 +7521,14 @@ class Loss_FlowDisp_SelfSup_TS_OG_size(nn.Module):
 		disp_l2_teacher = teacher_dict['disp_l2_pp'][ii]
 		disp_r1_teacher = teacher_dict['output_dict_r']['disp_l1'][ii]
 		disp_r2_teacher = teacher_dict['output_dict_r']['disp_l2'][ii]
+
+		sf_f_teacher = self.upsample_flow_as(sf_f_teacher, sf_f_student)
+		sf_b_teacher = self.upsample_flow_as(sf_b_teacher, sf_b_student)
+		disp_l1_teacher = interpolate2d_as(disp_l1_teacher, disp_l1_student, mode="bilinear") * disp_l1_student.size(3)
+		disp_l2_teacher = interpolate2d_as(disp_l2_teacher, disp_l2_student, mode="bilinear") * disp_l2_student.size(3)
+		disp_r1_teacher = interpolate2d_as(disp_r1_teacher, disp_r1_student, mode="bilinear") * disp_r1_student.size(3)
+		disp_r2_teacher = interpolate2d_as(disp_r2_teacher, disp_r2_student, mode="bilinear") * disp_r2_student.size(3)
+
 			
 		## For image reconstruction loss
 		img_l1_aug = interpolate2d_as(target_dict["input_l1_aug"], sf_f_student)
@@ -7522,17 +7540,9 @@ class Loss_FlowDisp_SelfSup_TS_OG_size(nn.Module):
 
 		# teacher occ maskes:
 		disp_occ_l1_teacher = _adaptive_disocc_detection_disp(disp_r1_teacher).detach()
-		disp_occ_l1_teacher = disp_occ_l1_teacher[:, :, str_y:end_y, str_x:end_x]
-		disp_l1_teacher = disp_l1_teacher[:, :, str_y:end_y, str_x:end_x]
 		disp_occ_l2_teacher = _adaptive_disocc_detection_disp(disp_r2_teacher).detach()
-		disp_occ_l2_teacher = disp_occ_l2_teacher[:, :, str_y:end_y, str_x:end_x]
-		disp_l2_teacher = disp_l2_teacher[:, :, str_y:end_y, str_x:end_x]
 		flow_occ_f_teacher = _adaptive_disocc_detection(sf_f_teacher).detach()
-		flow_occ_f_teacher = flow_occ_f_teacher[:, :, str_y:end_y, str_x:end_x]
-		sf_f_teacher = sf_f_teacher[:, :, str_y:end_y, str_x:end_x]
 		flow_occ_b_teacher = _adaptive_disocc_detection(sf_b_teacher).detach()
-		flow_occ_b_teacher = flow_occ_b_teacher[:, :, str_y:end_y, str_x:end_x]
-		sf_b_teacher = sf_b_teacher[:, :, str_y:end_y, str_x:end_x]
 
 		## Disp Loss
 		loss_disp_l1, disp_ts_l1, disp_occ_l1 = self.depth_loss_left_img(disp_l1_student, disp_r1_student, img_l1_aug, img_r1_aug, disp_occ_l1_teacher, disp_l1_teacher, 0)
