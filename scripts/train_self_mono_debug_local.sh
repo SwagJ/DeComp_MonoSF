@@ -18,20 +18,20 @@ KITTI_FLOW_HOME="/disk_hdd/kitti_full/kitti_flow"
 SYNTH_DRIVING_HOME="/disk_ssd/driving"
 
 # model
-MODEL=MonoFlowDisp_Teacher_Student 
+MODEL=MonoFlow_DispC_v2_1 
 
 # save path
 #CHECKPOINT="checkpoints/full_model_kitti/checkpoint_latest.ckpt"
-CHECKPOINT=None
+CHECKPOINT="/disk_ssd/Self_Mono_Experiments/-monoflowdispC-v2-1-loss-v3/checkpoint_best.ckpt"
 
 # Loss and Augmentation
 Train_Dataset=KITTI_Raw_KittiSplit_Train_mnsf
-Train_Augmentation=Augmentation_SceneFlow_TS
-Train_Loss_Function=Loss_FlowDisp_SelfSup_TS_OG_size
+Train_Augmentation=Augmentation_SceneFlow
+Train_Loss_Function=Loss_MonoFlowDispC_SelfSup_No_Flow_Reg_v3
 
 Valid_Dataset=KITTI_Raw_KittiSplit_Valid_mnsf
-Valid_Augmentation=Augmentation_SceneFlow_TS
-Valid_Loss_Function=Loss_FlowDisp_SelfSup_TS_OG_size
+Valid_Augmentation=Augmentation_Resize_Only
+Valid_Loss_Function=Loss_MonoFlowDispC_SelfSup_No_Flow_Reg_v3
 
 ALIAS="-kitti-raw-"
 TIME=$(date +"%Y%m%d-%H%M%S")
@@ -62,7 +62,7 @@ python ../main.py \
 --training_dataset_root=$KITTI_RAW_HOME \
 --training_dataset_flip_augmentations=True \
 --training_dataset_preprocessing_crop=True \
---training_dataset_num_examples=10 \
+--training_dataset_num_examples=-1 \
 --training_key=total_loss \
 --training_loss=$Train_Loss_Function \
 --validation_augmentation=$Valid_Augmentation \

@@ -7040,6 +7040,12 @@ class Loss_MonoFlowDispC_SelfSup_No_Flow_Reg_v3(nn.Module):
 		interval = 5 * 25800 / (batch_size)
 		if (cur_iter >= self._args.start) & (cur_iter <= (self._args.start + interval)):
 			self._3d_weight = (cur_iter - self._args.start) * self._sf_3d_pts / (interval)
+		elif (cur_iter < self._args.start):
+			self._3d_weight = 0
+		else:
+			self._3d_weight = self._sf_3d_pts
+
+		print(self._3d_weight)
 
 		#print(self._3d_weight)
 
