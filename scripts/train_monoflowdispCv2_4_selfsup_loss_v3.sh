@@ -35,7 +35,7 @@ Valid_Loss_Function=Loss_MonoFlowDispC_SelfSup_No_Flow_Reg_v3
 ALIAS="-monoflowdispC-v2-4-loss-v3"
 SAVE_PATH="$EXPERIMENTS_HOME/$ALIAS/"
 
-CHECKPOINT="$EXPERIMENTS_HOME/$ALIAS/checkpoint_best.ckpt"
+#CHECKPOINT="$EXPERIMENTS_HOME/$ALIAS/checkpoint_best.ckpt"
 
 
 
