@@ -9,7 +9,7 @@ from torchvision import transforms as vistf
 from models.forwardwarp_package.forward_warp import forward_warp
 from utils.interpolation import interpolate2d_as
 from utils.sceneflow_util import pixel2pts_ms, pts2pixel_ms, reconstructImg, reconstructPts, projectSceneFlow2Flow, flow2sf_dispC, flow2sf_dispC_v2, flow2sf_dispC_v3
-from utils.sceneflow_util import flow_horizontal_flip, intrinsic_scale, get_pixelgrid, post_processing, pixel2pts_disp, disp2depth_kitti, flow2sf, flow2sf_exp
+from utils.sceneflow_util import flow_horizontal_flip, intrinsic_scale, get_pixelgrid, post_processing, pixel2pts_disp, disp2depth_kitti, flow2sf, flow2sf_exp, pts2pixel, pixel2pts
 from utils.monodepth_eval import compute_errors, compute_d1_all
 from models.modules_sceneflow import WarpingLayer_Flow, get_grid_exp
 
@@ -1084,6 +1084,79 @@ class Eval_SceneFlow_KITTI_Train(nn.Module):
 
 		outlier_sf = (flow_outlier_epe.bool() + d0_outlier_image.bool() + d1_outlier_image.bool()).float() * gt_sf_mask
 		loss_dict["sf"] = (outlier_sf.view(batch_size, -1).sum(1)).mean() / 91873.4
+
+		return loss_dict
+
+class Eval_SceneFlow_3D(nn.Module):
+	def __init__(self, args):
+		super(Eval_SceneFlow_3D, self).__init__()
+		self.warping_layer = WarpingLayer_Flow()
+
+
+	def forward(self, output_dict, target_dict):
+
+		loss_dict = {}
+
+		gt_flow = target_dict['target_flow']
+		gt_flow_mask = (target_dict['target_flow_mask']==1).float()
+
+		gt_disp = target_dict['target_disp']
+		gt_disp_mask = (target_dict['target_disp_mask']==1).float()
+
+		gt_disp2_occ = target_dict['target_disp2_occ']
+		gt_disp2_mask = (target_dict['target_disp2_mask_occ']==1).float()
+
+		gt_sf_mask = gt_flow_mask * gt_disp_mask * gt_disp2_mask
+
+		intrinsics = target_dict['input_k_l1']                
+
+		##################################################
+		## Depth 1
+		##################################################
+
+		batch_size, _, _, width = gt_disp.size()
+
+		out_disp_l1 = interpolate2d_as(output_dict["disp_l1_pp"][0], gt_disp, mode="bilinear") * width
+		#out_disp_l1 = target_dict['disp_pre'].cuda()
+		out_depth_l1 = _disp2depth_kitti_K(out_disp_l1, intrinsics[:, 0, 0])
+		out_depth_l1 = torch.clamp(out_depth_l1, 1e-3, 80)
+		gt_depth_l1 = _disp2depth_kitti_K(gt_disp, intrinsics[:, 0, 0])
+
+		#dict_disp0_occ = eval_module_disp_depth(gt_disp, gt_disp_mask.bool(), out_disp_l1, gt_depth_l1, out_depth_l1)
+
+		##################################################
+		## Optical Flow Eval
+		##################################################
+		#print(output_dict['flow_f_pp'][0])
+		
+		out_sceneflow = interpolate2d_as(output_dict['flow_f_pp'][0], gt_flow, mode="bilinear")
+		#out_flow = projectSceneFlow2Flow(target_dict['input_k_l1'], out_sceneflow, output_dict["out_disp_l_pp"])
+
+		gt_pts1, _ = pixel2pts(target_dict['input_k_l1'], gt_depth_l1)
+		pts1, _ = pixel2pts(target_dict['input_k_l1'], out_depth_l1)
+
+
+		##################################################
+		## Depth 2
+		##################################################
+
+		out_depth_l1_next = out_depth_l1 + out_sceneflow[:, 2:3, :, :]
+		out_disp_l1_next = _depth2disp_kitti_K(out_depth_l1_next, intrinsics[:, 0, 0])
+		#out_disp_l1_next = interpolate2d_as(output_dict["disp_l2_pp"][0], gt_disp, mode="bilinear") * width
+		gt_depth_l1_next = _disp2depth_kitti_K(gt_disp2_occ, intrinsics[:, 0, 0])
+
+		#dict_disp1_occ = eval_module_disp_depth(gt_disp2_occ, gt_disp2_mask.bool(), out_disp_l1_next, gt_depth_l1_next, out_depth_l1_next)
+
+		gt_pts1_next, _ = pixel2pts(target_dict['input_k_l1'], gt_depth_l1_next)
+		pts1_next, _ = pixel2pts(target_dict['input_k_l1'], out_depth_l1_next)
+
+		gt_pts_warpped = self.warping_layer(gt_pts1_next, gt_flow)
+		gt_sf = gt_pts_warpped - gt_pts1
+		epe = _elementwise_epe(out_sceneflow, gt_sf) * gt_sf_mask
+		loss_dict['sf_epe'] = torch.sum(epe) / torch.sum(gt_sf_mask.float())
+		print((torch.norm(gt_sf,dim=1,keepdim=True)*gt_sf_mask).mean())
+		print((torch.norm(out_sceneflow,dim=1,keepdim=True)*gt_sf_mask).mean())
+		#print(gt_sf.shape)
 
 		return loss_dict
 
