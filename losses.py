@@ -7045,7 +7045,7 @@ class Loss_MonoFlowDispC_SelfSup_No_Flow_Reg_v3(nn.Module):
 		else:
 			self._3d_weight = self._sf_3d_pts
 
-		print(self._3d_weight)
+		#print(self._3d_weight)
 
 		#print(self._3d_weight)
 

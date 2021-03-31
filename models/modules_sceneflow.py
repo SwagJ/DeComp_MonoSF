@@ -553,9 +553,9 @@ class ContextNetwork(nn.Module):
 		else:
 			return sf, disp1
 
-class ContextNetwork_DispC(nn.Module):
+class ContextNetwork_DispC_SF(nn.Module):
 	def __init__(self, ch_in):
-		super(ContextNetwork_DispC, self).__init__()
+		super(ContextNetwork_DispC_SF, self).__init__()
 		self.convs = nn.Sequential(
 			conv(ch_in, 128, 3, 1, 1),
 			conv(128, 128, 3, 1, 2),
@@ -736,6 +736,26 @@ class Flow_Decoder(nn.Module):
 
 		return x_out, flow
 
+class DispC_Decoder(nn.Module):
+	def __init__(self, ch_in):
+		super(DispC_Decoder, self).__init__()
+
+		self.convs = nn.Sequential(
+			conv(ch_in, 128),
+			conv(128, 128),
+			conv(128, 96),
+			conv(96, 64),
+			conv(64, 32)
+		)
+		self.conv_flow = conv(32, 1, isReLU=False)
+		#self.conv_d1 = conv(32, 1, isReLU=False)
+
+	def forward(self, x):
+		x_out = self.convs(x)
+		flow = self.conv_flow(x_out)
+
+		return x_out, flow
+
 class Disp_Decoder(nn.Module):
 	def __init__(self, ch_in):
 		super(Disp_Decoder, self).__init__()
@@ -812,6 +832,32 @@ class ContextNetwork_Flow(nn.Module):
 		#   torch.nn.Sigmoid()
 		#)
 		self.conv_sf = conv(32, 2, isReLU=False)
+
+	def forward(self, x):
+
+		x_out = self.convs(x)
+		sf = self.conv_sf(x_out)
+		#disp1 = self.conv_d1(x_out) * 0.3
+		
+		return sf
+
+class ContextNetwork_DispC(nn.Module):
+	def __init__(self, ch_in):
+		super(ContextNetwork_DispC, self).__init__()
+
+		self.convs = nn.Sequential(
+			conv(ch_in, 128, 3, 1, 1),
+			conv(128, 128, 3, 1, 2),
+			conv(128, 128, 3, 1, 4),
+			conv(128, 96, 3, 1, 8),
+			conv(96, 64, 3, 1, 16),
+			conv(64, 32, 3, 1, 1)
+		)
+		#self.conv_d1 = nn.Sequential(
+		#   conv(32, 1, isReLU=False), 
+		#   torch.nn.Sigmoid()
+		#)
+		self.conv_sf = conv(32, 1, isReLU=False)
 
 	def forward(self, x):
 
