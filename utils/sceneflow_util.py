@@ -96,25 +96,17 @@ def flow2sf(flow, disp, exp, intrinsic, rel_scale):
 def flow2sf_exp(flow, disp, exp, intrinsic, rel_scale):
 	b, _, h, w = disp.size()
 	disp_next = disp/torch.exp(exp)
-	intrinsic_dp_s = intrinsic_scale(intrinsic, rel_scale[:,0], rel_scale[:,1])
-	depth = disp2depth_kitti(disp, intrinsic_dp_s[:,0,0])
-	depth_next = disp2depth_kitti(disp_next, intrinsic_dp_s[:,0,0])
+	dispC = disp_next - disp
+	sf = flow2sf_dispC(flow, disp, dispC, intrinsic, rel_scale)
 
-	grid = get_pixelgrid(b,h,w)
-	#print(grid.shape)
-	grid_next = torch.cat((grid[:,:2,:,:] + flow,torch.ones_like(disp)),dim=1)
-
-	pts = pixel2pts_disp(intrinsic_dp_s, depth, grid)
-	pts_next = pixel2pts_disp(intrinsic_dp_s, depth_next, grid_next)
-
-	return pts_next - pts
+	return sf
 
 def flow2sf_dispC(flow, disp, dispC, intrinsic, rel_scale):
 	b, _, h, w = disp.size()
 	intrinsic_dp_s = intrinsic_scale(intrinsic, rel_scale[:,0], rel_scale[:,1])
 	depth = disp2depth_kitti(disp, intrinsic_dp_s[:,0,0])
-	flow_x = flow[:,0:1,:,:] - dispC
-	depthC = disp2depth_kitti(dispC*w, intrinsic_dp_s[:,0,0])
+	flow_x = flow[:,0:1,:,:] + dispC
+	depthC = disp2depth_kitti(dispC, intrinsic_dp_s[:,0,0])
 	#print(intrinsic_dp_s[:,0,0].shape)
 	#print(flow_x.shape)
 	sf_x = flow_x / intrinsic_dp_s[:,0,0].view(b,1,1,1) * depth

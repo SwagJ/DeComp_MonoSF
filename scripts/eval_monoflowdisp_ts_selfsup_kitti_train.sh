@@ -2,17 +2,17 @@
 
 # DATASETS_HOME
 KITTI_HOME="/disk_hdd/kitti_flow"
-CHECKPOINT="/disk_ssd/Self_Mono_Experiments/-mono-flow-disp-ts-/checkpoint_best.ckpt"
+CHECKPOINT="/disk_ssd/Self_Mono_Experiments/-mono-flow-disp-ts-v2-/checkpoint_best.ckpt"
 
 # model
 MODEL=MonoFlowDisp_Teacher_Student
 
 Valid_Dataset=KITTI_2015_Train_Full_mnsf
-Valid_Augmentation=Augmentation_Resize_Only
+Valid_Augmentation=Augmentation_Resize_Only_TS
 Valid_Loss_Function=Eval_FlowDisp_TS_KITTI_Train
 
 # training configuration
-SAVE_PATH="/disk_ssd/self-mono-eval/-mono-flow-disp-ts-"
+SAVE_PATH="/disk_ssd/self-mono-eval/-mono-flow-disp-ts-v2-"
 python ../main.py \
 --batch_size=1 \
 --batch_size_val=1 \

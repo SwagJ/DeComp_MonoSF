@@ -33,6 +33,8 @@ MonoFlow_DispC_v2_2			=	model_monosceneflow.MonoFlow_DispC_v2_2
 MonoFlow_DispC_v2_3			=	model_monosceneflow.MonoFlow_DispC_v2_3
 MonoFlow_DispC_v2_4			=	model_monosceneflow.MonoFlow_DispC_v2_4
 MonoSF_DispC				=	model_monosceneflow.MonoSF_DispC
+MonoFlowDisp_DispC			=	model_monosceneflow.MonoFlowDisp_DispC
+MonoFlowDisp_Exp			=	model_monosceneflow.MonoFlowDisp_Exp
 MonoFlowDisp_Teacher_Student	=	model_monosceneflow.MonoFlowDisp_Teacher_Student
 
 ##########################################################################################

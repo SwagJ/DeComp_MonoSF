@@ -697,6 +697,100 @@ class Augmentation_SceneFlow_Finetuning(nn.Module):
         return example_dict
 
 
+class Augmentation_Resize_Only_TS(nn.Module):
+    def __init__(self, args, photometric=False, imgsize=[256, 832]):
+        super(Augmentation_Resize_Only_TS, self).__init__()
+
+        # init
+        self._args = args
+        self._imgsize = imgsize
+        self._isRight = False
+        self._photometric = photometric
+        self._photo_augmentation = PhotometricAugmentation()
+
+    def forward(self, example_dict):
+
+        if ('input_r1' in example_dict) and ('input_r2' in example_dict):
+            self._isRight = True
+
+        # Focal length rescaling
+        _, _, hh, ww = example_dict["input_l1"].size()
+        sy = self._imgsize[0] / hh
+        sx = self._imgsize[1] / ww
+        sy_student = 320 / hh
+        sx_student = 1024 / ww
+
+        #print("Resized image is of ",self._imgsize)
+
+        # Image resizing
+        im_l1 = interpolate2d(example_dict["input_l1"], self._imgsize)
+        im_l2 = interpolate2d(example_dict["input_l2"], self._imgsize)
+        im_l1_student = interpolate2d(example_dict["input_l1"], [320, 1024])
+        im_l2_student = interpolate2d(example_dict["input_l2"], [320, 1024])
+        k_l1 = _intrinsic_scale(example_dict["input_k_l1"], sx, sy)
+        k_l2 = _intrinsic_scale(example_dict["input_k_l2"], sx, sy)
+        k_l1_student = _intrinsic_scale(example_dict["input_k_l1"], sx_student, sy_student)
+        k_l2_student = _intrinsic_scale(example_dict["input_k_l2"], sx_student, sy_student)
+
+        if self._isRight:
+            im_r1 = interpolate2d(example_dict["input_r1"], self._imgsize)
+            im_r2 = interpolate2d(example_dict["input_r2"], self._imgsize)
+            k_r1 = _intrinsic_scale(example_dict["input_k_r1"], sx, sy)
+            k_r2 = _intrinsic_scale(example_dict["input_k_r2"], sx, sy)
+
+
+        if self._photometric and torch.rand(1) > 0.5:
+            if self._isRight:
+                im_l1, im_l2, im_r1, im_r2 = self._photo_augmentation(im_l1, im_l2, im_r1, im_r2)
+            else:
+                im_l1, im_l2 = self._photo_augmentation(im_l1, im_l2)
+
+
+        example_dict["input_l1_aug"] = im_l1
+        example_dict["input_l2_aug"] = im_l2
+        example_dict["input_k_l1_aug"] = k_l1
+        example_dict["input_k_l2_aug"] = k_l2
+        example_dict["input_l1_aug_student"] = im_l1_student
+        example_dict["input_l2_aug_student"] = im_l2_student
+        example_dict["input_k_l1_aug_student"] = k_l1_student
+        example_dict["input_k_l2_aug_student"] = k_l2_student
+
+        if self._isRight:
+            example_dict["input_r1_aug"] = im_r1
+            example_dict["input_r2_aug"] = im_r2
+            example_dict["input_k_r1_aug"] = k_r1
+            example_dict["input_k_r2_aug"] = k_r2
+
+        k_l1_flip = k_l1.clone()
+        k_l2_flip = k_l2.clone()
+        k_l1_flip[:, 0, 2] = im_l1.size(3) - k_l1_flip[:, 0, 2]
+        k_l2_flip[:, 0, 2] = im_l2.size(3) - k_l2_flip[:, 0, 2]
+        example_dict["input_k_l1_flip_aug"] = k_l1_flip
+        example_dict["input_k_l2_flip_aug"] = k_l2_flip
+
+        k_l1_flip_student = k_l1_student.clone()
+        k_l2_flip_student = k_l2_student.clone()
+        k_l1_flip_student[:, 0, 2] = im_l1_student.size(3) - k_l1_flip_student[:, 0, 2]
+        k_l2_flip_student[:, 0, 2] = im_l2_student.size(3) - k_l2_flip_student[:, 0, 2]
+        example_dict["input_k_l1_flip_aug_student"] = k_l1_flip_student
+        example_dict["input_k_l2_flip_aug_student"] = k_l2_flip_student
+
+        if self._isRight:
+            k_r1_flip = k_r1.clone()
+            k_r2_flip = k_r2.clone()
+            k_r1_flip[:, 0, 2] = im_r1.size(3) - k_r1_flip[:, 0, 2]
+            k_r2_flip[:, 0, 2] = im_r2.size(3) - k_r2_flip[:, 0, 2]
+            example_dict["input_k_r1_flip_aug"] = k_r1_flip
+            example_dict["input_k_r2_flip_aug"] = k_r2_flip
+
+        aug_size = torch.zeros_like(example_dict["input_size"])
+        aug_size[:, 0] = self._imgsize[0]
+        aug_size[:, 1] = self._imgsize[1]
+        example_dict["aug_size"] = aug_size
+
+        return example_dict
+
+
 class Augmentation_Resize_Only(nn.Module):
     def __init__(self, args, photometric=False, imgsize=[256, 832]):
         super(Augmentation_Resize_Only, self).__init__()
