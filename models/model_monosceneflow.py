@@ -5202,7 +5202,7 @@ class MonoFlow_DispC_v2_4(nn.Module):
                 x2_warp_disp = self.warping_layer_flow(x2_disp, flow_f)  # becuase K can be changing when doing augmentation
                 x1_warp_disp = self.warping_layer_flow(x1_disp, flow_b)
                 x1_dispC_out = self.upconv_layers_dispC[l-1](x1_dispC_out)
-                x2_dispC_out = self.upconv_layers_dispC[l-1](x1_dispC_out)
+                x2_dispC_out = self.upconv_layers_dispC[l-1](x2_dispC_out)
 
             # correlation
             out_corr_flow_f = Correlation.apply(x1_flow, x2_warp_flow, self.corr_params)
@@ -5230,6 +5230,7 @@ class MonoFlow_DispC_v2_4(nn.Module):
                 x2_flow_out, flow_b_res = self.flow_estimators[l](torch.cat([out_corr_relu_flow_b, x2_flow, x2_flow_out, flow_b], dim=1))
                 x1_disp_out, disp_l1 = self.disp_estimators[l](torch.cat([out_corr_relu_disp_f, x1_disp, x1_disp_out, disp_l1], dim=1))
                 x2_disp_out, disp_l2 = self.disp_estimators[l](torch.cat([out_corr_relu_disp_b, x2_disp, x2_disp_out, disp_l2], dim=1))
+                #print(out_corr_relu_flow_f.shape, x1_flow.shape, x1_dispC_out.shape, dispC_f.shape)
                 x1_dispC_out, dispC_f_res = self.dispC_estimators[l](torch.cat([out_corr_relu_flow_f, x1_flow, x1_dispC_out, dispC_f], dim=1))
                 x2_dispC_out, dispC_b_res = self.dispC_estimators[l](torch.cat([out_corr_relu_flow_f, x2_flow, x2_dispC_out, dispC_b], dim=1))
                 flow_f = flow_f + flow_f_res

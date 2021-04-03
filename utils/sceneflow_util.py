@@ -30,6 +30,12 @@ def disp2depth_kitti(pred_disp, k_value):
 
 	return pred_depth
 
+def depth2disp_kitti_K(depth, k_value):
+
+	disp = k_value.unsqueeze(1).unsqueeze(1).unsqueeze(1) * 0.54 / depth
+
+	return disp
+
 
 def get_pixelgrid(b, h, w):
 	grid_h = torch.linspace(0.0, w - 1, w).view(1, 1, 1, w).expand(b, 1, h, w)
@@ -97,6 +103,14 @@ def flow2sf_exp(flow, disp, exp, intrinsic, rel_scale):
 	b, _, h, w = disp.size()
 	disp_next = disp/torch.exp(exp)
 	dispC = disp_next - disp
+	sf = flow2sf_dispC(flow, disp, dispC, intrinsic, rel_scale)
+
+	return sf
+
+def flow2sf_depthC(flow, disp, depthC, intrinsic, rel_scale):
+	b, _, h, w = disp.size()
+	intrinsic_dp_s = intrinsic_scale(intrinsic, rel_scale[:,0], rel_scale[:,1])
+	dispC = depth2disp_kitti_K(depthC, intrinsic_dp_s[:,0,0])
 	sf = flow2sf_dispC(flow, disp, dispC, intrinsic, rel_scale)
 
 	return sf
