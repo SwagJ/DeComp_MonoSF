@@ -2,7 +2,7 @@
 
 # DATASETS_HOME
 KITTI_HOME="/disk_hdd/kitti_flow"
-CHECKPOINT="/disk_ssd/Self_Mono_Experiments/-mono-flow-disp-warp-feat-norm-top-/checkpoint_best.ckpt"
+CHECKPOINT="/disk_ssd/Self_Mono_Experiments/-mono-flow-disp-warp-feat-norm-top-/checkpoint_epoch35.ckpt"
 
 # model
 MODEL=MonoFlow_Disp_Seperate_Warp_OG_Decoder_Feat_Norm
@@ -28,11 +28,11 @@ python ../main.py \
 --validation_dataset_root=$KITTI_HOME \
 --validation_loss=$Valid_Loss_Function \
 --validation_key="f1" \
---save_disp=True \
---save_disp2=True \
---save_flow=True \
---save_flow_otl=True \
---save_disp_otl=True
+#--save_disp=True \
+#--save_disp2=True \
+#--save_flow=True \
+#--save_flow_otl=True \
+#--save_disp_otl=True
 
 
 
