@@ -62,6 +62,26 @@ class WarpingLayer_Flow(nn.Module):
 
 		return x_warp * mask
 
+class WarpingLayer_Flow_W_Mask(nn.Module):
+	def __init__(self):
+		super(WarpingLayer_Flow_W_Mask, self).__init__()
+
+	def forward(self, x, flow):
+		flo_list = []
+		flo_w = flow[:, 0] * 2 / max(x.size(3) - 1, 1)
+		flo_h = flow[:, 1] * 2 / max(x.size(2) - 1, 1)
+		flo_list.append(flo_w)
+		flo_list.append(flo_h)
+		flow_for_grid = torch.stack(flo_list).transpose(0, 1)
+		grid = torch.add(get_grid(x), flow_for_grid).transpose(1, 2).transpose(2, 3)        
+		x_warp = tf.grid_sample(x, grid)
+
+		mask = torch.ones(x.size(), requires_grad=False).cuda()
+		mask = tf.grid_sample(mask, grid)
+		mask = (mask >= 1.0).float()
+
+		return x_warp * mask, mask
+
 
 class WarpingLayer_SF(nn.Module):
 	def __init__(self):
@@ -104,6 +124,39 @@ class WarpingLayer_SF_DispC(nn.Module):
 		sceneflow = flow2sf_dispC_v2(flow, disp, dispC, k1, local_scale / input_size)
 
 		pts1, k1_scale = pixel2pts_ms(k1, disp, local_scale / input_size)
+		_, _, coord1 = pts2pixel_ms(k1_scale, pts1, sceneflow, [h_x, w_x])
+
+		grid = coord1.transpose(1, 2).transpose(2, 3)
+		x_warp = tf.grid_sample(x, grid)
+
+		mask = torch.ones_like(x, requires_grad=False)
+		mask = tf.grid_sample(mask, grid)
+		mask = (mask >= 1.0).float()
+
+		return x_warp * mask
+
+class WarpingLayer_SF_DispC_Flow(nn.Module):
+	def __init__(self):
+		super(WarpingLayer_SF_DispC_Flow, self).__init__()
+		self._warping_layer = WarpingLayer_Flow()
+ 
+	def forward(self, x, flow, dispC, disp, k1, input_size):
+
+		_, _, h_x, w_x = x.size()
+		disp = interpolate2d_as(disp, x) * w_x
+
+		local_scale = torch.zeros_like(input_size)
+		local_scale[:, 0] = h_x
+		local_scale[:, 1] = w_x
+
+		disp_next = disp + dispC 
+		#sceneflow = flow2sf_dispC_v2(flow, disp, dispC, k1, local_scale / input_size)
+
+		pts1, k1_scale = pixel2pts_ms(k1, disp, local_scale / input_size)
+		pts1_next, k1_scale_next = pixel2pts_ms(k1, disp_next, local_scale / input_size)
+		pts1_warpped = self._warping_layer(pts1_next, flow)
+		sceneflow = pts1_warpped - pts1
+
 		_, _, coord1 = pts2pixel_ms(k1_scale, pts1, sceneflow, [h_x, w_x])
 
 		grid = coord1.transpose(1, 2).transpose(2, 3)

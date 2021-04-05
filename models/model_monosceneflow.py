@@ -9,7 +9,7 @@ from .correlation_package.correlation import Correlation
 import numpy as np
 
 from .modules_sceneflow import get_grid, WarpingLayer_SF, WarpingLayer_Flow_Exp, MonoSF_Disp_Exp_Decoder, WarpingLayer_Flow_Exp_Plus, WarpingLayer_Flow, WarpingLayer_SF_PWC
-from .modules_sceneflow import initialize_msra, upsample_outputs_as, normalize_feature
+from .modules_sceneflow import initialize_msra, upsample_outputs_as, normalize_feature, WarpingLayer_SF_DispC_Flow
 from .modules_sceneflow import upconv
 from .modules_sceneflow import FeatureExtractor, MonoSceneFlowDecoder, ContextNetwork,MonoFlow_Disp_Decoder, ContextNetwork_Flow_Disp, ContextNetwork_Flow_DispC_v1_1, ContextNetwork_Flow_DispC_v1_2
 from .modules_sceneflow import Flow_Decoder, ContextNetwork_Flow, Disp_Decoder_Skip_Connection, Disp_Decoder, ContextNetwork_Disp, Feature_Decoder, ContextNetwork_Disp_DispC, Disp_DispC_Decoder
@@ -1856,12 +1856,10 @@ class MonoFlow_Disp_Seperate_Warp_OG_Decoder_No_Res(nn.Module):
             output_dict['disp_l1'] = upsample_outputs_as(disps_1[::-1], x1_rev)
             output_dict['disp_l2'] = upsample_outputs_as(disps_2[::-1], x1_rev)
         else:
-            output_dict['flow_f'] = sceneflows_f[::-1]
-            output_dict['flow_b'] = sceneflows_b[::-1]
-            output_dict['disp_l1'] = disps_1[::-1]
-            output_dict['disp_l2'] = disps_2[::-1]
-            output_dict['x1_feats'] = x1_feats[::-1]
-            output_dict['x2_feats'] = x2_feats[::-1]
+            output_dict['flow_f'] = sceneflows_f
+            output_dict['flow_b'] = sceneflows_b
+            output_dict['disp_l1'] = disps_1
+            output_dict['disp_l2'] = disps_2
             output_dict['x1_rev'] = x1_rev
         #output_dict['x1_feats'] = upsample_outputs_as(x1_feats[::-1],x1_rev)
         #output_dict['x2_feats'] = upsample_outputs_as(x2_feats[::-1],x1_rev)
@@ -5488,6 +5486,7 @@ class MonoFlowDisp_DispC(nn.Module):
 
         output_dict['dispC_f'], output_dict['dispC_b'] = self.run_decoder(output_dict['x1_feats'], output_dict['x2_feats'], output_dict['corr_f'], output_dict['corr_b'], output_dict['x1_rev'])
 
+        #print(output_dict.keys())
         #print("Training:", self.training)
         #print("Evaluation:", self._args.evaluation)
         #print("SF_Sup:", self._args.sf_sup)
@@ -5518,7 +5517,166 @@ class MonoFlowDisp_DispC(nn.Module):
             k_l1_flip = input_dict["input_k_l1_flip_aug"]
             k_l2_flip = input_dict["input_k_l2_flip_aug"]
 
-            output_dict_flip['flow_f'], output_dict_flip['flow_b'] = self.run_decoder(output_dict_flip['x1_feats'], output_dict_flip['x2_feats'], output_dict_flip['corr_f'], output_dict_flip['corr_b'], output_dict_flip['x1_rev'])
+            output_dict_flip['dispC_f'], output_dict_flip['dispC_b'] = self.run_decoder(output_dict_flip['x1_feats'], output_dict_flip['x2_feats'], output_dict_flip['corr_f'], output_dict_flip['corr_b'], output_dict_flip['x1_rev'])
+            dispC_f_pp = []
+            dispC_b_pp = []
+
+            for ii in range(0, len(output_dict_flip['flow_f'])):
+                dispC_f_pp.append(post_processing(output_dict['dispC_f'][ii], flow_horizontal_flip(output_dict_flip['dispC_f'][ii])))
+                dispC_b_pp.append(post_processing(output_dict['dispC_b'][ii], flow_horizontal_flip(output_dict_flip['dispC_b'][ii])))
+            output_dict['dispC_f_pp'] = dispC_f_pp
+            output_dict['dispC_b_pp'] = dispC_b_pp
+
+        return output_dict
+
+class MonoFlowDisp_DispC_v2(nn.Module):
+    def __init__(self, args):
+        super(MonoFlowDisp_DispC_v2, self).__init__()
+        self._args = args
+        self._backbone = MonoFlow_Disp_Seperate_Warp_OG_Decoder_No_Res(args)
+        self.num_chs = [3, 32, 64, 96, 128, 192, 256]
+        self.output_level = 4
+        self.num_levels = 7
+        self.dim_corr = 81
+
+        self.search_range = 4
+        self.corr_params = {"pad_size": self.search_range, "kernel_size": 1, "max_disp": self.search_range, "stride1": 1, "stride2": 1, "corr_multiply": 1}
+        self.warping_layer_3d = WarpingLayer_SF_DispC_Flow()
+
+        self.dispC_estimators = nn.ModuleList()
+        self.upconv_layers_dispC = nn.ModuleList()
+        self.leakyRELU = nn.LeakyReLU(0.1, inplace=True)
+        if self._args.evaluation == False:
+            state_dict = torch.load(self._args.backbone_weight)
+            renamed_state_dict = collections.OrderedDict()
+            for k,v in state_dict['state_dict'].items():
+                name = k[7:]
+                renamed_state_dict[name] = v
+
+            self._backbone.load_state_dict(renamed_state_dict) 
+
+        for l, ch in enumerate(self.num_chs[::-1]):
+            if l > self.output_level:
+                break
+
+            if l == 0:
+                num_ch_in_disp = self.dim_corr + ch 
+            else:
+                num_ch_in_disp = self.dim_corr + ch + 32 + 1
+                self.upconv_layers_dispC.append(upconv(32, 32, 3, 2))
+                #self.disp_decoder.append
+            layer_dispC = DispC_Decoder(num_ch_in_disp)
+            self.dispC_estimators.append(layer_dispC)
+
+        self.context_networks_dispC = ContextNetwork_DispC(32 + 1)
+
+    def run_decoder(self, x1_feats, x2_feats, x1_rev, flows_f, flows_b, disps_l1, disps_l2, k1, k2, input_dict):
+        dispCs_f = []
+        dispCs_b = []
+        for l, (x1, x2, flow_f, flow_b, disp_l1, disp_l2) in enumerate(zip(x1_feats, x2_feats, flows_f, flows_b, disps_l1, disps_l2)):
+            x1_flow = x1
+            x2_flow = x2
+            #print(x1.shape)
+            #print(flow_f.shape)
+            if l != 0:
+                dispC_f = interpolate2d_as(dispC_f, x1_flow, mode="bilinear")
+                dispC_b = interpolate2d_as(dispC_b, x1_flow, mode="bilinear")
+                x1_dispC_out = self.upconv_layers_dispC[l-1](x1_dispC_out)
+                x2_dispC_out = self.upconv_layers_dispC[l-1](x2_dispC_out)
+                x2_warp = self.warping_layer_3d(x2_flow, flow_f, dispC_f, disp_l1, k1, input_dict['aug_size'])  # becuase K can be changing when doing augmentation
+                x1_warp = self.warping_layer_3d(x1_flow, flow_b, dispC_b, disp_l2, k2, input_dict['aug_size'])
+            else:
+                x1_warp = x1_flow
+                x2_warp = x2_flow
+
+            out_corr_f = Correlation.apply(x1_flow, x2_warp, self.corr_params)
+            out_corr_b = Correlation.apply(x2_flow, x1_warp, self.corr_params)
+            out_corr_relu_f = self.leakyRELU(out_corr_f)
+            out_corr_relu_b = self.leakyRELU(out_corr_b)
+
+            # monosf estimator
+            if l == 0:
+                x1_dispC_out, dispC_f = self.dispC_estimators[l](torch.cat([out_corr_relu_f, x1_flow], dim=1))
+                x2_dispC_out, dispC_b = self.dispC_estimators[l](torch.cat([out_corr_relu_b, x2_flow], dim=1))
+                #print("bottom layer dim:",x1_out.shape,flow_f.shape,disp_l1.shape)
+            else:
+                x1_dispC_out, dispC_f_res = self.dispC_estimators[l](torch.cat([out_corr_relu_f, x1_flow, x1_dispC_out, dispC_f], dim=1))
+                x2_dispC_out, dispC_b_res = self.dispC_estimators[l](torch.cat([out_corr_relu_b, x2_flow, x1_dispC_out, dispC_b], dim=1))
+                dispC_f = dispC_f + dispC_f_res
+                dispC_b = dispC_b + dispC_b_res
+                
+
+            # upsampling or post-processing
+            if l != self.output_level:
+                dispCs_f.append(dispC_f)
+                dispCs_b.append(dispC_b)
+            else:
+                dispC_res_f = self.context_networks_dispC(torch.cat([x1_dispC_out, dispC_f], dim=1))
+                dispC_res_b = self.context_networks_dispC(torch.cat([x2_dispC_out, dispC_b], dim=1))
+                dispC_f = dispC_f + dispC_res_f
+                dispC_b = dispC_b + dispC_res_b
+                dispCs_f.append(dispC_f)
+                dispCs_b.append(dispC_b)               
+                break
+
+        dispCs_f = upsample_outputs_as(dispCs_f[::-1], x1_rev)
+        dispCs_b = upsample_outputs_as(dispCs_b[::-1], x1_rev)
+
+        return dispCs_f, dispCs_b
+
+    def forward(self, input_dict):
+        output_dict = {}
+
+        ## Left
+        #print("input image size:",input_dict['input_l1_aug'].shape)
+        #print("input image size:",input_dict['input_l2_aug'].shape)
+        if (not self._args.evaluation) == True:
+            self.eval()
+            torch.set_grad_enabled(False)
+
+            output_dict = self._backbone(input_dict)
+        
+            torch.set_grad_enabled(True)          
+            self.train()
+            output_dict_r = output_dict['output_dict_r']
+        else:
+            output_dict = self._backbone(input_dict)
+            output_dict_flip = output_dict['output_dict_flip']
+
+        k_l1 = input_dict['input_k_l1_aug']
+        k_l2 = input_dict['input_k_l2_aug']
+        #print(output_dict.keys())
+
+        output_dict['dispC_f'], output_dict['dispC_b'] = self.run_decoder(output_dict['x1_feats'], output_dict['x2_feats'], output_dict['x1_rev'], output_dict['flow_f'], output_dict['flow_b'], output_dict['disp_l1'], output_dict['disp_l2'], k_l1, k_l2, input_dict)
+
+        output_dict
+        #print("Training:", self.training)
+        #print("Evaluation:", self._args.evaluation)
+        #print("SF_Sup:", self._args.sf_sup)
+        
+        ## Right
+        ## ss: train val 
+        ## ft: train 
+        if self.training or (not self._args.finetuning and not self._args.evaluation):
+            output_dict['flow_f'] = upsample_outputs_as(output_dict['flow_f'][::-1], output_dict['x1_rev'])
+            output_dict['flow_b'] = upsample_outputs_as(output_dict['flow_b'][::-1], output_dict['x1_rev'])
+            output_dict['disp_l1'] = upsample_outputs_as(output_dict['disp_l1'][::-1], output_dict['x1_rev'])
+            output_dict['disp_l2'] = upsample_outputs_as(output_dict['disp_l2'][::-1], output_dict['x1_rev'])
+
+        output_dict['output_dict_r'] = output_dict_r
+            #print("generating right output dict")
+
+        ## Post Processing 
+        ## ss:           eval
+        ## ft: train val eval
+        if self._args.evaluation or self._args.finetuning:
+
+            input_l1_flip = torch.flip(input_dict['input_l1_aug'], [3])
+            input_l2_flip = torch.flip(input_dict['input_l2_aug'], [3])
+            k_l1_flip = input_dict["input_k_l1_flip_aug"]
+            k_l2_flip = input_dict["input_k_l2_flip_aug"]
+
+            output_dict_flip['dispC_f'], output_dict_flip['dispC_b'] = self.run_decoder(output_dict_flip['x1_feats'], output_dict_flip['x2_feats'], output_dict_flip['x1_rev'], output_dict_flip['flow_f'], output_dict_flip['flow_b'], output_dict_flip['disp_l1'], output_dict_flip['disp_l2'], k_l1_flip, k_l2_flip, input_dict)
             dispC_f_pp = []
             dispC_b_pp = []
 
@@ -5659,14 +5817,14 @@ class MonoFlowDisp_Exp(nn.Module):
             k_l1_flip = input_dict["input_k_l1_flip_aug"]
             k_l2_flip = input_dict["input_k_l2_flip_aug"]
 
-            output_dict_flip['flow_f'], output_dict_flip['flow_b'] = self.run_decoder(output_dict_flip['x1_feats'], output_dict_flip['x2_feats'], output_dict_flip['corr_f'], output_dict_flip['corr_b'], output_dict_flip['x1_rev'])
+            output_dict_flip['dispC_f'], output_dict_flip['dispC_b'] = self.run_decoder(output_dict_flip['x1_feats'], output_dict_flip['x2_feats'], output_dict_flip['corr_f'], output_dict_flip['corr_b'], output_dict_flip['x1_rev'])
             dispC_f_pp = []
             dispC_b_pp = []
 
             for ii in range(0, len(output_dict_flip['flow_f'])):
                 dispC_f_pp.append(post_processing(output_dict['dispC_f'][ii], flow_horizontal_flip(output_dict_flip['dispC_f'][ii])))
                 dispC_b_pp.append(post_processing(output_dict['dispC_b'][ii], flow_horizontal_flip(output_dict_flip['dispC_b'][ii])))
-            output_dict['dispC_f_pp'] = dispC_f_pp
-            output_dict['dispC_b_pp'] = dispC_b_pp
+            output_dict['exp_f_pp'] = dispC_f_pp
+            output_dict['exp_b_pp'] = dispC_b_pp
 
         return output_dict

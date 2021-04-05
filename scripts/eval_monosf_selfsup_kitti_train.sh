@@ -2,7 +2,7 @@
 
 # DATASETS_HOME
 KITTI_HOME="/disk_hdd/kitti_flow"
-CHECKPOINT="/disk_ssd/Self_Mono_Experiments/-self-mono-og-/checkpoint_epoch40.ckpt"
+CHECKPOINT="/disk_ssd/Self_Mono_Experiments/-self-mono-og-/checkpoint_best.ckpt"
 
 # model
 MODEL=MonoSF_Full
@@ -27,7 +27,7 @@ python ../main.py \
 --validation_dataset_preprocessing_crop=False \
 --validation_dataset_root=$KITTI_HOME \
 --validation_loss=$Valid_Loss_Function \
---validation_key="sf" \
+--validation_key="err_xy" \
 #--save_disp=True \
 #--save_disp2=True \
 #--save_flow=True \
