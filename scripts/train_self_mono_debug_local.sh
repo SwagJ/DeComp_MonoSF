@@ -28,11 +28,11 @@ CHECKPOINT=None
 # Loss and Augmentation
 Train_Dataset=KITTI_Raw_KittiSplit_Train_mnsf
 Train_Augmentation=Augmentation_SceneFlow
-Train_Loss_Function=Loss_MonoFlowDisp_DispC_SelfSup_v2
+Train_Loss_Function=Loss_MonoFlowDisp_DispC_Sceneflow_v2_Proj
 
 Valid_Dataset=KITTI_Raw_KittiSplit_Valid_mnsf
 Valid_Augmentation=Augmentation_Resize_Only
-Valid_Loss_Function=Loss_MonoFlowDisp_DispC_SelfSup_v2
+Valid_Loss_Function=Loss_MonoFlowDisp_DispC_Sceneflow_v2_Proj
 
 ALIAS="-kitti-raw-"
 TIME=$(date +"%Y%m%d-%H%M%S")
@@ -55,7 +55,7 @@ python ../main.py \
 --start=1000	\
 --num_workers=10 \
 --optimizer=Adam \
---optimizer_lr=5e-5 \
+--optimizer_lr=1e-4 \
 --save=$SAVE_PATH \
 --total_epochs=62 \
 --save_freq=5 \

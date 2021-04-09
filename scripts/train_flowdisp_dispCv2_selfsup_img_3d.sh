@@ -26,13 +26,13 @@ CHECKPOINT=None
 # Loss and Augmentation
 Train_Dataset=KITTI_Raw_KittiSplit_Train_mnsf
 Train_Augmentation=Augmentation_SceneFlow
-Train_Loss_Function=Loss_MonoFlowDisp_DispC_SelfSup_v2
+Train_Loss_Function=Loss_MonoFlowDisp_DispC_Sceneflow_v2_Proj
 
 Valid_Dataset=KITTI_Raw_KittiSplit_Valid_mnsf
 Valid_Augmentation=Augmentation_Resize_Only
-Valid_Loss_Function=Loss_MonoFlowDisp_DispC_SelfSup_v2
+Valid_Loss_Function=Loss_MonoFlowDisp_DispC_Sceneflow_v2_Proj
 
-ALIAS="-flowdisp-dispC-loss-v2-"
+ALIAS="-flowdisp-dispCv2-loss-img-3d-"
 SAVE_PATH="$EXPERIMENTS_HOME/$ALIAS/"
 
 #CHECKPOINT="$EXPERIMENTS_HOME/$ALIAS/checkpoint_latest.ckpt"

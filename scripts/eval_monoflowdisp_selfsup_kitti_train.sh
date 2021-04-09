@@ -2,7 +2,7 @@
 
 # DATASETS_HOME
 KITTI_HOME="/disk_hdd/kitti_flow"
-CHECKPOINT="/disk_ssd/Self_Mono_Experiments/-mono-flow-disp-warp-feat-norm-top-/checkpoint_epoch35.ckpt"
+CHECKPOINT="/disk_ssd/Self_Mono_Experiments/-mono-flow-disp-warp-feat-norm-top-/checkpoint_epoch30.ckpt"
 
 # model
 MODEL=MonoFlow_Disp_Seperate_Warp_OG_Decoder_Feat_Norm
