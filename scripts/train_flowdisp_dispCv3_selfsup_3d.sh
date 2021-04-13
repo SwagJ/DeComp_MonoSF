@@ -17,7 +17,7 @@ KITTI_RAW_HOME="/scratch_net/phon/majing/datasets/kitti_raw/"
 EXPERIMENTS_HOME="/scratch_net/phon/majing/src/exps"
 
 # model
-MODEL=MonoFlowDisp_DispC
+MODEL=MonoFlowDisp_DispC_v3
 
 # save path
 #CHECKPOINT="checkpoints/full_model_kitti/checkpoint_latest.ckpt"
