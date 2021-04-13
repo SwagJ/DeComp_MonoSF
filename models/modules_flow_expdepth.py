@@ -387,6 +387,76 @@ class Expansion_Decoder(nn.Module):
 		# 	return flow2,  dchange2[0,0], iexp2[0,0]
 
 
+class DispC_Decoder(nn.Module):
+	def __init__(self, args, exp_unc=False):
+
+		super(DispC_Decoder, self).__init__()
+
+		#self.f3d2v1 = conv(64, 32, kernel_size=3, stride=1, padding=1,dilation=1) # 
+		self.f3d2v2 = conv(64,   32, kernel_size=3, stride=1, padding=1,dilation=1) # 
+		self.f3d2v3 = conv(1,   32, kernel_size=3, stride=1, padding=1,dilation=1) # 
+		#self.f3d2v4 = conv(1,   32, kernel_size=3, stride=1, padding=1,dilation=1) # 
+		#self.f3d2v5 = conv(64,   32, kernel_size=3, stride=1, padding=1,dilation=1) # 
+		#self.f3d2v6 = conv(12*81,   32, kernel_size=3, stride=1, padding=1,dilation=1) # 
+		self.f3d2 = bfmodule(128-64,1)
+
+		# depth change net
+		# self.dcnetv1 = conv(64, 32, kernel_size=3, stride=1, padding=1,dilation=1) # 
+		# self.dcnetv2 = conv(1,   32, kernel_size=3, stride=1, padding=1,dilation=1) # 
+		# self.dcnetv3 = conv(1,   32, kernel_size=3, stride=1, padding=1,dilation=1) # 
+		# self.dcnetv4 = conv(1,   32, kernel_size=3, stride=1, padding=1,dilation=1) # 
+		#self.dcnetv5 = conv(12*81,   32, kernel_size=3, stride=1, padding=1,dilation=1) # 
+		#self.dcnetv6 = conv(4,   32, kernel_size=3, stride=1, padding=1,dilation=1) # 
+		if exp_unc:       
+			self.dcnet = bfmodule(128,2)
+		else:
+			self.dcnet = bfmodule(128,1)
+
+	def forward(self, init_dispC, c12, im0):
+		# flow 2 is top level flow:
+		# c12 is top level feature 
+		b,_,h,w = init_dispC.shape 
+		x = torch.cat((
+					   self.f3d2v2(c12),
+					   self.f3d2v3(init_dispC),
+					   ),1)
+		dchange2 = self.f3d2(x)[0]
+
+		# depth change net
+		#print(c12.shape)
+		#print(flow2.shape)
+		# iexp2 = F.interpolate(dchange2.clone(), [im0.size()[2],im0.size()[3]], mode='bilinear', align_corners=True)
+		# x = torch.cat((self.dcnetv1(c12.detach()),
+		# 			   self.dcnetv2(dchange2.detach()),
+		# 			   self.dcnetv3(-exp2.log()),
+		# 			   self.dcnetv4(err2),
+		# 			),1)
+		# dcneto = 1./200*self.dcnet(x)[0]
+		# dchange2 = dchange2.detach() + dcneto[:,:1]
+
+		# flow2 = F.interpolate(flow2.detach(), [im0.size()[2],im0.size()[3]], mode='bilinear', align_corners=True)
+		dispC = F.interpolate(dchange2, [im0.size()[2],im0.size()[3]], mode='bilinear', align_corners=True)
+
+		return dispC
+
+		# if self.training:
+		# 	flowl0 = disc_aux[0].permute(0,3,1,2).clone()
+		# 	gt_depth = disc_aux[2][:,:,:,0]
+		# 	gt_f3d =  disc_aux[2][:,:,:,4:7].permute(0,3,1,2).clone()
+		# 	gt_dchange = (1+gt_f3d[:,2]/gt_depth)
+		# 	maskdc = (gt_dchange < 2) & (gt_dchange > 0.5) & disc_aux[1]
+
+		# 	gt_expi,gt_expi_err,maskoe = self.affine_mask(get_grid(b,4*h,4*w)[:,0].permute(0,3,1,2).repeat(b,1,1,1), flowl0,pw=3)
+		# 	gt_exp = 1./gt_expi[:,0]
+
+		# 	loss =  0.1* (dchange2[:,0]-gt_dchange.log()).abs()[maskdc].mean()
+		# 	loss += 0.1* (iexp2[:,0]-gt_exp.log()).abs()[maskoe].mean()
+		# 	return flow2*4, flow3*8,flow4*16,flow5*32,flow6*64,loss, dchange2[:,0], iexp2[:,0]
+
+		# else:
+		# 	return flow2,  dchange2[0,0], iexp2[0,0]
+
+
 class Depth_Decoder_SelfMono(nn.Module):
 	def __init__(self):
 		super(Depth_Decoder_SelfMono, self).__init__()

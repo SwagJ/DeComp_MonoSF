@@ -17,6 +17,7 @@ Mono_Expansion				=   model_exp_depth_flow.Mono_Expansion
 PWC_Disp					=   model_exp_depth_flow.PWC_Disp
 PWC_Disp_Unfreeze			=	model_exp_depth_flow.PWC_Disp_Unfreeze
 MonoDispExp 				=	model_exp_depth_flow.MonoDispExp
+MonoDispDispC 				=	model_exp_depth_flow.MonoDispDispC
 Joint_MonoDispExp			=	model_exp_depth_flow.Joint_MonoDispExp
 MonoFlow_Disp_Seperate_NoWarp = model_monosceneflow.MonoFlow_Disp_Seperate_NoWarp
 MonoFlow_Disp_Seperate_Warp_OG_Decoder = model_monosceneflow.MonoFlow_Disp_Seperate_Warp_OG_Decoder
@@ -35,6 +36,7 @@ MonoFlow_DispC_v2_4			=	model_monosceneflow.MonoFlow_DispC_v2_4
 MonoSF_DispC				=	model_monosceneflow.MonoSF_DispC
 MonoFlowDisp_DispC			=	model_monosceneflow.MonoFlowDisp_DispC
 MonoFlowDisp_DispC_v2		=	model_monosceneflow.MonoFlowDisp_DispC_v2
+MonoFlowDisp_DispC_v3		=	model_monosceneflow.MonoFlowDisp_DispC_v3
 MonoFlowDisp_Exp			=	model_monosceneflow.MonoFlowDisp_Exp
 MonoFlowDisp_Teacher_Student	=	model_monosceneflow.MonoFlowDisp_Teacher_Student
 

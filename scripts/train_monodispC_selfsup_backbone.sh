@@ -3,60 +3,60 @@
 # For SLURM cluster only
 #SBATCH	--output=/scratch_net/phon/majing/src/log/%j.out
 #SBATCH --gres=gpu:1
-#SBATCH --mem=50G
+#SBATCH --mem=60G
+#SBATCH --mail-type=ALL
+#SBATCH --constraint='turing|titan_xp'
 
-#source /scratch_net/phon/majing/anaconda/bin/conda shell.bash hook
-#conda activate self-mono
+source /scratch_net/phon/majing/anaconda3/etc/profile.d/conda.sh
+conda activate self-mono
 
 
 # experiments and datasets meta
-#KITTI_RAW_HOME="/scratch_net/phon/majing/datasets/kitti_full/"
-KITTI_RAW_HOME="/disk_hdd/kitti_raw/"
-EXPERIMENTS_HOME="/disk_ssd/self-mono-debug"
-KITTI_COMB_HOME="/disk_hdd/kitti_full"
-KITTI_FLOW_HOME="/disk_hdd/kitti_full/kitti_flow"
-SYNTH_DRIVING_HOME="/disk_ssd/driving"
+KITTI_RAW_HOME="/scratch_net/phon/majing/datasets/kitti_raw/"
+#KITTI_RAW_HOME="/disk_hdd/kitti_full/"
+EXPERIMENTS_HOME="/scratch_net/phon/majing/src/exps"
 
 # model
-MODEL=MonoFlowDisp_DispC_v3 
+MODEL=MonoDispDispC
 
 # save path
-#CHECKPOINT="checkpoints/full_model_kitti/checkpoint_latest.ckpt"
-#CHECKPOINT="/disk_ssd/Self_Mono_Experiments/-monoflowdispC-v2-1-loss-v3/checkpoint_best.ckpt"
+
 CHECKPOINT=None
 
 # Loss and Augmentation
 Train_Dataset=KITTI_Raw_KittiSplit_Train_mnsf
 Train_Augmentation=Augmentation_SceneFlow
-Train_Loss_Function=Loss_MonoFlowDisp_DispC_Sceneflow_v2
+Train_Loss_Function=Loss_MonoDispC_SelfSup
 
 Valid_Dataset=KITTI_Raw_KittiSplit_Valid_mnsf
 Valid_Augmentation=Augmentation_Resize_Only
-Valid_Loss_Function=Loss_MonoFlowDisp_DispC_Sceneflow_v2
+Valid_Loss_Function=Loss_MonoDispC_SelfSup
 
-ALIAS="-kitti-raw-"
-TIME=$(date +"%Y%m%d-%H%M%S")
-SAVE_PATH="$EXPERIMENTS_HOME/debug"
+ALIAS="-monodispc-bb-"
+SAVE_PATH="$EXPERIMENTS_HOME/$ALIAS/"
+#CHECKPOINT="$EXPERIMENTS_HOME/$ALIAS/checkpoint_latest.ckpt"
 
-PRETRAIN="/disk_ssd/Self_Mono_Experiments/-mono-flow-disp-warp-og-decoder-no-res-/checkpoint_best.ckpt"
+PRETRAIN="$EXPERIMENTS_HOME/-mono-flow-disp-warp-og-decoder-no-res-/checkpoint_best.ckpt"
+
+
+
 
 
 # training configuration
 python ../main.py \
---batch_size=2 \
+--batch_size=4 \
 --batch_size_val=1 \
 --checkpoint=$CHECKPOINT \
 --lr_scheduler=MultiStepLR \
---lr_scheduler_gamma=0.5 \
---lr_scheduler_milestones="[10, 32, 33, 34, 35, 36, 37, 38, 39, 40]" \
 --backbone_weight=$PRETRAIN \
+--lr_scheduler_gamma=0.5 \
+--exp_training=True \
 --backbone_mode=True \
---exp_training=False  \
+--lr_scheduler_milestones="[23, 39, 47, 54]" \
 --model=$MODEL \
---start=1000	\
 --num_workers=10 \
 --optimizer=Adam \
---optimizer_lr=5e-5 \
+--optimizer_lr=2e-4 \
 --save=$SAVE_PATH \
 --total_epochs=62 \
 --save_freq=5 \

@@ -5688,6 +5688,159 @@ class MonoFlowDisp_DispC_v2(nn.Module):
 
         return output_dict
 
+class MonoFlowDisp_DispC_v3(nn.Module):
+    def __init__(self, args):
+        super(MonoFlowDisp_DispC_v3, self).__init__()
+        self._args = args
+        self._backbone = MonoFlow_Disp_Seperate_Warp_OG_Decoder_No_Res(args)
+        self.num_chs = [3, 32, 64, 96, 128, 192, 256]
+        self.output_level = 4
+        self.num_levels = 7
+        self.dim_corr = 81
+
+        self.dispC_estimators = nn.ModuleList()
+        self.upconv_layers_dispC = nn.ModuleList()
+        if self._args.evaluation == False:
+            state_dict = torch.load(self._args.backbone_weight)
+            renamed_state_dict = collections.OrderedDict()
+            for k,v in state_dict['state_dict'].items():
+                name = k[7:]
+                renamed_state_dict[name] = v
+
+            self._backbone.load_state_dict(renamed_state_dict) 
+
+        for l, ch in enumerate(self.num_chs[::-1]):
+            if l > self.output_level:
+                break
+
+            if l == 0:
+                num_ch_in_disp = self.dim_corr + ch 
+            else:
+                num_ch_in_disp = self.dim_corr + ch + 32 + 1 + 3
+                self.upconv_layers_dispC.append(upconv(32, 32, 3, 2))
+                #self.disp_decoder.append
+            layer_dispC = DispC_Decoder(num_ch_in_disp)
+            self.dispC_estimators.append(layer_dispC)
+
+        self.context_networks_dispC = ContextNetwork_DispC(32 + 1 + 3)
+
+    def run_decoder(self, x1_feats, x2_feats, x1_rev, flows_f, flows_b, disps_l1, disps_l2, k1, k2, input_dict, corr_f, corr_b):
+        dispCs_f = []
+        dispCs_b = []
+        for l, (x1, x2, flow_f, flow_b, disp_l1, disp_l2) in enumerate(zip(x1_feats, x2_feats, flows_f, flows_b, disps_l1, disps_l2)):
+            x1_flow = x1
+            x2_flow = x2
+            if l != 0:
+                dispC_f = interpolate2d_as(dispC_f, x1_flow, mode="bilinear")
+                dispC_b = interpolate2d_as(dispC_b, x1_flow, mode="bilinear")
+                x1_dispC_out = self.upconv_layers_dispC[l-1](x1_dispC_out)
+                x2_dispC_out = self.upconv_layers_dispC[l-1](x2_dispC_out)
+
+            out_corr_relu_flow_f = corr_f[l]
+            out_corr_relu_flow_b = corr_b[l]
+
+            # monosf estimator
+            if l == 0:
+                x1_dispC_out, dispC_f = self.dispC_estimators[l](torch.cat([out_corr_relu_flow_f, x1_flow], dim=1))
+                x2_dispC_out, dispC_b = self.dispC_estimators[l](torch.cat([out_corr_relu_flow_b, x2_flow], dim=1))
+                #print("bottom layer dim:",x1_out.shape,flow_f.shape,disp_l1.shape)
+            else:
+                x1_dispC_out, dispC_f_res = self.dispC_estimators[l](torch.cat([out_corr_relu_flow_f, x1_flow, x1_dispC_out, dispC_f, flow_f, disp_l1], dim=1))
+                x2_dispC_out, dispC_b_res = self.dispC_estimators[l](torch.cat([out_corr_relu_flow_f, x2_flow, x1_dispC_out, dispC_b, flow_b, disp_l2], dim=1))
+                dispC_f = dispC_f + dispC_f_res
+                dispC_b = dispC_b + dispC_b_res
+                
+
+            # upsampling or post-processing
+            if l != self.output_level:
+                dispCs_f.append(dispC_f)
+                dispCs_b.append(dispC_b)
+            else:
+                dispC_res_f = self.context_networks_dispC(torch.cat([x1_dispC_out, dispC_f, flow_f, disp_l1], dim=1))
+                dispC_res_b = self.context_networks_dispC(torch.cat([x2_dispC_out, dispC_b, flow_b, disp_l2], dim=1))
+                dispC_f = dispC_f + dispC_res_f
+                dispC_b = dispC_b + dispC_res_b
+                dispCs_f.append(dispC_f)
+                dispCs_b.append(dispC_b)               
+                break
+
+        dispCs_f = upsample_outputs_as(dispCs_f[::-1], x1_rev)
+        dispCs_b = upsample_outputs_as(dispCs_b[::-1], x1_rev)
+
+        return dispCs_f, dispCs_b
+
+    def forward(self, input_dict):
+        output_dict = {}
+
+        ## Left
+        #print("input image size:",input_dict['input_l1_aug'].shape)
+        #print("input image size:",input_dict['input_l2_aug'].shape)
+        if (not self._args.evaluation) == True:
+            self.eval()
+            torch.set_grad_enabled(False)
+
+            output_dict = self._backbone(input_dict)
+        
+            torch.set_grad_enabled(True)          
+            self.train()
+            output_dict_r = output_dict['output_dict_r']
+        else:
+            output_dict = self._backbone(input_dict)
+            output_dict_flip = output_dict['output_dict_flip']
+
+        k_l1 = input_dict['input_k_l1_aug']
+        k_l2 = input_dict['input_k_l2_aug']
+
+        output_dict['dispC_f'], output_dict['dispC_b'] = self.run_decoder(output_dict['x1_feats'], output_dict['x2_feats'], output_dict['x1_rev'], output_dict['flow_f'], output_dict['flow_b'], output_dict['disp_l1'], output_dict['disp_l2'], k_l1, k_l2, input_dict, output_dict['corr_f'], output_dict['corr_b'])
+
+        #print(output_dict.keys())
+        #print("Training:", self.training)
+        #print("Evaluation:", self._args.evaluation)
+        #print("SF_Sup:", self._args.sf_sup)
+        
+        ## Right
+        ## ss: train val 
+        ## ft: train 
+        if self.training or (not self._args.finetuning and not self._args.evaluation):
+            output_dict['flow_f'] = upsample_outputs_as(output_dict['flow_f'][::-1], output_dict['x1_rev'])
+            output_dict['flow_b'] = upsample_outputs_as(output_dict['flow_b'][::-1], output_dict['x1_rev'])
+            output_dict['disp_l1'] = upsample_outputs_as(output_dict['disp_l1'][::-1], output_dict['x1_rev'])
+            output_dict['disp_l2'] = upsample_outputs_as(output_dict['disp_l2'][::-1], output_dict['x1_rev'])
+
+            output_dict_r['dispC_f'], output_dict_r['dispC_b'] = self.run_decoder(output_dict_r['x1_feats'], output_dict_r['x2_feats'], output_dict_r['x1_rev'], output_dict_r['flow_f'], output_dict_r['flow_b'], output_dict_r['disp_l1'], output_dict_r['disp_l2'], k_l1, k_l2, input_dict, output_dict_r['corr_f'], output_dict_r['corr_b'])
+
+            for ii in range(0, len(output_dict_r['flow_f'])):
+                output_dict_r['dispC_f'][ii] = flow_horizontal_flip(output_dict_r['dispC_f'][ii])
+                output_dict_r['dispC_b'][ii] = flow_horizontal_flip(output_dict_r['dispC_b'][ii])
+                #output_dict_r['x1_feats'][ii] = torch.flip(output_dict_r['x1_feats'][ii], [3])
+                #output_dict_r['x2_feats'][ii] = torch.flip(output_dict_r['x2_feats'][ii], [3])
+                #print("output_dict_r[disp_l2] size:", output_dict_r['disp_l1'][ii].size())
+
+            output_dict['output_dict_r'] = output_dict_r
+            #print("generating right output dict")
+
+        ## Post Processing 
+        ## ss:           eval
+        ## ft: train val eval
+        if self._args.evaluation or self._args.finetuning:
+
+            input_l1_flip = torch.flip(input_dict['input_l1_aug'], [3])
+            input_l2_flip = torch.flip(input_dict['input_l2_aug'], [3])
+            k_l1_flip = input_dict["input_k_l1_flip_aug"]
+            k_l2_flip = input_dict["input_k_l2_flip_aug"]
+
+            output_dict_flip['dispC_f'], output_dict_flip['dispC_b'] = self.run_decoder(output_dict_flip['x1_feats'], output_dict_flip['x2_feats'], output_dict_flip['x1_rev'], output_dict_flip['flow_f'], output_dict_flip['flow_b'], output_dict_flip['disp_l1'], output_dict_flip['disp_l2'], k_l1_flip, k_l2_flip, input_dict, output_dict_flip['corr_f'], output_dict_flip['corr_b'])
+            dispC_f_pp = []
+            dispC_b_pp = []
+
+            for ii in range(0, len(output_dict_flip['flow_f'])):
+                dispC_f_pp.append(post_processing(output_dict['dispC_f'][ii], flow_horizontal_flip(output_dict_flip['dispC_f'][ii])))
+                dispC_b_pp.append(post_processing(output_dict['dispC_b'][ii], flow_horizontal_flip(output_dict_flip['dispC_b'][ii])))
+            output_dict['dispC_f_pp'] = dispC_f_pp
+            output_dict['dispC_b_pp'] = dispC_b_pp
+
+        return output_dict
+
 
 class MonoFlowDisp_Exp(nn.Module):
     def __init__(self, args):
