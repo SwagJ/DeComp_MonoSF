@@ -3,7 +3,7 @@
 # For SLURM cluster only
 #SBATCH	--output=/scratch_net/phon/majing/src/log/%j.out
 #SBATCH --gres=gpu:1
-#SBATCH --mem=60G
+#SBATCH --mem=50G
 #SBATCH --mail-type=ALL
 #SBATCH --constraint='turing|titan_xp'
 
