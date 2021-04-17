@@ -50,7 +50,7 @@ python ../main.py \
 --checkpoint=$CHECKPOINT \
 --lr_scheduler=MultiStepLR \
 --backbone_weight=$PRETRAIN \
---backbone_mode=False \
+--backbone_mode=True \
 --lr_scheduler_gamma=0.5 \
 --lr_scheduler_milestones="[7, 14, 28, 35, 42]" \
 --model=$MODEL \
