@@ -29,12 +29,12 @@ python ../main.py \
 --validation_dataset_root=$KITTI_HOME \
 --validation_loss=$Valid_Loss_Function \
 --validation_key="f1" \
-#--save_disp=False \
-#--save_disp2=True \
-#--save_flow=False \
-#--save_flow_otl=False \
-#--save_disp2_otl=True \
-#--save_disp_otl=False
+--save_disp=True \
+--save_disp2=True \
+--save_flow=True \
+--save_flow_otl=True \
+--save_disp2_otl=True \
+--save_disp_otl=True
 
 
 

@@ -2,17 +2,17 @@
 
 # DATASETS_HOME
 KITTI_HOME="/disk_hdd/kitti_flow"
-CHECKPOINT="/disk_ssd/Self_Mono_Experiments/-flowdisp-dispCv3-loss-3d-/checkpoint_best.ckpt"
+CHECKPOINT="/disk_ssd/Self_Mono_Experiments/-flowdisp-dispC-loss-3d-joint-/checkpoint_best.ckpt"
 
 # model
-MODEL=MonoFlowDisp_DispC_v3
+MODEL=MonoFlowDisp_DispC
 
 Valid_Dataset=KITTI_2015_Train_Full_mnsf
 Valid_Augmentation=Augmentation_Resize_Only
 Valid_Loss_Function=Eval_MonoFlowDispC_KITTI_Train
 
 # training configuration
-SAVE_PATH="/disk_ssd/self-mono-eval/-flowdisp-dispCv3-loss-3d-/"
+SAVE_PATH="/disk_ssd/self-mono-eval/-flowdisp-dispC-loss-3d-joint-/"
 python ../main.py \
 --batch_size=1 \
 --batch_size_val=1 \

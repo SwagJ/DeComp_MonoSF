@@ -25,17 +25,16 @@ CHECKPOINT=None
 
 # Loss and Augmentation
 Train_Dataset=KITTI_Raw_KittiSplit_Train_mnsf
-Train_Augmentation=Augmentation_SceneFlow
+Train_Augmentation=Augmentation_SceneFlow_512x768
 Train_Loss_Function=Loss_FlowDisp_SelfSup_CensusFlow_SSIM_Disp_Top
 
 Valid_Dataset=KITTI_Raw_KittiSplit_Valid_mnsf
-Valid_Augmentation=Augmentation_Resize_Only
+Valid_Augmentation=Augmentation_Resize_Only_512x768
 Valid_Loss_Function=Loss_FlowDisp_SelfSup_CensusFlow_SSIM_Disp_Top
 
-ALIAS="-mono-flow-disp-warp-feat-norm-top-lr-v4"
+ALIAS="-mono-flow-disp-warp-feat-norm-top-512-"
 SAVE_PATH="$EXPERIMENTS_HOME/$ALIAS/"
 
-CHECKPOINT="$EXPERIMENTS_HOME/-mono-flow-disp-warp-feat-norm-top-/checkpoint_epoch10.ckpt"
 #CHECKPOINT="$EXPERIMENTS_HOME/$ALIAS/checkpoint_latest.ckpt"
 
 
@@ -44,19 +43,18 @@ CHECKPOINT="$EXPERIMENTS_HOME/-mono-flow-disp-warp-feat-norm-top-/checkpoint_epo
 
 # training configuration
 python ../main.py \
---batch_size=4 \
+--batch_size=2 \
 --batch_size_val=1 \
 --checkpoint=$CHECKPOINT \
 --lr_scheduler=MultiStepLR \
 --lr_scheduler_gamma=0.5 \
---lr_scheduler_milestones="[15, 26, 35, 38]" \
+--lr_scheduler_milestones="[10, 23, 35, 40, 45, 46, 48, 50, 51, 52, 53, 54]" \
 --model=$MODEL \
 --num_workers=10 \
 --optimizer=Adam \
 --optimizer_lr=2e-4 \
 --save=$SAVE_PATH \
---start_epoch=10 \
---total_epochs=45 \
+--total_epochs=62 \
 --save_freq=5 \
 --training_augmentation=$Train_Augmentation \
 --training_augmentation_photometric=True \
