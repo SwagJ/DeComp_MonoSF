@@ -13,7 +13,7 @@ from utils.interpolation import interpolate2d_as
 from utils.sceneflow_util import pixel2pts_ms, pts2pixel_ms, reconstructImg, reconstructPts, projectSceneFlow2Flow, flow2sf_dispC, flow2sf_dispC_v2, flow2sf_dispC_formula2, flow2sf_depthC, flow2sf_dispC_validate
 from utils.sceneflow_util import flow_horizontal_flip, intrinsic_scale, get_pixelgrid, post_processing, pixel2pts_disp, disp2depth_kitti, flow2sf, flow2sf_exp, pts2pixel, pixel2pts
 from utils.monodepth_eval import compute_errors, compute_d1_all
-from models.modules_sceneflow import WarpingLayer_Flow, get_grid_exp
+from models.modules_sceneflow import WarpingLayer_Flow, get_grid_exp, WarpingLayer_Flow_W_Mask
 
 
 ###############################################
@@ -5714,6 +5714,173 @@ class Loss_FlowDisp_SelfSup_CensusFlow_SSIM_Disp_Top(nn.Module):
 		loss_dict["dp"] = loss_dp_sum
 		loss_dict["flow"] = loss_sf_sum
 		loss_dict["im"] = loss_sf_2d
+		loss_dict["total_loss"] = total_loss
+
+		self.detaching_grad_of_outputs(output_dict['output_dict_r'])
+
+		return loss_dict
+
+
+class Loss_FlowDisp_SelfSup_CensusFlow_SSIM_Disp_Top_Consistency(nn.Module):
+	def __init__(self, args):
+		super(Loss_FlowDisp_SelfSup_CensusFlow_SSIM_Disp_Top_Consistency, self).__init__()
+				
+		self._weights = [4.0, 2.0, 1.0, 1.0, 1.0]
+		self._ssim_w = 0.85
+		self._disp_smooth_w = 0.1
+		self._sf_3d_pts = 0.2
+		self._sf_3d_sm = 200
+		self._warping_layer = WarpingLayer_Flow()
+		self._warping_layer_consistency = WarpingLayer_Flow_W_Mask()
+
+	def depth_loss_left_img(self, disp_l, disp_r, img_l_aug, img_r_aug, ii):
+
+		img_r_warp = _generate_image_left(img_r_aug, disp_l)
+		left_occ = _adaptive_disocc_detection_disp(disp_r).detach()
+		kernel_size = (ii == 0) * 7 + ((ii == 1) or (ii == 2)) * 5 + (ii == 3) * 3 + (ii == 4) * 1
+		#print(kernel_size)
+
+		## Photometric loss
+		img_diff= (_elementwise_l1(img_l_aug, img_r_warp) * (1.0 - self._ssim_w) + _SSIM(img_l_aug, img_r_warp) * self._ssim_w).mean(dim=1, keepdim=True)       
+		loss_img = (img_diff[left_occ]).mean()
+		img_diff[~left_occ].detach_()
+
+		## Disparities smoothness
+		loss_smooth = _smoothness_motion_2nd(disp_l, img_l_aug, beta=10.0).mean() / (2 ** ii)
+		#print(torch.isnan(loss_img), torch.isnan(loss_smooth))
+
+		return loss_img + self._disp_smooth_w * loss_smooth, left_occ
+
+	def depth_loss_left_img_l2(self, disp_l, disp_r, img_l_aug, img_r_aug, weight):
+
+		img_r_warp = _generate_image_left(img_r_aug, disp_l)
+		left_occ = _adaptive_disocc_detection_disp(disp_r).detach()
+		#kernel_size = (ii == 0) * 7 + ((ii == 1) or (ii == 2)) * 5 + (ii == 3) * 3 + (ii == 4) * 1
+		#print(kernel_size)
+
+		## Photometric loss
+		img_diff= (_elementwise_l1(img_l_aug, img_r_warp) * (1.0 - self._ssim_w) + _SSIM(img_l_aug, img_r_warp) * self._ssim_w).mean(dim=1, keepdim=True)
+		img_diff= img_diff * weight       
+		loss_img = (img_diff[left_occ]).mean()
+		img_diff[~left_occ].detach_()
+
+		## Disparities smoothness
+		loss_smooth = _smoothness_motion_2nd(disp_l, img_l_aug, beta=10.0).mean() 
+		#print(torch.isnan(loss_img), torch.isnan(loss_smooth))
+
+		return loss_img + self._disp_smooth_w * loss_smooth, left_occ
+
+	def consistency_loss(self, disp_l1, disp_l2, flow_f):
+		disp_l2_warp, mask = self._warping_layer_consistency(disp_l2, flow_f)
+		diff = _elementwise_l1(disp_l1, disp_l2_warp) / (disp_l1 + disp_l2_warp)
+		loss_consist = (diff * mask).mean()
+		weight = 1 - (diff / diff.max() * mask)
+
+		return loss_consist, weight
+
+
+	def flow_loss(self, sf_f, sf_b, img_l1, img_l2, ii):
+
+		img_l2_warp = self._warping_layer(img_l2, sf_f)
+		img_l1_warp = self._warping_layer(img_l1, sf_b)
+		occ_map_f = _adaptive_disocc_detection(sf_b).detach()
+		occ_map_b = _adaptive_disocc_detection(sf_f).detach()
+
+		kernel_size = (ii == 0) * 7 + ((ii == 1) or (ii == 2)) * 5 + (ii == 3) * 3 + (ii == 4) * 3
+		#print(kernel_size)
+
+		img_diff1, mask_f = census_loss(img_l1, img_l2_warp, kernel_size)
+		img_diff2, mask_b = census_loss(img_l2, img_l1_warp, kernel_size)
+		#img_diff1 = (_elementwise_l1(img_l1, img_l2_warp) * (1.0 - self._ssim_w) + _SSIM(img_l1, img_l2_warp) * self._ssim_w).mean(dim=1, keepdim=True)
+		#img_diff2 = (_elementwise_l1(img_l2, img_l1_warp) * (1.0 - self._ssim_w) + _SSIM(img_l2, img_l1_warp) * self._ssim_w).mean(dim=1, keepdim=True)
+		occ_map_f = occ_map_f * mask_f
+		occ_map_b = occ_map_b * mask_b
+		loss_im1 = img_diff1[occ_map_f].mean()
+		loss_im2 = img_diff2[occ_map_b].mean()
+		img_diff1[~occ_map_f].detach_()
+		img_diff2[~occ_map_b].detach_()
+		loss_im = loss_im1 + loss_im2
+		loss_smooth = _smoothness_motion_2nd(sf_f / 20.0, img_l1, beta=10.0).mean() + _smoothness_motion_2nd(sf_b / 20.0, img_l2, beta=10.0).mean()
+			
+		total_loss = (loss_im + 10 * loss_smooth)
+			
+		return total_loss, loss_im, loss_smooth
+
+	def detaching_grad_of_outputs(self, output_dict):
+		
+		for ii in range(0, len(output_dict['flow_f'])):
+			output_dict['flow_f'][ii].detach_()
+			output_dict['flow_b'][ii].detach_()
+			output_dict['disp_l1'][ii].detach_()
+			output_dict['disp_l2'][ii].detach_()
+
+		return None
+
+	def forward(self, output_dict, target_dict):
+
+		loss_dict = {}
+
+		batch_size = target_dict['input_l1'].size(0)
+		loss_sf_sum = 0
+		loss_dp_sum = 0
+		loss_sf_2d = 0
+		loss_sf_3d = 0
+		loss_sf_sm = 0
+		
+		k_l1_aug = target_dict['input_k_l1_aug']
+		k_l2_aug = target_dict['input_k_l2_aug']
+		aug_size = target_dict['aug_size']
+
+		disp_r1_dict = output_dict['output_dict_r']['disp_l1']
+		disp_r2_dict = output_dict['output_dict_r']['disp_l2']
+
+		sf_f = output_dict['flow_f'][0]
+		sf_b = output_dict['flow_b'][0]
+		disp_l1 = output_dict['disp_l1'][0]
+		disp_l2 = output_dict['disp_l2'][0]
+		disp_r1 = disp_r1_dict[0]
+		disp_r2 = disp_r2_dict[0]
+
+		assert(sf_f.size()[2:4] == sf_b.size()[2:4])
+		assert(sf_f.size()[2:4] == disp_l1.size()[2:4])
+		assert(sf_f.size()[2:4] == disp_l2.size()[2:4])
+			
+		## For image reconstruction loss
+		img_l1_aug = interpolate2d_as(target_dict["input_l1_aug"], sf_f)
+		img_l2_aug = interpolate2d_as(target_dict["input_l2_aug"], sf_b)
+		img_r1_aug = interpolate2d_as(target_dict["input_r1_aug"], sf_f)
+		img_r2_aug = interpolate2d_as(target_dict["input_r2_aug"], sf_b)
+
+		## Disp Loss
+		loss_disp_l1, disp_occ_l1 = self.depth_loss_left_img(disp_l1, disp_r1, img_l1_aug, img_r1_aug, 0)
+		loss_consist, weight = self.consistency_loss(disp_l1, disp_l2, sf_f)
+		loss_disp_l2, disp_occ_l2 = self.depth_loss_left_img_l2(disp_l2, disp_r2, img_l2_aug, img_r2_aug, weight)
+		loss_dp_sum = loss_dp_sum + (loss_disp_l1 + loss_disp_l2) + 0.5 * loss_consist
+
+		## Sceneflow Loss           
+		loss_flow, loss_im, loss_smooth = self.flow_loss(sf_f, sf_b, img_l1_aug, img_l2_aug, 0)
+		#print(loss_im, loss_smooth)
+
+		loss_sf_sum = loss_sf_sum + loss_flow            
+		loss_sf_2d = loss_sf_2d + loss_im
+		loss_sf_sm = loss_sf_sm + loss_smooth
+
+		# finding weight
+		f_loss = loss_sf_sum.detach()
+		d_loss = loss_dp_sum.detach()
+		max_val = torch.max(f_loss, d_loss)
+		f_weight = max_val / f_loss
+		d_weight = max_val / d_loss
+
+		#print(loss_sf_sum, loss_dp_sum)
+
+		total_loss = loss_sf_sum * f_weight + loss_dp_sum * d_weight
+
+		loss_dict = {}
+		loss_dict["dp"] = loss_dp_sum
+		loss_dict["flow"] = loss_sf_sum
+		loss_dict["im"] = loss_sf_2d
+		loss_dict["sc"] = loss_consist
 		loss_dict["total_loss"] = total_loss
 
 		self.detaching_grad_of_outputs(output_dict['output_dict_r'])
