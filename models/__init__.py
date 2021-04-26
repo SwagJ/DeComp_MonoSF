@@ -41,6 +41,7 @@ MonoFlowDisp_DispC_v3		=	model_monosceneflow.MonoFlowDisp_DispC_v3
 MonoFlowDisp_Exp			=	model_monosceneflow.MonoFlowDisp_Exp
 MonoFlowDisp_Teacher_Student	=	model_monosceneflow.MonoFlowDisp_Teacher_Student
 MonoFlowDisp_DispC_Joint	=	model_monosceneflow.MonoFlowDisp_DispC_Joint
+MonoFlowDisp_DispC_Joint_v2	=	model_monosceneflow.MonoFlowDisp_DispC_Joint_v2
 
 ##########################################################################################
 ## Monocular Scene Flow - The models for the ablation studies
