@@ -17,6 +17,7 @@ Mono_Expansion				=   model_exp_depth_flow.Mono_Expansion
 PWC_Disp					=   model_exp_depth_flow.PWC_Disp
 PWC_Disp_Unfreeze			=	model_exp_depth_flow.PWC_Disp_Unfreeze
 MonoDispExp 				=	model_exp_depth_flow.MonoDispExp
+MonoDispExp_v2				=	model_exp_depth_flow.MonoDispExp_v2
 MonoDispDispC 				=	model_exp_depth_flow.MonoDispDispC
 MonoDispDispC_Large			=	model_exp_depth_flow.MonoDispDispC_Large
 Joint_MonoDispExp			=	model_exp_depth_flow.Joint_MonoDispExp

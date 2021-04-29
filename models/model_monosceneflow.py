@@ -5033,6 +5033,7 @@ class MonoFlow_Disp_Student(nn.Module):
         ## Post Processing 
         ## ss:           eval
         ## ft: train val eval
+        #print(self._args.evaluation)
         if self._args.evaluation or self._args.finetuning or self._args.exp_training:
 
             input_l1_flip = torch.flip(input_dict['input_l1_aug_student'], [3])
@@ -5054,6 +5055,7 @@ class MonoFlow_Disp_Student(nn.Module):
                 disp_l1_pp.append(post_processing(output_dict['disp_l1'][ii], torch.flip(output_dict_flip['disp_l1'][ii], [3])))
                 disp_l2_pp.append(post_processing(output_dict['disp_l2'][ii], torch.flip(output_dict_flip['disp_l2'][ii], [3])))
 
+            #print(flow_f_pp[0].shape,flow_f_pp[1].shape,flow_f_pp[2].shape,flow_f_pp[3].shape)
             output_dict['flow_f_pp'] = flow_f_pp
             output_dict['flow_b_pp'] = flow_b_pp
             output_dict['disp_l1_pp'] = disp_l1_pp
@@ -5486,6 +5488,11 @@ class MonoFlowDisp_DispC(nn.Module):
 
         output_dict['dispC_f'], output_dict['dispC_b'] = self.run_decoder(output_dict['x1_feats'], output_dict['x2_feats'], output_dict['corr_f'], output_dict['corr_b'], output_dict['x1_rev'])
 
+        # output_dict['flow_f'] = upsample_outputs_as(output_dict['flow_f'][::-1], output_dict['x1_rev'])
+        # output_dict['flow_b'] = upsample_outputs_as(output_dict['flow_b'][::-1], output_dict['x1_rev'])
+        # output_dict['disp_l1'] = upsample_outputs_as(output_dict['disp_l1'][::-1], output_dict['x1_rev'])
+        # output_dict['disp_l2'] = upsample_outputs_as(output_dict['disp_l2'][::-1], output_dict['x1_rev'])
+
         #print(output_dict.keys())
         #print("Training:", self.training)
         #print("Evaluation:", self._args.evaluation)
@@ -5500,9 +5507,10 @@ class MonoFlowDisp_DispC(nn.Module):
             for ii in range(0, len(output_dict_r['flow_f'])):
                 output_dict_r['dispC_f'][ii] = flow_horizontal_flip(output_dict_r['dispC_f'][ii])
                 output_dict_r['dispC_b'][ii] = flow_horizontal_flip(output_dict_r['dispC_b'][ii])
-                #output_dict_r['x1_feats'][ii] = torch.flip(output_dict_r['x1_feats'][ii], [3])
-                #output_dict_r['x2_feats'][ii] = torch.flip(output_dict_r['x2_feats'][ii], [3])
-                #print("output_dict_r[disp_l2] size:", output_dict_r['disp_l1'][ii].size())
+                output_dict_r['flow_f'][ii] = flow_horizontal_flip(output_dict_r['flow_f'][ii])
+                output_dict_r['flow_b'][ii] = flow_horizontal_flip(output_dict_r['flow_b'][ii])
+                output_dict_r['disp_l1'][ii] = torch.flip(output_dict_r['disp_l1'][ii], [3])
+                output_dict_r['disp_l2'][ii] = torch.flip(output_dict_r['disp_l2'][ii], [3])
 
             output_dict['output_dict_r'] = output_dict_r
             #print("generating right output dict")

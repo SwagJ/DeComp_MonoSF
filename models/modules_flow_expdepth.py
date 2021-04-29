@@ -9,13 +9,22 @@ import numpy as np
 import pdb
 
 from .modules_sceneflow import ConvBlock, Conv3x3
-from .model_monosceneflow import MonoFlow_Disp_Seperate_Warp_OG_Decoder_No_Res
+from .model_monosceneflow import MonoFlow_Disp_Seperate_Warp_OG_Decoder_No_Res, MonoFlow_Disp_Seperate_Warp_OG_Decoder_Feat_Norm
 
 class MonoFlowDispKernel(nn.Module):
 	def __init__(self, args):
 		super(MonoFlowDispKernel, self).__init__()
 		self._args = args
 		self._model = MonoFlow_Disp_Seperate_Warp_OG_Decoder_No_Res(args)
+
+	def forward(self, input_dict):
+		return self._model(input_dict)
+
+class MonoFlowDispKernel_v2(nn.Module):
+	def __init__(self, args):
+		super(MonoFlowDispKernel_v2, self).__init__()
+		self._args = args
+		self._model = MonoFlow_Disp_Seperate_Warp_OG_Decoder_Feat_Norm(args)
 
 	def forward(self, input_dict):
 		return self._model(input_dict)
@@ -111,7 +120,7 @@ class pyramidPooling(nn.Module):
 		self.levels = levels
 
 		self.paths = []
-		for i in range(levels):
+		for i in range(levels-1):
 			self.paths.append(conv2DBatchNormRelu(in_channels, in_channels, 1, 1, 0, with_bn=with_bn))
 		self.path_module_list = nn.ModuleList(self.paths)
 		self.relu = nn.LeakyReLU(0.1, inplace=True)
@@ -131,6 +140,7 @@ class pyramidPooling(nn.Module):
 
 		for i, module in enumerate(self.path_module_list):
 			out = F.avg_pool2d(x, k_sizes[i], stride=strides[i], padding=0)
+			#print(out.shape)
 			out = module(out)
 			out = F.interpolate(out, size=(h,w), mode='bilinear', align_corners=True)
 			pp_sum = pp_sum + 1./self.levels*out

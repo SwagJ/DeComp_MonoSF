@@ -1444,6 +1444,8 @@ class Eval_MonoFlowDispC_KITTI_Train(nn.Module):
 
 		batch_size, _, _, width = gt_disp.size()
 
+		#print(output_dict["disp_l1_pp"][0].shape)
+		#print(output_dict["flow_f_pp"][0].shape)
 		out_disp_l1 = interpolate2d_as(output_dict["disp_l1_pp"][0], gt_disp, mode="bilinear") * width
 		#out_disp_l1 = target_dict['disp_pre'].cuda()
 		out_depth_l1 = _disp2depth_kitti_K(out_disp_l1, intrinsics[:, 0, 0])
@@ -8938,7 +8940,15 @@ class Loss_MonoFlowDisp_DispC_Sceneflow_v2_Joint(nn.Module):
 		img_r_warp = _generate_image_left(img_r_aug, disp_l)
 		left_occ = _adaptive_disocc_detection_disp(disp_r).detach()
 
-		return left_occ
+		## Photometric loss
+		img_diff = (_elementwise_l1(img_l_aug, img_r_warp) * (1.0 - self._ssim_w) + _SSIM(img_l_aug, img_r_warp) * self._ssim_w).mean(dim=1, keepdim=True)        
+		loss_img = (img_diff[left_occ]).mean()
+		img_diff[~left_occ].detach_()
+
+		## Disparities smoothness
+		loss_smooth = _smoothness_motion_2nd(disp_l, img_l_aug, beta=10.0).mean() / (2 ** ii)
+
+		return loss_img + self._disp_smooth_w * loss_smooth, left_occ
 
 
 	def sceneflow_loss(self, dispC_f, dispC_b, flow_f, flow_b, disp_l1, disp_l2, disp_occ_l1, disp_occ_l2, k_l1_aug, k_l2_aug, img_l1_aug, img_l2_aug, aug_size, ii):
@@ -9071,9 +9081,9 @@ class Loss_MonoFlowDisp_DispC_Sceneflow_v2_Joint(nn.Module):
 			img_r2_aug = interpolate2d_as(target_dict["input_r2_aug"], sf_b)
 
 			## Disp Loss
-			disp_occ_l1 = self.depth_loss_left_img(disp_l1, disp_r1, img_l1_aug, img_r1_aug, ii)
-			disp_occ_l2 = self.depth_loss_left_img(disp_l2, disp_r2, img_l2_aug, img_r2_aug, ii)
-			#loss_dp_sum = loss_dp_sum + (loss_disp_l1 + loss_disp_l2) * self._weights[ii]
+			loss_disp_l1, disp_occ_l1 = self.depth_loss_left_img(disp_l1, disp_r1, img_l1_aug, img_r1_aug, ii)
+			loss_disp_l2, disp_occ_l2 = self.depth_loss_left_img(disp_l2, disp_r2, img_l2_aug, img_r2_aug, ii)
+			loss_dp_sum = loss_dp_sum + (loss_disp_l1 + loss_disp_l2) * self._weights[ii]
 
 
 			## Sceneflow Loss           

@@ -17,7 +17,7 @@ from utils.interpolation import interpolate2d_as
 from utils.sceneflow_util import flow_horizontal_flip, intrinsic_scale, get_pixelgrid, post_processing
 from .modules_flow_expdepth import Expansion_Decoder, Disp_Decoder_Skip_Connection
 from .pwc import pwc_dc_net
-from .modules_flow_expdepth import get_grid, MonoFlowDispKernel, DispC_Decoder
+from .modules_flow_expdepth import get_grid, MonoFlowDispKernel, DispC_Decoder, MonoFlowDispKernel_v2
 
 
 class Flow_Expansion(nn.Module):
@@ -367,6 +367,81 @@ class MonoDispExp(nn.Module):
 		flows_b = output_dict['flow_b_pp']
 		feat_f = output_dict['x1_feats']
 		feat_b = output_dict['x2_feats']
+
+		dchange_f, _, flow_f = self.expansion(flows_f[0],feat_f[0], input_dict['input_l1_aug'])
+		dchange_b, _, flow_b = self.expansion(flows_b[0],feat_b[0], input_dict['input_l2_aug'])
+
+		mask_f = self.affine(flow_f, pw=3)
+		mask_b = self.affine(flow_b, pw=3)
+
+		output_dict['dchange_f'] = dchange_f
+		output_dict['dchange_b'] = dchange_b
+
+		output_dict['mask_f'] = mask_f
+		output_dict['mask_b'] = mask_b
+
+		output_dict['scaled_flow_f'] = flow_f
+		output_dict['scaled_flow_b'] = flow_b
+		return output_dict
+
+
+class MonoDispExp_v2(nn.Module):
+	def __init__(self, args):
+		super(MonoDispExp_v2, self).__init__()
+
+		self._args = args
+		self.flow_disp_net = MonoFlowDispKernel_v2(args)
+		if self._args.exp_training == True:
+			state_dict = torch.load(self._args.backbone_weight)
+			self.flow_disp_net.load_state_dict(state_dict['state_dict'])
+
+		self.expansion = Expansion_Decoder(args,exp_unc=False)
+
+	def affine(self, flow, pw=1):
+		b,_,lh,lw=flow.shape
+		pref = get_grid_exp(b,lh,lw)[:,0].permute(0,3,1,2).repeat(b,1,1,1).clone()
+		ptar = pref + flow
+		pw = 1
+		pref = tf.unfold(pref, (pw*2+1,pw*2+1), padding=(pw)).view(b,2,(pw*2+1)**2,lh,lw)-pref[:,:,np.newaxis]
+		ptar = tf.unfold(ptar, (pw*2+1,pw*2+1), padding=(pw)).view(b,2,(pw*2+1)**2,lh,lw)-ptar[:,:,np.newaxis] # b, 2,9,h,w
+		pref = pref.permute(0,3,4,1,2).reshape(b*lh*lw,2,(pw*2+1)**2)
+		ptar = ptar.permute(0,3,4,1,2).reshape(b*lh*lw,2,(pw*2+1)**2)
+
+		prefprefT = pref.matmul(pref.permute(0,2,1))
+		ppdet = prefprefT[:,0,0]*prefprefT[:,1,1]-prefprefT[:,1,0]*prefprefT[:,0,1]
+		ppinv = torch.cat((prefprefT[:,1,1:],-prefprefT[:,0,1:], -prefprefT[:,1:,0], prefprefT[:,0:1,0]),1).view(-1,2,2)/ppdet.clamp(1e-10,np.inf)[:,np.newaxis,np.newaxis]
+
+		Affine = ptar.matmul(pref.permute(0,2,1)).matmul(ppinv)
+		Error = (Affine.matmul(pref)-ptar).norm(2,1).mean(1).view(b,1,lh,lw)
+
+		Avol = (Affine[:,0,0]*Affine[:,1,1]-Affine[:,1,0]*Affine[:,0,1]).view(b,1,lh,lw).abs().clamp(1e-10,np.inf)
+		exp = Avol.sqrt()
+		mask = (exp>0.5) & (exp<2) & (Error<0.1)
+		mask = mask[:,0]
+
+		exp = exp.clamp(0.5,2)
+		exp[Error>0.1]=1
+		return mask
+
+	def forward(self,input_dict):
+
+		if self.training: # if only fine-tuning expansion 
+			reset=True
+			self.eval()
+			torch.set_grad_enabled(False)
+		else: reset=False
+
+		output_dict = self.flow_disp_net(input_dict)
+
+		if reset: 
+			torch.set_grad_enabled(True)          
+			self.train()
+		flows_f = output_dict['flow_f_pp']
+		flows_b = output_dict['flow_b_pp']
+		feat_f = output_dict['x1_feats']
+		feat_b = output_dict['x2_feats']
+
+		#print(flows_f[0].shape)
 
 		dchange_f, _, flow_f = self.expansion(flows_f[0],feat_f[0], input_dict['input_l1_aug'])
 		dchange_b, _, flow_b = self.expansion(flows_b[0],feat_b[0], input_dict['input_l2_aug'])
