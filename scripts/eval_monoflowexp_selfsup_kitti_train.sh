@@ -3,19 +3,19 @@
 # DATASETS_HOME
 KITTI_HOME="/disk_hdd/kitti_flow"
 #AUDI_HOME="/disk_hdd/a2d2/seq_01"
-CHECKPOINT="/disk_ssd/Self_Mono_Experiments/-monoexp-bb-/checkpoint_best.ckpt"
-PRETRAIN="/disk_ssd/Self_Mono_Experiments/-mono-flow-disp-warp-og-decoder-no-res-/checkpoint_best.ckpt"
+CHECKPOINT="/disk_ssd/Self_Mono_Experiments/-monoexp-bb-v2-/checkpoint_best.ckpt"
+PRETRAIN="/disk_ssd/Self_Mono_Experiments/-mono-flow-disp-warp-feat-norm-top-600-/checkpoint_epoch10.ckpt"
 
 # model
-MODEL=MonoDispExp
+MODEL=MonoDispExp_v2
 
 Valid_Dataset=KITTI_2015_Train_Full_mnsf
-Valid_Augmentation=Augmentation_Resize_Only
+Valid_Augmentation=Augmentation_Resize_Only_600
 Valid_Loss_Function=Eval_MonoFlowExp_KITTI_Train
 #VALIDATION_AUGMENTATION_IMGSIZE=[400,1200]
 
 # training configuration
-SAVE_PATH="/disk_ssd/self-mono-eval/-monoexp-bb-/"
+SAVE_PATH="/disk_ssd/self-mono-eval/-monoexp-bb-v2-/"
 python ../main.py \
 --batch_size=1 \
 --batch_size_val=1 \

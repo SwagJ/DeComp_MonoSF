@@ -9102,10 +9102,17 @@ class Loss_MonoFlowDisp_DispC_Sceneflow_v2_Joint(nn.Module):
 
 		# finding weight
 		f_loss = loss_sf_sum.detach()
+		d_loss = loss_dp_sum.detach()
+		max_val = torch.max(f_loss, d_loss)
+		f_weight = max_val / f_loss
+		d_weight = max_val / d_loss
+
+		total_loss = loss_sf_sum * f_weight + loss_dp_sum * d_weight
 
 		total_loss = loss_sf_sum
 
 		loss_dict = {}
+		loss_dict["dp"] = loss_dp_sum
 		loss_dict["sf"] = loss_sf_sum
 		loss_dict["s_2"] = loss_sf_2d
 		loss_dict["s_3"] = loss_sf_3d
