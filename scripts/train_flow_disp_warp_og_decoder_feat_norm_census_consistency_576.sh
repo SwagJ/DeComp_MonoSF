@@ -35,7 +35,7 @@ Valid_Loss_Function=Loss_FlowDisp_SelfSup_CensusFlow_SSIM_Disp_Top_Consistency
 ALIAS="-mono-flow-disp-warp-feat-norm-top-consistency-576-"
 SAVE_PATH="$EXPERIMENTS_HOME/$ALIAS/"
 
-#CHECKPOINT="$EXPERIMENTS_HOME/$ALIAS/checkpoint_latest.ckpt"
+CHECKPOINT="$EXPERIMENTS_HOME/$ALIAS/checkpoint_latest.ckpt"
 
 
 

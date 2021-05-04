@@ -35,7 +35,7 @@ Valid_Loss_Function=Loss_FlowDisp_SelfSup_CensusFlow_SSIM_Disp_Top
 ALIAS="-mono-flow-disp-warp-feat-norm-top-600-"
 SAVE_PATH="$EXPERIMENTS_HOME/$ALIAS/"
 
-#CHECKPOINT="$EXPERIMENTS_HOME/$ALIAS/checkpoint_latest.ckpt"
+CHECKPOINT="$EXPERIMENTS_HOME/$ALIAS/checkpoint_latest.ckpt"
 
 
 
@@ -52,7 +52,7 @@ python ../main.py \
 --model=$MODEL \
 --num_workers=10 \
 --optimizer=Adam \
---optimizer_lr=2e-4 \
+--optimizer_lr=5e-5 \
 --save=$SAVE_PATH \
 --total_epochs=62 \
 --save_freq=5 \

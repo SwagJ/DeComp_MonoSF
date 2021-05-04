@@ -9109,7 +9109,7 @@ class Loss_MonoFlowDisp_DispC_Sceneflow_v2_Joint(nn.Module):
 
 		total_loss = loss_sf_sum * f_weight + loss_dp_sum * d_weight
 
-		total_loss = loss_sf_sum
+		#total_loss = loss_sf_sum
 
 		loss_dict = {}
 		loss_dict["dp"] = loss_dp_sum

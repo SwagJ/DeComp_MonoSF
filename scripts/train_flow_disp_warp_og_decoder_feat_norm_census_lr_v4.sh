@@ -36,7 +36,7 @@ ALIAS="-mono-flow-disp-warp-feat-norm-top-lr-v4"
 SAVE_PATH="$EXPERIMENTS_HOME/$ALIAS/"
 
 CHECKPOINT="$EXPERIMENTS_HOME/-mono-flow-disp-warp-feat-norm-top-/checkpoint_epoch10.ckpt"
-#CHECKPOINT="$EXPERIMENTS_HOME/$ALIAS/checkpoint_latest.ckpt"
+CHECKPOINT="$EXPERIMENTS_HOME/$ALIAS/checkpoint_latest.ckpt"
 
 
 
@@ -53,7 +53,7 @@ python ../main.py \
 --model=$MODEL \
 --num_workers=10 \
 --optimizer=Adam \
---optimizer_lr=2e-4 \
+--optimizer_lr=5e-5 \
 --save=$SAVE_PATH \
 --start_epoch=10 \
 --total_epochs=45 \

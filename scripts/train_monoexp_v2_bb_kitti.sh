@@ -34,7 +34,7 @@ Valid_Loss_Function=Loss_MonoExp_SelfSup
 
 ALIAS="-monoexp-bb-v2-"
 SAVE_PATH="$EXPERIMENTS_HOME/$ALIAS/"
-#CHECKPOINT="$EXPERIMENTS_HOME/$ALIAS/checkpoint_latest.ckpt"
+CHECKPOINT="$EXPERIMENTS_HOME/$ALIAS/checkpoint_latest.ckpt"
 
 PRETRAIN="$EXPERIMENTS_HOME/-mono-flow-disp-warp-feat-norm-top-600-/checkpoint_best.ckpt"
 
@@ -52,13 +52,13 @@ python ../main.py \
 --lr_scheduler_gamma=0.5 \
 --exp_training=True \
 --backbone_mode=True \
---lr_scheduler_milestones="[23, 39, 47, 54]" \
+--lr_scheduler_milestones="[15, 23, 30, 35]" \
 --model=$MODEL \
 --num_workers=10 \
 --optimizer=Adam \
---optimizer_lr=2e-4 \
+--optimizer_lr=1e-4 \
 --save=$SAVE_PATH \
---total_epochs=62 \
+--total_epochs=40 \
 --save_freq=5 \
 --training_augmentation=$Train_Augmentation \
 --training_augmentation_photometric=True \

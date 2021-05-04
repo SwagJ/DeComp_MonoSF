@@ -35,7 +35,7 @@ Valid_Loss_Function=Loss_MonoFlowDisp_DispC_Sceneflow_v2_Joint
 ALIAS="-flowdisp-dispC-loss-3d-joint-v2-"
 SAVE_PATH="$EXPERIMENTS_HOME/$ALIAS/"
 
-#CHECKPOINT="$EXPERIMENTS_HOME/$ALIAS/checkpoint_latest.ckpt"
+CHECKPOINT="$EXPERIMENTS_HOME/$ALIAS/checkpoint_latest.ckpt"
 PRETRAIN="$EXPERIMENTS_HOME/-mono-flow-disp-warp-og-decoder-no-res-/checkpoint_best.ckpt"
 
 

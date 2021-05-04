@@ -17,25 +17,25 @@ KITTI_RAW_HOME="/scratch_net/phon/majing/datasets/kitti_raw/"
 EXPERIMENTS_HOME="/scratch_net/phon/majing/src/exps"
 
 # model
-MODEL=MonoFlow_Disp_Seperate_Warp_OG_Decoder_Feat_Norm
+MODEL=MonoFlow_DispC_v2_3
 
 # save path
-#CHECKPOINT="checkpoints/full_model_kitti/checkpoint_latest.ckpt"
+
 CHECKPOINT=None
 
 # Loss and Augmentation
 Train_Dataset=KITTI_Raw_KittiSplit_Train_mnsf
-Train_Augmentation=Augmentation_SceneFlow_600x600
-Train_Loss_Function=Loss_FlowDisp_SelfSup_CensusFlow_SSIM_Disp_Top
+Train_Augmentation=Augmentation_SceneFlow
+Train_Loss_Function=Loss_MonoFlowDispC_SelfSup_No_Flow_Reg_v2
 
 Valid_Dataset=KITTI_Raw_KittiSplit_Valid_mnsf
 Valid_Augmentation=Augmentation_Resize_Only
-Valid_Loss_Function=Loss_FlowDisp_SelfSup_CensusFlow_SSIM_Disp_Top
+Valid_Loss_Function=Loss_MonoFlowDispC_SelfSup_No_Flow_Reg_v2
 
-ALIAS="-mono-flow-disp-warp-feat-norm-top-600-final-"
+ALIAS="-monoflowdispC-v2-3-loss-v2"
 SAVE_PATH="$EXPERIMENTS_HOME/$ALIAS/"
 
-#CHECKPOINT="$EXPERIMENTS_HOME/$ALIAS/checkpoint_latest.ckpt"
+CHECKPOINT="$EXPERIMENTS_HOME/$ALIAS/checkpoint_latest.ckpt"
 
 
 
@@ -43,18 +43,18 @@ SAVE_PATH="$EXPERIMENTS_HOME/$ALIAS/"
 
 # training configuration
 python ../main.py \
---batch_size=2 \
+--batch_size=4 \
 --batch_size_val=1 \
 --checkpoint=$CHECKPOINT \
 --lr_scheduler=MultiStepLR \
 --lr_scheduler_gamma=0.5 \
---lr_scheduler_milestones="[15, 26, 35, 38]" \
+--lr_scheduler_milestones="[23, 39, 47, 54]" \
 --model=$MODEL \
 --num_workers=10 \
 --optimizer=Adam \
 --optimizer_lr=2e-4 \
 --save=$SAVE_PATH \
---total_epochs=45 \
+--total_epochs=62 \
 --save_freq=5 \
 --training_augmentation=$Train_Augmentation \
 --training_augmentation_photometric=True \

@@ -12,50 +12,44 @@ conda activate self-mono
 
 
 # experiments and datasets meta
-KITTI_RAW_HOME="/scratch_net/phon/majing/datasets/kitti_raw/"
+KITTI_RAW_HOME="/scratch_net/phon/majing/datasets/kitti_full/"
 #KITTI_RAW_HOME="/disk_hdd/kitti_full/"
 EXPERIMENTS_HOME="/scratch_net/phon/majing/src/exps"
 
 # model
-MODEL=MonoFlow_Disp_Seperate_Warp_OG_Decoder_Feat_Norm
+MODEL=MonoSF_Full
 
 # save path
-#CHECKPOINT="checkpoints/full_model_kitti/checkpoint_latest.ckpt"
+#CHECKPOINT="/scratch_net/phon/majing/src/exps/MonoSF_Full-kitti-dep-20201128-185226/KITTI_Raw_Depth_KittiSplit_Train_mnsf/checkpoint_latest.ckpt"
 CHECKPOINT=None
 
 # Loss and Augmentation
-Train_Dataset=KITTI_Raw_KittiSplit_Train_mnsf
-Train_Augmentation=Augmentation_SceneFlow_600x600
-Train_Loss_Function=Loss_FlowDisp_SelfSup_CensusFlow_SSIM_Disp_Top
+Train_Dataset=KITTI_Raw_Depth_KittiSplit_Train_mnsf
+Train_Augmentation=Augmentation_SceneFlow_Depth_Sup
+Train_Loss_Function=Loss_SceneFlow_Depth_Sup
 
-Valid_Dataset=KITTI_Raw_KittiSplit_Valid_mnsf
+Valid_Dataset=KITTI_Raw_Depth_KittiSplit_Valid_mnsf
 Valid_Augmentation=Augmentation_Resize_Only
-Valid_Loss_Function=Loss_FlowDisp_SelfSup_CensusFlow_SSIM_Disp_Top
+Valid_Loss_Function=Loss_SceneFlow_Depth_Sup
 
-ALIAS="-mono-flow-disp-warp-feat-norm-top-600-final-"
-SAVE_PATH="$EXPERIMENTS_HOME/$ALIAS/"
-
-#CHECKPOINT="$EXPERIMENTS_HOME/$ALIAS/checkpoint_latest.ckpt"
-
-
-
-
+ALIAS="-kitti-complete-dep-"
+TIME=$(date +"%Y%m%d-%H%M%S")
+SAVE_PATH="$EXPERIMENTS_HOME/$MODEL$ALIAS/$Train_Dataset"
 
 # training configuration
 python ../main.py \
---batch_size=2 \
+--batch_size=4 \
 --batch_size_val=1 \
 --checkpoint=$CHECKPOINT \
 --lr_scheduler=MultiStepLR \
---lr_scheduler_gamma=0.5 \
---lr_scheduler_milestones="[15, 26, 35, 38]" \
+--lr_scheduler_gamma=0.4 \
+--lr_scheduler_milestones="[8, 23, 39, 47, 54]" \
 --model=$MODEL \
 --num_workers=10 \
 --optimizer=Adam \
 --optimizer_lr=2e-4 \
 --save=$SAVE_PATH \
---total_epochs=45 \
---save_freq=5 \
+--total_epochs=62 \
 --training_augmentation=$Train_Augmentation \
 --training_augmentation_photometric=True \
 --training_dataset=$Train_Dataset \
