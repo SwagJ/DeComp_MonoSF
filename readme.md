@@ -2,6 +2,8 @@
 
 This repository is the implementation of master thesis work: **Decomposing Self-Supervised Monocular Scene Flow Estimation** by Jingyuan Ma, supervised by [Dr. Martin Danelljan](https://martin-danelljan.github.io/) and [Dr. Radu Timofte](http://people.ee.ethz.ch/~timofter/). 
 
+- Contact: majing[at]student.ethz.ch 
+
 This implementation is based on the Self-Mono's implementation:
  
 
@@ -9,8 +11,6 @@ This implementation is based on the Self-Mono's implementation:
 &nbsp;&nbsp;&nbsp;*CVPR*, 2020 (**Oral**)  
 
 The official implementaion of this paper can be found [here](https://github.com/visinf/self-mono-sf)
-
-- Contact: majing[at]student.ethz.ch 
 
 ## Getting started
 This code has been developed with Anaconda (Python 3.7), **PyTorch 1.2.0** and CUDA 10.1.243 on Ubuntu 19.10.  
@@ -77,7 +77,7 @@ Also, please drop the line 2 to line 13 if you are not using BIWI Cluster of CVL
 
 ## Pretrained Models 
 
-The **[checkpoints](checkpoints/DM_FD)** folder contains the checkpoints of the pretrained models of DM-Net or FD-Net.  
+The **[checkpoints/DM_FD](checkpoints/DM_FD)** folder contains the checkpoints of the pretrained models of DM-Net or FD-Net.  
 
 ## Acknowledgement
 
