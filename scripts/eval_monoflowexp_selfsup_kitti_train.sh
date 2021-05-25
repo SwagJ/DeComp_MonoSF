@@ -4,7 +4,7 @@
 KITTI_HOME="/disk_hdd/kitti_flow"
 #AUDI_HOME="/disk_hdd/a2d2/seq_01"
 CHECKPOINT="/disk_ssd/Self_Mono_Experiments/-monoexp-bb-v2-/checkpoint_best.ckpt"
-PRETRAIN="/disk_ssd/Self_Mono_Experiments/-mono-flow-disp-warp-feat-norm-top-600-/checkpoint_epoch10.ckpt"
+PRETRAIN="/disk_ssd/Self_Mono_Experiments/-mono-flow-disp-warp-feat-norm-top-600-/checkpoint_best.ckpt"
 
 # model
 MODEL=MonoDispExp_v2
@@ -31,9 +31,9 @@ python ../main.py \
 --validation_dataset_root=$KITTI_HOME \
 --validation_loss=$Valid_Loss_Function \
 --validation_key=sf \
-#--save_disp=True \
-#--save_disp2=True \
-#--save_flow=True \
-#--save_flow_otl=True \
-#--save_disp_otl=True \
-#--save_disp2_otl=True
+--save_disp=True \
+--save_disp2=True \
+--save_flow=True \
+--save_flow_otl=True \
+--save_disp_otl=True \
+--save_disp2_otl=True

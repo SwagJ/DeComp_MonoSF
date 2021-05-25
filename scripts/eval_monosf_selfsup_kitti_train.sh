@@ -9,10 +9,10 @@ MODEL=MonoSF_Full
 
 Valid_Dataset=KITTI_2015_Train_Full_mnsf
 Valid_Augmentation=Augmentation_Resize_Only
-Valid_Loss_Function=Eval_SceneFlow_KITTI_Train_Param
+Valid_Loss_Function=Eval_SceneFlow_KITTI_Train
 
 # training configuration
-SAVE_PATH="/disk_ssd/self-mono-eval/-self-mono-og-param-/"
+SAVE_PATH="/disk_ssd/self-mono-eval/-self-mono-og-/"
 python ../main.py \
 --batch_size=1 \
 --batch_size_val=1 \
@@ -27,12 +27,13 @@ python ../main.py \
 --validation_dataset_preprocessing_crop=False \
 --validation_dataset_root=$KITTI_HOME \
 --validation_loss=$Valid_Loss_Function \
---validation_key="err_xy" \
-#--save_disp=True \
-#--save_disp2=True \
-#--save_flow=True \
-#--save_flow_otl=True \
-#--save_disp_otl=True
+--validation_key="f1" \
+--save_disp=True \
+--save_disp2=True \
+--save_flow=True \
+--save_flow_otl=True \
+--save_disp_otl=True \
+--save_disp2_otl=True
 
 
 
