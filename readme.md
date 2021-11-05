@@ -81,8 +81,6 @@ The **[checkpoints/DM_FD](checkpoints/DM_FD)** folder contains the checkpoints o
 
 ## Acknowledgement
 
-Please cite our paper if you use our source code.  
-
 - Portions of the source code (e.g., training pipeline, runtime, argument parser, and logger) are from [Self-Mono](https://github.com/visinf/self-mono-sf)  
 - My sincerest gratitude to my two supervisors: [Dr. Martin Danelljan](https://martin-danelljan.github.io/) and [Dr. Radu Timofte](http://people.ee.ethz.ch/~timofter/)
 
